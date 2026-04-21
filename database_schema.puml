@@ -1,0 +1,177 @@
+@startuml
+
+' 数据库表结构可视化
+
+!define Table(name, desc) class name as """**name**\n//desc//"""
+!define PrimaryKey(field) <b><color:red>field</color></b>
+!define ForeignKey(field, ref) <color:blue>field</color> \n**→** ref
+!define Field(field, type, desc) <color:black>field</color> : <color:gray>type</color>\n//desc//
+
+' 用户信息表
+Table(users, 用户信息表)
+users : PrimaryKey(_id) : ObjectId
+users : Field(username, String, 用户名)
+users : Field(email, String, 邮箱)
+users : Field(password, String, 密码哈希)
+users : Field(role, String, 用户角色)
+users : Field(status, String, 用户状态)
+users : Field(banReason, String, 封禁原因)
+users : Field(profile, Object, 个人信息)
+users : Field(social, Object, 社交关系)
+users : Field(stats, Object, 统计信息)
+users : Field(lastLogin, Date, 最后登录时间)
+users : Field(createdAt, Date, 创建时间)
+users : Field(updatedAt, Date, 更新时间)
+users : Field(resetPasswordToken, String, 密码重置令牌)
+users : Field(resetPasswordExpires, Date, 密码重置令牌过期时间)
+users : Field(privacy, Object, 隐私设置)
+users : Field(notifications, Object, 通知设置)
+
+' 博客文章表
+Table(blogs, 博客文章表)
+blogs : PrimaryKey(_id) : ObjectId
+blogs : ForeignKey(author, users)
+blogs : ForeignKey(category, categories)
+blogs : ForeignKey(topic, topics)
+blogs : Field(title, String, 标题)
+blogs : Field(content, String, 内容)
+blogs : Field(articleType, String, 文章类型)
+blogs : Field(image, String, 封面图片)
+blogs : Field(video, String, 视频URL)
+blogs : Field(mediaFiles, Array, 媒体文件列表)
+blogs : Field(shortContent, String, 短文章内容)
+blogs : Field(hashtags, Array, 话题标签)
+blogs : Field(location, String, 位置信息)
+blogs : Field(tags, Array, 标签数组)
+blogs : Field(likes, Number, 点赞数)
+blogs : Field(comments, Number, 评论数)
+blogs : Field(views, Number, 浏览量)
+blogs : Field(bookmarks, Number, 收藏数)
+blogs : Field(status, String, 状态)
+blogs : Field(createdAt, Date, 创建时间)
+blogs : Field(updatedAt, Date, 更新时间)
+
+' 评论表
+Table(comments, 评论表)
+comments : PrimaryKey(_id) : ObjectId
+comments : ForeignKey(author, users)
+comments : ForeignKey(blog, blogs)
+comments : ForeignKey(parentId, comments)
+comments : ForeignKey(replyTo, users)
+comments : Field(content, String, 评论内容)
+comments : Field(likes, Number, 点赞数)
+comments : Field(status, String, 状态)
+comments : Field(isPinned, Boolean, 是否置顶)
+comments : Field(createdAt, Date, 创建时间)
+comments : Field(updatedAt, Date, 更新时间)
+
+' 点赞表
+Table(likes, 点赞表)
+likes : PrimaryKey(_id) : ObjectId
+likes : ForeignKey(user, users)
+likes : Field(contentId, ObjectId, 内容ID)
+likes : Field(contentType, String, 内容类型)
+likes : Field(createdAt, Date, 创建时间)
+
+' 收藏表
+Table(bookmarks, 收藏表)
+bookmarks : PrimaryKey(_id) : ObjectId
+bookmarks : ForeignKey(user, users)
+bookmarks : ForeignKey(blog, blogs)
+bookmarks : Field(createdAt, Date, 创建时间)
+
+' 关注表
+Table(follows, 关注表)
+follows : PrimaryKey(_id) : ObjectId
+follows : ForeignKey(follower, users)
+follows : ForeignKey(following, users)
+follows : Field(createdAt, Date, 创建时间)
+
+' 话题表
+Table(topics, 话题表)
+topics : PrimaryKey(_id) : ObjectId
+topics : Field(name, String, 话题名称)
+topics : Field(description, String, 话题描述)
+topics : Field(coverImage, String, 话题封面图片)
+topics : Field(followersCount, Number, 关注人数)
+topics : Field(articlesCount, Number, 文章数量)
+topics : Field(createdAt, Date, 创建时间)
+topics : Field(updatedAt, Date, 更新时间)
+
+' 分类表
+Table(categories, 分类表)
+categories : PrimaryKey(_id) : ObjectId
+categories : Field(name, String, 分类名称)
+categories : Field(description, String, 分类描述)
+categories : Field(icon, String, 分类图标)
+categories : Field(articleCount, Number, 文章数量)
+categories : Field(createdAt, Date, 创建时间)
+categories : Field(updatedAt, Date, 更新时间)
+
+' 消息表
+Table(messages, 消息表)
+messages : PrimaryKey(_id) : ObjectId
+messages : ForeignKey(sender, users)
+messages : ForeignKey(receiver, users)
+messages : Field(content, String, 消息内容)
+messages : Field(type, String, 消息类型)
+messages : Field(attachment, Object, 附件信息)
+messages : Field(status, String, 消息状态)
+messages : Field(createdAt, Date, 创建时间)
+messages : Field(readAt, Date, 阅读时间)
+
+' 通知表
+Table(notifications, 通知表)
+notifications : PrimaryKey(_id) : ObjectId
+notifications : ForeignKey(receiver, users)
+notifications : ForeignKey(sender, users)
+notifications : Field(type, String, 通知类型)
+notifications : Field(content, String, 相关内容)
+notifications : Field(resourceId, ObjectId, 相关资源ID)
+notifications : Field(resourceType, String, 资源类型)
+notifications : Field(isRead, Boolean, 是否已读)
+notifications : Field(createdAt, Date, 创建时间)
+
+' 搜索记录表
+Table(searchRecords, 搜索记录表)
+searchRecords : PrimaryKey(_id) : ObjectId
+searchRecords : ForeignKey(user, users)
+searchRecords : Field(keyword, String, 搜索关键词)
+searchRecords : Field(createdAt, Date, 搜索时间)
+
+' 浏览历史表
+Table(browseHistory, 浏览历史表)
+browseHistory : PrimaryKey(_id) : ObjectId
+browseHistory : ForeignKey(user, users)
+browseHistory : ForeignKey(blog, blogs)
+browseHistory : Field(createdAt, Date, 浏览时间)
+
+' 话题关注表
+Table(topicFollowers, 话题关注表)
+topicFollowers : PrimaryKey(_id) : ObjectId
+topicFollowers : ForeignKey(userId, users)
+topicFollowers : ForeignKey(topicId, topics)
+topicFollowers : Field(createdAt, Date, 关注时间)
+
+' 关系连接
+users ||--o{ blogs : 发布
+users ||--o{ comments : 评论
+users ||--o{ likes : 点赞
+users ||--o{ bookmarks : 收藏
+users ||--o{ follows : 关注
+users ||--o{ messages : 发送
+users ||--o{ messages : 接收
+users ||--o{ notifications : 接收
+users ||--o{ notifications : 发送
+users ||--o{ searchRecords : 搜索
+users ||--o{ browseHistory : 浏览
+users ||--o{ topicFollowers : 关注话题
+blogs ||--o{ comments : 包含
+blogs ||--o{ likes : 被点赞
+blogs ||--o{ bookmarks : 被收藏
+blogs ||--o{ browseHistory : 被浏览
+categories ||--o{ blogs : 分类
+topics ||--o{ blogs : 话题
+topics ||--o{ topicFollowers : 被关注
+
+@enduml
