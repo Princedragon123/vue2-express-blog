@@ -92,124 +92,46 @@ import Router from 'vue-router';
 import auth from '../utils/auth';
 
 // ============================================================
-// 【第二部分：导入页面组件】
+// 【第二部分：路由懒加载组件定义】
 // ============================================================
+// 使用动态 import() 实现路由懒加载
+// 访问路由时才加载对应组件，减小首屏加载体积
 
 // ─── 认证相关组件 ───
-
-// 登录页面组件
-// 路径：/login
-// 功能：用户登录表单
-import Login from '../components/Login.vue';
-
-// 注册页面组件
-// 路径：/register
-// 功能：新用户注册表单
-import Register from '../components/Register.vue';
+const Login = () => import(/* webpackChunkName: "auth" */ '../components/Login.vue');
+const Register = () => import(/* webpackChunkName: "auth" */ '../components/Register.vue');
 
 // ─── 核心功能组件 ───
-
-// 博客首页组件（小红书风格）
-// 路径：/blog
-// 功能：展示博客列表、瀑布流布局
-import Blog from '../components/Blog.vue';
-
-// 创建博客页面组件
-// 路径：/create
-// 功能：创建新博客文章
-import Create from '../components/Create.vue';
+const Blog = () => import(/* webpackChunkName: "blog" */ '../components/Blog.vue');
+const Create = () => import(/* webpackChunkName: "create" */ '../components/Create.vue');
 
 // ─── 用户关系组件 ───
-
-// 关注列表组件
-// 路径：/following
-// 功能：展示用户关注的人
-import Following from '../components/Following.vue';
-
-// 粉丝列表组件
-// 路径：/followers
-// 功能：展示用户的粉丝
-import Followers from '../components/Followers.vue';
+const Following = () => import(/* webpackChunkName: "social" */ '../components/Following.vue');
+const Followers = () => import(/* webpackChunkName: "social" */ '../components/Followers.vue');
+const UserDynamic = () => import(/* webpackChunkName: "social" */ '../components/UserDynamic.vue');
 
 // ─── 消息通知组件 ───
-
-// 私信页面组件
-// 路径：/messages
-// 功能：用户间私信聊天
-import Messages from '../components/Messages.vue';
-
-// 通知页面组件
-// 路径：/notifications
-// 功能：展示点赞、评论、关注等通知
-import Notifications from '../components/Notifications.vue';
+const Messages = () => import(/* webpackChunkName: "message" */ '../components/Messages.vue');
+const Notifications = () => import(/* webpackChunkName: "message" */ '../components/Notifications.vue');
 
 // ─── 用户中心组件 ───
-
-// 用户资料页面组件
-// 路径：/profile/:userId?
-// 功能：展示用户信息和发布的博客
-import Profile from '../components/Profile.vue';
-
-// 搜索页面组件
-// 路径：/search
-// 功能：搜索博客和用户
-import Search from '../components/Search.vue';
-
-// 用户动态页面组件
-// 路径：/user-dynamic
-// 功能：展示关注用户的最新动态
-import UserDynamic from '../components/UserDynamic.vue';
-
-// 我的信息页面组件
-// 路径：/my-profile
-// 功能：当前登录用户的个人中心
-import MyProfile from '../components/MyProfile.vue';
-
-// 我的创作页面组件
-// 路径：/my-creation
-// 功能：管理用户发布的博客
-import MyCreation from '../components/MyCreation.vue';
-
-// 编辑资料页面组件
-// 路径：/edit-profile
-// 功能：编辑用户个人信息
-import EditProfile from '../components/EditProfile.vue';
+const Profile = () => import(/* webpackChunkName: "profile" */ '../components/Profile.vue');
+const Search = () => import(/* webpackChunkName: "search" */ '../components/Search.vue');
+const MyProfile = () => import(/* webpackChunkName: "profile" */ '../components/MyProfile.vue');
+const MyCreation = () => import(/* webpackChunkName: "profile" */ '../components/MyCreation.vue');
+const EditProfile = () => import(/* webpackChunkName: "profile" */ '../components/EditProfile.vue');
 
 // ─── 话题相关组件 ───
-
-// 话题列表页面组件
-// 路径：/topics
-// 功能：展示所有话题
-import TopicList from '../components/TopicList.vue';
-
-// 话题详情页面组件
-// 路径：/topic/:id
-// 功能：展示话题下的博客列表
-import TopicDetail from '../components/TopicDetail.vue';
+const TopicList = () => import(/* webpackChunkName: "topic" */ '../components/TopicList.vue');
+const TopicDetail = () => import(/* webpackChunkName: "topic" */ '../components/TopicDetail.vue');
 
 // ─── 文章详情组件 ───
-
-// 知乎风格文章详情组件
-// 路径：/zhihu-detail/:id
-// 功能：展示博客文章详情（知乎风格布局）
-import ZhihuDetail from '../components/ZhihuDetail.vue';
+const ZhihuDetail = () => import(/* webpackChunkName: "detail" */ '../components/ZhihuDetail.vue');
 
 // ─── 管理员组件 ───
-
-// 管理员仪表盘组件
-// 路径：/admin
-// 功能：管理员首页，统计数据展示
-import AdminDashboard from '../components/AdminDashboard.vue';
-
-// 管理员用户管理组件
-// 路径：/admin/users
-// 功能：管理所有用户
-import AdminUsers from '../components/AdminUsers.vue';
-
-// 管理员博客管理组件
-// 路径：/admin/blogs
-// 功能：管理所有博客
-import AdminBlogs from '../components/AdminBlogs.vue';
+const AdminDashboard = () => import(/* webpackChunkName: "admin" */ '../components/AdminDashboard.vue');
+const AdminUsers = () => import(/* webpackChunkName: "admin" */ '../components/AdminUsers.vue');
+const AdminBlogs = () => import(/* webpackChunkName: "admin" */ '../components/AdminBlogs.vue');
 
 // ============================================================
 // 【第三部分：注册路由插件】
