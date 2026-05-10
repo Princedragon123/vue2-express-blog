@@ -205,7 +205,7 @@ export default {
     // 获取热门博客
     async fetchHotBlogs() {
       try {
-        const data = await this.$http.get('/api/blogs/hot?limit=10');
+        const data = await this.$http.get('/api/blogs/hot?limit=10', { noAuth: true });
         
         if (data.success) {
           const blogs = data.data.map(blog => ({
@@ -216,7 +216,7 @@ export default {
             views: blog.views || 0
           }));
           
-          // 直接更新hotBlogs数组
+          // 直接更新 hotBlogs 数组
           this.hotBlogs = blogs;
         }
       } catch (error) {

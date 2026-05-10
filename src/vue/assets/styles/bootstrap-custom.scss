@@ -1,0 +1,46 @@
+// ==========================================================================
+// Bootstrap 自定义 - 只引入需要的部分（Bootstrap 5 兼容版）
+// ==========================================================================
+// 
+// 【说明】
+// 这是项目的 Bootstrap 自定义配置，只引入必要的功能模块
+// 避免引入完整的 Bootstrap，减少文件体积
+// 
+// Bootstrap 5 的 utilities 使用新的生成方式：
+// 1. 定义 $utilities 变量
+// 2. 使用 utilities/api 生成
+// ==========================================================================
+
+// 1. 导入 Bootstrap 函数和变量
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/variables-dark";
+@import "~bootstrap/scss/maps";
+@import "~bootstrap/scss/mixins";
+
+// ==========================================================================
+// 2. 核心功能 - Grid 系统（必须）
+// ==========================================================================
+@import "~bootstrap/scss/root";
+@import "~bootstrap/scss/reboot";
+@import "~bootstrap/scss/type";
+@import "~bootstrap/scss/containers";
+@import "~bootstrap/scss/grid";
+
+// ==========================================================================
+// 3. 工具类 - 按需引入（Bootstrap 5 方式）
+// ==========================================================================
+
+// 导入 utilities 配置
+@import "~bootstrap/scss/utilities";
+
+// 自定义 utilities 配置（可选）
+// $utilities: map-merge(
+//   $utilities,
+//   (
+//     // 添加自定义 utilities
+//   )
+// );
+
+// 生成 utilities CSS
+@import "~bootstrap/scss/utilities/api";

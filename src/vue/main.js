@@ -121,12 +121,13 @@ import socketService from './utils/socket.js';
 // 【第三部分：导入样式文件】
 // ============================================================
 
-// 导入 Bootstrap CSS
-// Bootstrap 是前端 UI 框架，提供响应式布局和组件样式
-import 'bootstrap/dist/css/bootstrap.min.css';
+// 导入 Bootstrap 自定义配置
+// 只引入 Grid 系统和必要的工具类，减少文件体积
+// 完整的 Bootstrap CSS 被替换为按需引入
+import './assets/styles/bootstrap-custom.scss';
 
 // 导入全局样式
-// main.scss 包含自定义的全局样式
+// main.scss 包含自定义的全局样式、CSS 变量、工具类等
 import './assets/styles/main.scss';
 
 // 导入 Font Awesome 图标 (使用 CDN 方式)

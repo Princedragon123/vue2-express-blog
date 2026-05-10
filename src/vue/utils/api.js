@@ -153,20 +153,22 @@ api.interceptors.request.use(
   // ========================================================
   (config) => {
     // ----------------------------------------------------
-    // 步骤1：添加认证token
+    // 步骤 1：添加认证 token
     // ----------------------------------------------------
-    // 从认证状态管理获取token
+    // 从认证状态管理获取 token
     const token = auth.getToken();
     
-    if (token) {
+    // 如果请求配置了 noAuth 标记，则不添加 token
+    // 用于公开接口（如获取热门博客、推荐博客等）
+    if (token && !config.noAuth) {
       // 添加 Authorization 请求头
       // 【格式】Bearer <token>
-      // 【Bearer】表示这是一个Bearer Token
+      // 【Bearer】表示这是一个 Bearer Token
       config.headers.Authorization = `Bearer ${token}`;
     }
     
     // ----------------------------------------------------
-    // 步骤2：处理 FormData
+    // 步骤 2：处理 FormData
     // ----------------------------------------------------
     // 【问题】上传文件时使用 FormData
     // 如果手动设置 Content-Type: application/json
@@ -187,10 +189,10 @@ api.interceptors.request.use(
   // 失败回调：请求配置出错时执行
   // ========================================================
   // 【场景】请求配置有误，根本没发出去
-  // 【示例】URL格式错误、请求参数序列化失败等
+  // 【示例】URL 格式错误、请求参数序列化失败等
   // ========================================================
   (error) => {
-    console.error('API请求错误:', error);
+    console.error('API 请求错误:', error);
     // Promise.reject(error)：把错误传递给调用者的 catch
     return Promise.reject(error);
   }
@@ -258,57 +260,49 @@ api.interceptors.response.use(
         // 401 未授权：token过期或无效
         // ================================================
         case 401: {
-          // 保存原始请求配置
           const originalRequest = error.config;
           
-          // 如果还没有尝试过刷新token
           if (!originalRequest._retry) {
-            // 标记已尝试过刷新，避免无限循环
             originalRequest._retry = true;
             
             try {
-              // --------------------------------------------
-              // 发送刷新token请求
-              // --------------------------------------------
               const token = auth.getToken();
-              const refreshResponse = await refreshInstance.post('/auth/refresh-token', {}, {
+              
+              if (!token) {
+                auth.logout();
+                return Promise.reject(error);
+              }
+              
+              const refreshResponse = await refreshInstance.post('/api/auth/refresh-token', {}, {
                 headers: {
                   'Authorization': `Bearer ${token}`
                 }
               });
               
-              // --------------------------------------------
-              // 保存新token
-              // --------------------------------------------
               auth.loginSuccess(
                 refreshResponse.data.user,
                 refreshResponse.data.token,
                 localStorage.getItem('token') !== null
               );
               
-              // --------------------------------------------
-              // 更新原始请求的token
-              // --------------------------------------------
               originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
               
-              // --------------------------------------------
-              // 重新发送原始请求
-              // --------------------------------------------
               return api(originalRequest);
               
             } catch (refreshError) {
-              // 刷新token失败
               console.error('Token刷新失败:', refreshError);
               auth.logout();
-              window.location.href = '/login';
+              
+              if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+                return Promise.reject(refreshError);
+              }
+              
               return Promise.reject(refreshError);
             }
           }
           
-          // 已经尝试过刷新但仍然失败
           auth.logout();
-          window.location.href = '/login';
-          break;
+          return Promise.reject(error);
         }
         
         // ================================================
