@@ -2,10 +2,10 @@
   <div class="messages-tabs" role="tablist" aria-label="消息与通知切换">
     <button
       class="messages-tabs__tab tab-btn"
-      :class="{ 'tab-btn--active': modelValue === 'notifications' }"
-      @click="$emit('update:modelValue', 'notifications')"
+      :class="{ 'tab-btn--active': value === 'notifications' }"
+      @click="handleTabClick('notifications')"
       role="tab"
-      :aria-selected="modelValue === 'notifications'"
+      :aria-selected="value === 'notifications'"
     >
       通知
       <span
@@ -18,10 +18,10 @@
     </button>
     <button
       class="messages-tabs__tab tab-btn"
-      :class="{ 'tab-btn--active': modelValue === 'messages' }"
-      @click="$emit('update:modelValue', 'messages')"
+      :class="{ 'tab-btn--active': value === 'messages' }"
+      @click="handleTabClick('messages')"
       role="tab"
-      :aria-selected="modelValue === 'messages'"
+      :aria-selected="value === 'messages'"
     >
       私信
       <span
@@ -39,7 +39,7 @@
 export default {
   name: 'MessagesTabs',
   props: {
-    modelValue: {
+    value: {
       type: String,
       default: 'notifications',
       validator: v => ['notifications', 'messages'].includes(v)
@@ -52,6 +52,11 @@ export default {
       type: Number,
       default: 0
     }
+  },
+  methods: {
+    handleTabClick(tab) {
+      this.$emit('input', tab);
+    }
   }
 }
 </script>
@@ -60,7 +65,7 @@ export default {
 .messages-tabs {
   display: flex;
   max-width: 1200px;
-  margin: 0 auto 20px;
+  margin: 0 auto;
   background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
   border: 4px solid var(--background-dark);
   border-radius: 10px;

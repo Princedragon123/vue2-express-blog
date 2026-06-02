@@ -8,7 +8,7 @@
         :value="query"
         @input="$emit('update:query', $event.target.value)"
       >
-      <i class="fas fa-search search-icon"></i>
+      <svg-icon name="search" :size="18" class-name="search-icon"></svg-icon>
     </div>
   </div>
 </template>

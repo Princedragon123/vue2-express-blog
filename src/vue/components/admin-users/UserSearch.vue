@@ -1,24 +1,33 @@
 <template>
   <div class="users-filters">
     <div class="search-container">
-      <input 
-        type="text" 
-        class="search-input" 
+      <input
+        type="text"
+        class="search-input"
         placeholder="搜索用户名或邮箱..."
         :value="query"
         @input="$emit('update:query', $event.target.value)"
-      >
-      <i class="fas fa-search search-icon"></i>
+      />
+      <svg-icon name="search" :size="18" class-name="search-icon"></svg-icon>
     </div>
     <div class="filter-container">
-      <select :value="statusFilter" @change="$emit('update:statusFilter', $event.target.value)" class="filter-select">
+      <select
+        :value="statusFilter"
+        @change="$emit('update:statusFilter', $event.target.value)"
+        class="filter-select"
+      >
         <option value="all">所有状态</option>
         <option value="active">活跃用户</option>
         <option value="banned">封禁用户</option>
       </select>
-      <select :value="roleFilter" @change="$emit('update:roleFilter', $event.target.value)" class="filter-select">
+      <select
+        :value="roleFilter"
+        @change="$emit('update:roleFilter', $event.target.value)"
+        class="filter-select"
+      >
         <option value="all">所有角色</option>
         <option value="user">普通用户</option>
+        <option value="svip">svip用户</option>
         <option value="admin">管理员</option>
       </select>
     </div>
@@ -27,22 +36,22 @@
 
 <script>
 export default {
-  name: 'UserSearch',
-  
+  name: "UserSearch",
+
   props: {
     query: {
       type: String,
-      default: ''
+      default: "",
     },
     statusFilter: {
       type: String,
-      default: 'all'
+      default: "all",
     },
     roleFilter: {
       type: String,
-      default: 'all'
-    }
-  }
+      default: "all",
+    },
+  },
 };
 </script>
 

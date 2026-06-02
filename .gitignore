@@ -15,12 +15,14 @@ yarn-error.log*
 # ------------------------------------------------------------
 .env
 .env.local
+.env.production
 .env.development.local
 .env.test.local
 .env.production.local
 
 # 允许提交模板文件
 !.env.example
+!.env.production
 
 # ------------------------------------------------------------
 # 构建输出
@@ -56,3 +58,67 @@ coverage/
 # ------------------------------------------------------------
 # src/uploads/
 # static/uploads/
+
+# ============================================================
+# YmtEtj 儿童节页面相关文件（私有内容，不提交到 GitHub）
+# ============================================================
+
+# Vue 组件
+src/vue/components/interactive-food/YmtEtj.vue
+src/vue/components/AnimalGuessGame.vue
+src/vue/components/interactive-food/MagicBook.vue
+src/vue/components/interactive-food/Monster.vue
+src/vue/components/interactive-food/GiftBox.vue
+src/vue/components/interactive-food/Balloons.vue
+src/vue/components/interactive-food/Stars.vue
+src/vue/components/interactive-food/BounceText.vue
+src/vue/components/interactive-food/CardMatch.vue
+
+# JS 配置
+src/vue/components/interactive-food/meitingChildrenDay.js
+
+# 拖拽物品 SVG 图片
+src/vue/assets/images/提拉米苏.svg
+src/vue/assets/images/烧麦.svg
+src/vue/assets/images/加班.svg
+src/vue/assets/images/爆米花.svg
+src/vue/assets/images/委屈.svg
+src/vue/assets/images/糯米糍.svg
+src/vue/assets/images/压力.svg
+src/vue/assets/images/爱心.svg
+src/vue/assets/images/辣椒.svg
+src/vue/assets/images/好运宝钱包.svg
+src/vue/assets/images/回形针.svg
+src/vue/assets/images/护身符.svg
+src/vue/assets/images/毛线.svg
+src/vue/assets/images/锦鲤.svg
+src/vue/assets/images/柠檬.svg
+src/vue/assets/images/流星.svg
+src/vue/assets/images/树苗.svg
+src/vue/assets/images/太阳.svg
+src/vue/assets/images/鲜花.svg
+src/vue/assets/images/睡眠.svg
+
+# 气球 SVG 图片
+src/vue/assets/images/ballon1.svg
+src/vue/assets/images/ballon2.svg
+src/vue/assets/images/ballon3.svg
+
+# ============================================================
+# 上传文件排除规则（用户动态内容 + 大文件）
+# ============================================================
+
+# 音乐压缩包（504MB 巨大，完全没必要）
+src/uploads/music.zip
+
+# FLAC 无损音乐（版权风险 + 单文件超100MB限制）
+src/uploads/music/*.flac
+
+# 用户动态上传内容（无数据库则无用）
+src/uploads/blogs/
+src/uploads/backgrounds/
+src/uploads/avatars/
+src/uploads/videos/
+
+# 歌词文件（版权问题）
+src/uploads/musicLyrics/

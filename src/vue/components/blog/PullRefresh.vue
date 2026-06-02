@@ -9,11 +9,13 @@
       class="pull-refresh__content"
       :class="{ 'pull-refresh__content--refreshing': isRefreshing }"
     >
-      <i
-        class="fa fa-arrow-down pull-refresh__icon"
+      <svg-icon
+        name="arrowDown"
+        :size="18"
+        class-name="pull-refresh__icon"
         :class="{ 'pull-refresh__icon--rotating': isRefreshing }"
         aria-hidden="true"
-      ></i>
+      ></svg-icon>
       <span class="pull-refresh__text">
         {{ pullRefreshText }}
       </span>

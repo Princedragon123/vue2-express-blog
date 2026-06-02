@@ -109,12 +109,7 @@ const jwt = require('../utils/jwt');
 // 【职责】查询用户信息
 const User = require('../models/User');
 
-// ============================================================
-// 认证中间件（强制认证）
-// ============================================================
-// 【用途】保护需要登录才能访问的路由
-// 【用法】router.get('/me', authMiddleware, controller)
-// ============================================================
+
 exports.authMiddleware = async (req, res, next) => {
     try {
         // ========================================================
@@ -184,69 +179,42 @@ exports.authMiddleware = async (req, res, next) => {
     }
 };
 
-// ============================================================
-// 可选认证中间件（不强制要求登录）
-// ============================================================
-// 【用途】登录用户可以看到更多信息，未登录用户也能访问
-// 【用法】router.get('/blogs/:id', optionalAuthMiddleware, controller)
-// 
-// 【场景示例】
-// - 查看文章详情：登录用户可以看到是否已点赞/收藏
-// - 查看用户主页：登录用户可以看到是否已关注
-// ============================================================
+
+exports.adminOnly = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, message: '仅管理员可访问' });
+  }
+  next();
+};
+
 exports.optionalAuthMiddleware = async (req, res, next) => {
     try {
-        // 从请求头获取 Token
         const token = req.header('Authorization')?.replace('Bearer ', '');
         
-        // 如果没有 Token，直接放行
-        // 【区别】不返回错误，继续处理请求
         if (!token) {
-            return next();
+            return next(); // 没有 Token，直接放行
         }
         
-        // 验证 Token
         const decoded = jwt.verifyToken(token);
-        
-        // 查找用户
         const user = await User.findById(decoded.id).select('-password');
         
-        // 如果用户存在，检查状态并挂载到 req.user
-        if (user) {
-            // 检查用户状态
-            if (user.status === 'banned') {
-                return res.status(403).json({ 
-                    message: `该账号已被封禁，原因：${user.banReason || '未提供原因'}。请联系管理员邮箱进行申诉。` 
-                });
-            }
-            req.user = user;
+        if (!user) {
+            return next(); // 用户不存在，也放行
         }
         
-        // 继续处理请求
+        if (user.status === 'banned') {
+            return res.status(403).json({ 
+                message: `该账号已被封禁，原因：${user.banReason || '未提供原因'}。请联系管理员邮箱进行申诉。` 
+            });
+        }
+        
+        req.user = user; // 有用户信息，挂载到 req
         next();
     } catch (error) {
-        // Token 无效，继续处理请求（不返回错误）
-        // 【区别】即使 Token 无效，也允许访问
+        // Token 无效或过期，直接放行，不报错
         next();
     }
 };
 
-// ============================================================
-// 使用示例
-// ============================================================
-// const { authMiddleware, optionalAuthMiddleware } = require('../middlewares/auth');
-// 
-// // 强制认证
-// router.get('/me', authMiddleware, (req, res) => {
-//   res.json({ user: req.user });  // req.user 一定存在
-// });
-// 
-// // 可选认证
-// router.get('/blogs/:id', optionalAuthMiddleware, (req, res) => {
-//   if (req.user) {
-//     // 登录用户，显示是否已点赞/收藏
-//   } else {
-//     // 未登录用户，正常显示文章
-//   }
-// });
-// ============================================================
+
+

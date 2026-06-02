@@ -156,7 +156,7 @@ topicFollowerSchema.index({ topicId: 1, followedAt: -1 });
 // ============================================================
 // 创建话题关注模型
 // ============================================================
-const TopicFollower = mongoose.model('TopicFollower', topicFollowerSchema);
+const TopicFollower = mongoose.models.TopicFollower || mongoose.model('TopicFollower', topicFollowerSchema);
 
 // ============================================================
 // 导出话题关注模型

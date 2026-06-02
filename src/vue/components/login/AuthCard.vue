@@ -1,22 +1,22 @@
 <template>
   <div class="card login-card shadow-lg">
     <div class="card-decoration top-left">
-      <i class="fas fa-star"></i>
+      <svg-icon name="star" :size="20"></svg-icon>
     </div>
     <div class="card-decoration top-right">
-      <i class="fas fa-heart"></i>
+      <svg-icon name="heart" :size="20"></svg-icon>
     </div>
     <div class="card-decoration bottom-left">
-      <i class="fas fa-moon"></i>
+      <svg-icon name="moon" :size="20"></svg-icon>
     </div>
     <div class="card-decoration bottom-right">
-      <i class="fas fa-sun"></i>
+      <svg-icon name="sun" :size="20"></svg-icon>
     </div>
     <div class="card-body p-5">
       <div class="text-center mb-5">
         <h2 class="mb-1">
           <span class="logo-text">
-            <i class="fas fa-magic text-primary"></i> kk博客
+            <svg-icon name="magic" :size="24" class-name="text-primary"></svg-icon> kk博客
           </span>
         </h2>
         <p class="text-muted">{{ subtitle }}</p>

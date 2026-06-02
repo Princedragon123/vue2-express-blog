@@ -8,7 +8,7 @@
           <div class="author-meta">
             <span class="publish-date">{{ formattedDate }}</span>
             <span class="article-stats">
-              <i class="fa fa-eye"></i> {{ views }} 阅读
+              <svg-icon name="eye" :size="14"></svg-icon> {{ views }} 阅读
             </span>
           </div>
         </div>

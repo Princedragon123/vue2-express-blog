@@ -1,11 +1,11 @@
 <template>
   <div class="pagination">
     <button class="page-btn" :disabled="currentPage === 1" @click="$emit('prev')">
-      <i class="fas fa-chevron-left"></i> 上一页
+      <svg-icon name="chevronLeft" :size="16"></svg-icon> 上一页
     </button>
     <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
     <button class="page-btn" :disabled="currentPage === totalPages" @click="$emit('next')">
-      下一页 <i class="fas fa-chevron-right"></i>
+      下一页 <svg-icon name="chevronRight" :size="16"></svg-icon>
     </button>
   </div>
 </template>

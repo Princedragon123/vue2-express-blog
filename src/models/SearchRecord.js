@@ -198,4 +198,4 @@ searchRecordSchema.index({ createdAt: -1 });
 //   { $limit: 10 }
 // ]);
 // ============================================================
-module.exports = mongoose.model('SearchRecord', searchRecordSchema);
+module.exports = mongoose.models.SearchRecord || mongoose.model('SearchRecord', searchRecordSchema);

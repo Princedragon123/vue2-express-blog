@@ -59,7 +59,7 @@
           class="search-form__button"
           aria-label="搜索"
         >
-          <i class="fa fa-search" aria-hidden="true"></i>
+          <svg-icon name="search" :size="18" aria-hidden="true"></svg-icon>
         </button>
       </form>
     </div>

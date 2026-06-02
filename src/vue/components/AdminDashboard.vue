@@ -16,7 +16,7 @@
         <div class="stats-overview">
           <div class="stat-card">
             <div class="stat-icon users-icon">
-              <i class="fas fa-users"></i>
+              <svg-icon name="users" :size="32"></svg-icon>
             </div>
             <div class="stat-content">
               <div class="stat-number">{{ stats.totalUsers }}</div>
@@ -25,7 +25,7 @@
           </div>
           <div class="stat-card">
             <div class="stat-icon blogs-icon">
-              <i class="fas fa-book"></i>
+              <svg-icon name="book" :size="32"></svg-icon>
             </div>
             <div class="stat-content">
               <div class="stat-number">{{ stats.totalBlogs }}</div>
@@ -38,44 +38,40 @@
         <div class="admin-nav">
           <div class="nav-card" @click="goToUsers">
             <div class="nav-icon">
-              <i class="fas fa-user-shield"></i>
+              <svg-icon name="userShield" :size="32"></svg-icon>
             </div>
             <div class="nav-content">
               <h3>用户管理</h3>
               <p>管理所有注册用户</p>
             </div>
             <div class="nav-arrow">
-              <i class="fas fa-arrow-right"></i>
+              <svg-icon name="arrowRight" :size="20"></svg-icon>
             </div>
           </div>
           <div class="nav-card" @click="goToBlogs">
             <div class="nav-icon">
-              <i class="fas fa-book-open"></i>
+              <svg-icon name="bookOpen" :size="32"></svg-icon>
             </div>
             <div class="nav-content">
               <h3>博客管理</h3>
               <p>管理所有博客文章</p>
             </div>
             <div class="nav-arrow">
-              <i class="fas fa-arrow-right"></i>
+              <svg-icon name="arrowRight" :size="20"></svg-icon>
             </div>
           </div>
         </div>
       </div>
     </main>
     
-    <!-- 底部导航栏 -->
-    <MobileBottomNav />
+
   </div>
 </template>
 
 <script>
-import MobileBottomNav from './MobileBottomNav.vue';
+
 export default {
   name: 'AdminDashboard',
-  components: {
-    MobileBottomNav
-  },
   data() {
     return {
       stats: {

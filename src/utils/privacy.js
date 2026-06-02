@@ -97,55 +97,23 @@ exports.canViewUserInfo = (currentUser, targetUser, privacyField) => {
   // ====================================================
   // 规则1：管理员可以查看所有信息
   // ====================================================
-  // 【原因】管理员需要审核内容、处理举报等
+  // 【原因】管理员需要审核内容等
   if (currentUser && currentUser.role === 'admin') {
     return true;
   }
   
-  // ====================================================
-  // 规则2：用户可以查看自己的信息
-  // ====================================================
-  // 【比较】ObjectId 需要转为字符串比较
-  // 【原因】ObjectId 是对象，直接比较会失败
+
   if (currentUser && currentUser._id && targetUser._id && 
       currentUser._id.toString() === targetUser._id.toString()) {
     return true;
   }
   
-  // ====================================================
-  // 规则3：检查隐私设置
-  // ====================================================
-  // 【逻辑】
-  // - privacy[field] === false → 禁止访问
-  // - privacy[field] === true 或 undefined → 允许访问
-  // 
-  // 【注意】undefined 视为 true（默认公开）
-  // 这样可以向后兼容旧数据
   if (!targetUser.privacy || targetUser.privacy[privacyField] !== false) {
     return true;
   }
-  
-  // ====================================================
-  // 规则4：其他情况禁止访问
-  // ====================================================
   return false;
 };
 
-// ============================================================
-// 检查用户是否有权限查看博客
-// ============================================================
-// 【参数】
-// - currentUser: 当前登录用户（可能为 null）
-// - blog: 博客对象
-// 
-// 【返回】
-// - true: 有权限查看
-// - false: 无权限查看
-// 
-// 【示例】
-// canViewBlog(currentUser, blog)
-// // true 或 false
-// ============================================================
 exports.canViewBlog = (currentUser, blog) => {
   // ====================================================
   // 规则1：管理员可以查看所有博客
@@ -154,67 +122,18 @@ exports.canViewBlog = (currentUser, blog) => {
     return true;
   }
   
-  // ====================================================
-  // 规则2：博客作者可以查看自己的博客
-  // ====================================================
-  // 【注意】blog.author 可能是 ObjectId 或填充后的对象
   if (currentUser && currentUser._id && blog.author && blog.author._id &&
       currentUser._id.toString() === blog.author._id.toString()) {
     return true;
   }
-  
-  // ====================================================
-  // 规则3：检查作者的隐私设置
-  // ====================================================
-  // 【逻辑】
-  // - 作者不存在 → 允许（匿名文章）
-  // - 作者没有隐私设置 → 允许
-  // - 作者设置 publicPosts = false → 禁止
+
   if (!blog.author || !blog.author.privacy || blog.author.privacy.publicPosts !== false) {
     return true;
   }
-  
-  // ====================================================
-  // 规则4：其他情况禁止访问
-  // ====================================================
+
   return false;
 };
 
-// ============================================================
-// 过滤掉用户无权查看的博客
-// ============================================================
-// 【参数】
-// - blogs: 博客列表
-// - currentUser: 当前登录用户
-// 
-// 【返回】
-// - 过滤后的博客列表
-// 
-// 【示例】
-// const visibleBlogs = filterBlogsByPrivacy(blogs, currentUser)
-// ============================================================
 exports.filterBlogsByPrivacy = (blogs, currentUser) => {
-  // Array.filter() - 过滤数组
-  // 只保留有权限查看的博客
   return blogs.filter(blog => exports.canViewBlog(currentUser, blog));
 };
-
-// ============================================================
-// 使用示例
-// ============================================================
-// const { canViewUserInfo, canViewBlog, filterBlogsByPrivacy } = require('../utils/privacy');
-// 
-// // 检查是否可以查看粉丝列表
-// if (!canViewUserInfo(req.user, targetUser, 'showFollowers')) {
-//   return res.status(403).json({ message: '用户已隐藏粉丝列表' });
-// }
-// 
-// // 检查是否可以查看博客
-// if (!canViewBlog(req.user, blog)) {
-//   return res.status(403).json({ message: '无权查看此博客' });
-// }
-// 
-// // 过滤博客列表
-// const visibleBlogs = filterBlogsByPrivacy(blogs, req.user);
-// res.json({ blogs: visibleBlogs });
-// ============================================================

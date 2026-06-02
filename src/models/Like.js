@@ -149,7 +149,7 @@ likeSchema.index({ user: 1, contentId: 1, contentType: 1 }, { unique: true });
 // ============================================================
 // 'Like' → 'likes' 集合
 // ============================================================
-const Like = mongoose.model('Like', likeSchema);
+const Like = mongoose.models.Like || mongoose.model('Like', likeSchema);
 
 // ============================================================
 // 【模块导出】

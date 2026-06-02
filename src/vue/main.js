@@ -9,79 +9,6 @@
 // 3. 设置全局错误处理
 // 4. 创建 Vue 根实例
 // 
-// 【学习重点】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │  1. Vue 应用初始化：导入、配置、创建实例                                │
-// │  2. 原型挂载：Vue.prototype 添加全局方法                                │
-// │  3. 插件使用：Vue.use() 注册插件                                        │
-// │  4. 全局错误处理：捕获各种类型的错误                                    │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【Vue 应用启动流程】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │                                                                         │
-// │   【Webpack 入口】                                                       │
-// │   webpack.config.js                                                    │
-// │   entry: './src/vue/main.js'                                           │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   【执行 main.js】                                                       │
-// │   ────────────────                                                      │
-// │       │                                                                 │
-// │       ├── 1. 导入 Vue 框架                                              │
-// │       ├── 2. 导入根组件 App.vue                                         │
-// │       ├── 3. 导入路由配置                                               │
-// │       ├── 4. 导入工具函数                                               │
-// │       ├── 5. 导入样式文件                                               │
-// │       ├── 6. 配置插件                                                   │
-// │       ├── 7. 挂载全局属性                                               │
-// │       ├── 8. 设置错误处理                                               │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   【创建 Vue 实例】                                                      │
-// │   new Vue({ ... })                                                      │
-// │       │                                                                 │
-// │       ├── el: '#app'        → 挂载到 DOM                               │
-// │       ├── router            → 注入路由                                 │
-// │       ├── render: h => h(App) → 渲染根组件                             │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   【挂载完成】                                                           │
-// │   index.html 中的 <div id="app">                                       │
-// │   被 Vue 实例替换，App 组件渲染完成                                     │
-// │                                                                         │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【Vue 2 vs Vue 3 入口对比】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │                                                                         │
-// │  【Vue 2（本项目）】                                                     │
-// │  import Vue from 'vue'                                                 │
-// │  import App from './App.vue'                                           │
-// │  import router from './router'                                         │
-// │                                                                         │
-// │  new Vue({                                                              │
-// │    el: '#app',                                                         │
-// │    router,                                                             │
-// │    render: h => h(App)                                                 │
-// │  })                                                                     │
-// │                                                                         │
-// │  【Vue 3】                                                              │
-// │  import { createApp } from 'vue'                                       │
-// │  import App from './App.vue'                                           │
-// │  import router from './router'                                         │
-// │                                                                         │
-// │  const app = createApp(App)                                            │
-// │  app.use(router)                                                       │
-// │  app.mount('#app')                                                     │
-// │                                                                         │
-// │  【主要区别】                                                            │
-// │  1. Vue 3 使用 createApp 创建应用实例                                  │
-// │  2. Vue 3 没有 Vue 构造函数，使用 app 实例方法                         │
-// │  3. Vue 3 支持多根节点组件（Fragment）                                  │
-// │                                                                         │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
 // ============================================================
 
 // ============================================================
@@ -99,6 +26,10 @@ import App from './App.vue';
 // 导入路由配置
 // router 定义了应用的页面导航规则
 import router from './router';
+
+// 导入 Vuex 状态管理
+// store 定义了应用的全局状态
+import store from './store';
 
 // ============================================================
 // 【第二部分：导入工具函数】
@@ -120,7 +51,7 @@ import socketService from './utils/socket.js';
 // ============================================================
 // 【第三部分：导入样式文件】
 // ============================================================
-
+ 
 // 导入 Bootstrap 自定义配置
 // 只引入 Grid 系统和必要的工具类，减少文件体积
 // 完整的 Bootstrap CSS 被替换为按需引入
@@ -129,7 +60,8 @@ import './assets/styles/bootstrap-custom.scss';
 // 导入全局样式
 // main.scss 包含自定义的全局样式、CSS 变量、工具类等
 import './assets/styles/main.scss';
-
+// main.js
+import './assets/styles/auth-common.scss';
 // 导入 Font Awesome 图标 (使用 CDN 方式)
 // 注释掉是因为改用 CDN 方式引入，在 index.html 中加载
 // import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -145,6 +77,11 @@ import VueLazyload from 'vue-lazyload';
 // 导入 vue-meta 插件
 // VueMeta 用于管理页面的 meta 信息（title、description 等）
 import VueMeta from 'vue-meta';
+
+// 导入 SVG 图标组件
+// SvgIcon 提供内联 SVG 图标，替代 Font Awesome，无需外部 CDN
+import SvgIcon from './components/SvgIcon.vue';
+Vue.component('SvgIcon', SvgIcon);
 
 // ============================================================
 // 【第五部分：挂载全局属性】
@@ -297,6 +234,10 @@ new Vue({
   // router：注入路由配置
   // 注入后可以在任何组件中访问 this.$router 和 this.$route
   router,
+  
+  // store：注入 Vuex 状态管理
+  // 注入后可以在任何组件中访问 this.$store
+  store,
   
   // render：渲染函数
   // h 是 createElement 的别名，用于创建 VNode（虚拟 DOM 节点）

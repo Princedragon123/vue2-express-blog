@@ -72,14 +72,13 @@
 
 <script>
 import CacheManager from '../utils/cache';
-import auth from '../utils/auth';
 import { getAuthorAvatar } from '../utils/avatarUtils';
 import { showNotification } from '../utils/notification';
 import InteractionBar from './detail/InteractionBar.vue';
 import DetailCommentSection from './detail/DetailCommentSection.vue';
 import RelatedArticles from './detail/RelatedArticles.vue';
-import DetailHeader from './DetailHeader.vue';
-import DetailContent from './DetailContent.vue';
+import DetailHeader from './detail/DetailHeader.vue';
+import DetailContent from './detail/DetailContent.vue';
 
 export default {
   name: 'Detail',
@@ -197,7 +196,7 @@ export default {
     
     async checkLikeStatus() {
       try {
-        if (!auth.isLoggedIn()) {
+        if (!this.$store.getters.isLoggedIn) {
           this.isLiked = false;
           return;
         }
@@ -362,7 +361,7 @@ export default {
     },
     
     async followAuthor() {
-      if (!auth.isLoggedIn()) {
+      if (!this.$store.getters.isLoggedIn) {
         this.$router.push('/login');
         return;
       }

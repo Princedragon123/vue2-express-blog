@@ -50,9 +50,9 @@
 import avatarMixin from '../mixins/avatarMixin';
 import webSocketMixin from '../mixins/webSocketMixin';
 import { showNotification } from '../utils/notification';
-import NotificationHeader from './NotificationHeader.vue';
-import NotificationTabs from './NotificationTabs.vue';
-import NotificationItem from './NotificationItem.vue';
+import NotificationHeader from './notifications/NotificationHeader.vue';
+import NotificationTabs from './notifications/NotificationTabs.vue';
+import NotificationItem from './notifications/NotificationItem.vue';
 
 export default {
   name: 'Notifications',

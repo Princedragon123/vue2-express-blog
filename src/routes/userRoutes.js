@@ -194,7 +194,7 @@ router.get('/search', UserController.searchUsers);
 // 【参数】
 //   - :userId (URL参数) - 用户ID
 // 【认证】可选（登录用户可以看到是否已关注）
-router.get('/:userId', UserController.getUserInfo);
+router.get('/:userId', optionalAuthMiddleware, UserController.getUserInfo);
 
 // 更新用户信息（需要认证）
 // 【方法】PUT

@@ -3,12 +3,12 @@
     <div class="card-header">
       <h3>浏览历史</h3>
       <button class="clear-history-btn" @click="$emit('clear')">
-        <i class="fas fa-trash"></i> 清空历史
+        <svg-icon name="trash" :size="16"></svg-icon> 清空历史
       </button>
     </div>
     <div class="history-content">
       <div v-if="history.length === 0" class="empty-history">
-        <i class="fas fa-clock"></i>
+        <svg-icon name="clock" :size="32"></svg-icon>
         <p>暂无浏览历史</p>
         <p class="empty-history-tip">浏览文章后，这里会显示您的历史记录</p>
       </div>
@@ -20,7 +20,7 @@
               <p class="history-item-date">{{ formatDate(item.timestamp) }}</p>
             </div>
             <button class="history-item-button" @click="$emit('view', item)">
-              <i class="fas fa-eye"></i> 查看
+              <svg-icon name="eye" :size="16"></svg-icon> 查看
             </button>
           </div>
         </div>

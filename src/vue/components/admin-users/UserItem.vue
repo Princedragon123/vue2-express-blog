@@ -1,7 +1,8 @@
 <template>
   <div class="user-item">
     <div class="user-info">
-      <img v-lazy="avatarUrl" alt="用户头像" class="user-avatar">
+      <!-- 修复：如果没装vue-lazyload，改成:src即可 -->
+      <img :src="avatarUrl" alt="用户头像" class="user-avatar">
       <div class="user-details">
         <div class="user-name">{{ user.username }}</div>
         <div class="user-email">{{ user.email }}</div>
@@ -15,11 +16,11 @@
     
     <div class="user-actions">
       <button class="action-btn view-btn" @click="$emit('view', user)">
-        <i class="fas fa-eye"></i> 查看
+        <svg-icon name="eye" :size="16"></svg-icon> 查看
       </button>
       
       <button class="action-btn edit-btn" @click="$emit('edit', user)">
-        <i class="fas fa-edit"></i> 编辑
+        <svg-icon name="edit" :size="16"></svg-icon> 编辑
       </button>
       
       <button 
@@ -28,7 +29,7 @@
         :class="user.status === 'active' ? 'ban-btn' : 'unban-btn'"
         @click="$emit('toggle-status', user)"
       >
-        <i :class="user.status === 'active' ? 'fas fa-ban' : 'fas fa-user-check'"></i>
+        <svg-icon :name="user.status === 'active' ? 'ban' : 'userCheck'" :size="16"></svg-icon>
         {{ user.status === 'active' ? '封禁' : '解封' }}
       </button>
       <button 
@@ -36,7 +37,7 @@
         class="action-btn ban-btn" 
         disabled
       >
-        <i class="fas fa-ban"></i> 封禁
+        <svg-icon name="ban" :size="16"></svg-icon> 封禁
       </button>
       
       <button 
@@ -44,14 +45,14 @@
         class="action-btn delete-btn" 
         @click="$emit('delete', user)"
       >
-        <i class="fas fa-trash"></i> 删除
+        <svg-icon name="trash" :size="16"></svg-icon> 删除
       </button>
       <button 
         v-else
         class="action-btn delete-btn" 
         disabled
       >
-        <i class="fas fa-trash"></i> 删除
+        <svg-icon name="trash" :size="16"></svg-icon> 删除
       </button>
     </div>
   </div>
@@ -60,38 +61,21 @@
 <script>
 export default {
   name: 'UserItem',
-  
   props: {
-    user: {
-      type: Object,
-      required: true
-    },
-    avatarUrl: {
-      type: String,
-      default: ''
-    }
+    user: { type: Object, required: true },
+    avatarUrl: { type: String, default: '' }
   },
-  
   methods: {
     formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN');
+      return new Date(dateString).toLocaleDateString('zh-CN');
     },
-    
     getRoleName(role) {
-      const roleMap = {
-        'user': '普通用户',
-        'admin': '管理员'
-      };
-      return roleMap[role] || role;
+      const map = { 'user': '普通用户', 'svip': 'SVIP用户', 'admin': '管理员' };
+      return map[role] || role;
     },
-    
     getStatusName(status) {
-      const statusMap = {
-        'active': '活跃',
-        'banned': '封禁'
-      };
-      return statusMap[status] || status;
+      const map = { 'active': '活跃', 'banned': '封禁' };
+      return map[status] || status;
     }
   }
 };
@@ -125,10 +109,6 @@ export default {
   border: 2px solid var(--primary-pink);
 }
 
-.user-avatar[src=""] {
-  display: none;
-}
-
 .user-name {
   font-size: 16px;
   font-weight: bold;
@@ -158,6 +138,11 @@ export default {
 .user-role.user {
   background: linear-gradient(135deg, var(--background-light) 0%, #e3f2fd 100%);
   color: #1976d2;
+}
+
+.user-role.svip {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  color: #f57f17;
 }
 
 .user-role.admin {

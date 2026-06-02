@@ -66,7 +66,6 @@ import MessagesTabs from './messages/MessagesTabs.vue';
 import { showNotification } from '../utils/notification';
 import avatarMixin from '../mixins/avatarMixin';
 import webSocketMixin from '../mixins/webSocketMixin';
-import auth from '../utils/auth';
 
 export default {
   name: 'Messages',
@@ -104,6 +103,13 @@ export default {
       currentBlog: null,
       currentUser: null
     };
+  },
+  watch: {
+    activeTab(newVal) {
+      if (newVal === 'notifications' && this.notifications.length === 0) {
+        this.fetchNotifications();
+      }
+    }
   },
   computed: {
     filteredContacts() {
@@ -488,7 +494,7 @@ export default {
 
 <style scoped>
 .messages-container {
-  min-height: 100vh;
+  min-height: 72vh;
   font-family: var(--font-family);
   padding: 20px;
   background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
@@ -497,8 +503,8 @@ export default {
 .messages-content {
   max-width: 1200px;
   margin: 0 auto;
-  min-height: 80vh;
-  height: 80vh;
+  min-height: 72vh;
+  height: 72vh;
   background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
   border: 4px solid var(--background-dark);
   border-radius: 10px;

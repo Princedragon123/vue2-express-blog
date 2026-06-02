@@ -140,6 +140,12 @@ const topicRoutes = require('./topicRoutes');
 // 浏览记录路由：浏览历史
 const browseHistoryRoutes = require('./browseHistoryRoutes');
 
+// 表情包路由：收藏、上传
+const emojiRoutes = require('./emojiRoutes');
+
+// 井字棋战绩路由：战绩统计、排行榜
+const chessRoutes = require('./chessRoutes');
+
 // ============================================================
 // 挂载路由（设置路由前缀）
 // ============================================================
@@ -214,6 +220,19 @@ router.use('/topics', topicRoutes);
 // DELETE /api/history/:id - 删除浏览记录
 // DELETE /api/history - 清空浏览历史
 router.use('/history', browseHistoryRoutes);
+
+// 表情包路由：前缀 /emojis
+// 【路径示例】
+// POST /api/emojis/upload - 上传表情包
+// GET /api/emojis/favorites - 获取收藏表情包
+// DELETE /api/emojis/favorites/:emojiId - 删除收藏表情包
+router.use('/emojis', emojiRoutes);
+
+// 井字棋战绩路由：前缀 /chess
+// 【路径示例】
+// GET /api/chess/stats/:userId - 获取用户战绩统计
+// GET /api/chess/leaderboard - 获取战绩排行榜
+router.use('/chess', chessRoutes);
 
 // ============================================================
 // 导出路由

@@ -1,196 +1,47 @@
-// ============================================================
-// api.js - 统一API调用工具（学习版·Axios封装）
-// ============================================================
-// 
-// 【文件职责】
-// 封装所有API调用，包括：
-// 1. 创建 Axios 实例
-// 2. 请求拦截器（添加token）
-// 3. 响应拦截器（错误处理、token刷新）
-// 4. 统一的API方法封装
-// 
-// 【学习重点】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │  1. Axios 实例：统一配置 baseURL、timeout、headers                      │
-// │  2. 请求拦截器：在请求发送前统一处理（如添加token）                      │
-// │  3. 响应拦截器：在响应返回后统一处理（如错误处理）                       │
-// │  4. Token 自动刷新：401时自动刷新token并重试请求                        │
-// │  5. 模块化API：按功能分组封装API方法                                    │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【Axios 拦截器执行流程】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │                                                                         │
-// │   调用 api.get('/api/user/profile')                                    │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   ┌─────────────────────────────────────────────────────────┐          │
-// │   │  请求拦截器                                             │          │
-// │   │  ───────────                                           │          │
-// │   │  1. 从 auth 获取 token                                 │          │
-// │   │  2. 添加 Authorization 头                              │          │
-// │   │  3. 处理 FormData                                      │          │
-// │   │  4. 返回 config                                        │          │
-// │   └─────────────────────────────────────────────────────────┘          │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   发送请求到服务器                                                      │
-// │   ────────────────                                                     │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   服务器返回响应                                                        │
-// │   ────────────────                                                     │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   ┌─────────────────────────────────────────────────────────┐          │
-// │   │  响应拦截器                                             │          │
-// │   │  ───────────                                           │          │
-// │   │  成功（2xx）：                                         │          │
-// │   │    - 检查 data.success                                 │          │
-// │   │    - 返回 data 或 reject                               │          │
-// │   │                                                        │          │
-// │   │  失败（非2xx）：                                       │          │
-// │   │    - 401: 尝试刷新token                                │          │
-// │   │    - 403: 显示权限不足                                 │          │
-// │   │    - 404: 显示资源不存在                               │          │
-// │   │    - 500: 显示服务器错误                               │          │
-// │   └─────────────────────────────────────────────────────────┘          │
-// │       │                                                                 │
-// │       ▼                                                                 │
-// │   返回数据给调用者                                                      │
-// │   ────────────────                                                     │
-// │                                                                         │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【面试常问】
-// Q1: 为什么用拦截器而不是每次请求手动添加token？
-// A: 拦截器统一处理，避免重复代码，便于维护
-// 
-// Q2: 如何实现token无感刷新？
-// A: 401时自动刷新token，然后用新token重试原请求
-// 
-// Q3: 为什么要创建两个axios实例？
-// A: 一个用于普通请求，一个用于刷新token（避免刷新请求也触发拦截器）
-// 
-// Q4: FormData为什么要删除Content-Type？
-// A: 让浏览器自动设置正确的boundary
-// ============================================================
 
-// ============================================================
-// 导入依赖模块
-// ============================================================
 // axios: HTTP 请求库
 import axios from 'axios';
 
 // 认证状态管理
-import auth from './auth';
+import store from '../store';
 
 // 通知工具
 import { showNotification } from './notification';
 
-// ============================================================
-// 创建 Axios 实例
-// ============================================================
-// 【为什么要创建实例？】
-// 1. 统一配置 baseURL、timeout、headers
-// 2. 可以创建多个实例，每个实例有不同的配置
-// 3. 实例上的拦截器只对该实例生效
-// 
-// 【配置说明】
-// baseURL: 基础URL，所有请求都会加上这个前缀
-// timeout: 超时时间（毫秒），超过这个时间请求会被取消
-// headers: 默认请求头
-// ============================================================
+// 👇 新增：导入路由！！！ 核心修复
+import router from '@/router/index';
+
+const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE_URL = isLocalDev ? '' : '';
+
 const api = axios.create({
-  // 基础URL
-  // 【开发环境】http://localhost:3001
-  // 【生产环境】应该改为实际服务器地址
-  baseURL: 'http://localhost:3001',
-  
-  // 超时时间：10秒
-  // 【作用】防止请求卡住太久
-  // 【注意】上传大文件时可能需要更长时间
-  timeout: 10000,
-  
-  // 默认请求头
+  baseURL: API_BASE_URL,
+  timeout: 15000, 
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// ============================================================
-// 创建刷新token专用的axios实例
-// ============================================================
-// 【为什么要单独创建？】
-// 刷新token的请求不应该触发普通的拦截器
-// 否则会形成无限循环：
-// 401 → 刷新token → 刷新请求也401 → 再刷新 → ...
-// ============================================================
 const refreshInstance = axios.create({
-  baseURL: 'http://localhost:3001',
-  timeout: 10000,
+  baseURL: '',
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// ============================================================
-// 请求拦截器
-// ============================================================
-// 【触发时机】调用 api.get()、api.post() 等方法时，在请求发送前执行
-// 【作用】统一处理请求配置
-// 
-// 【interceptors.request.use(成功回调, 失败回调)】
-// 成功回调：接收 config 对象，返回修改后的 config
-// 失败回调：请求配置出错时执行（很少用到）
-// ============================================================
+
 api.interceptors.request.use(
-  // ========================================================
-  // 成功回调：请求发送前执行
-  // ========================================================
-  // config: Axios 请求配置对象
-  // 包含 url、method、headers、data、params 等
-  // ========================================================
   (config) => {
-    // ----------------------------------------------------
-    // 步骤 1：添加认证 token
-    // ----------------------------------------------------
-    // 从认证状态管理获取 token
-    const token = auth.getToken();
-    
-    // 如果请求配置了 noAuth 标记，则不添加 token
-    // 用于公开接口（如获取热门博客、推荐博客等）
+    const token = store.getters.getToken;
     if (token && !config.noAuth) {
-      // 添加 Authorization 请求头
-      // 【格式】Bearer <token>
-      // 【Bearer】表示这是一个 Bearer Token
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // ----------------------------------------------------
-    // 步骤 2：处理 FormData
-    // ----------------------------------------------------
-    // 【问题】上传文件时使用 FormData
-    // 如果手动设置 Content-Type: application/json
-    // 会导致服务器无法正确解析文件
-    // 
-    // 【解决】删除 Content-Type，让浏览器自动设置
-    // 浏览器会自动设置正确的 Content-Type 和 boundary
-    // ----------------------------------------------------
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
-    
-    // 返回修改后的配置
     return config;
   },
-  
-  // ========================================================
-  // 失败回调：请求配置出错时执行
-  // ========================================================
-  // 【场景】请求配置有误，根本没发出去
-  // 【示例】URL 格式错误、请求参数序列化失败等
-  // ========================================================
   (error) => {
     console.error('API 请求错误:', error);
     // Promise.reject(error)：把错误传递给调用者的 catch
@@ -198,92 +49,52 @@ api.interceptors.request.use(
   }
 );
 
-// ============================================================
-// 响应拦截器
-// ============================================================
-// 【触发时机】服务器返回响应后，在传递给调用者之前执行
-// 【作用】统一处理响应数据和错误
-// 
-// 【interceptors.response.use(成功回调, 失败回调)】
-// 成功回调：HTTP状态码为 2xx 时执行
-// 失败回调：HTTP状态码非 2xx 时执行
-// ============================================================
 api.interceptors.response.use(
-  // ========================================================
-  // 成功回调：HTTP状态码为 2xx 时执行
-  // ========================================================
-  // response: Axios 包装的完整响应对象
-  // - response.data: 服务器返回的数据
-  // - response.status: HTTP状态码
-  // - response.headers: 响应头
-  // ========================================================
   (response) => {
-    // 提取服务器返回的数据
+    // 状态码2xx时，处理业务逻辑
     const data = response.data;
-    
-    // ----------------------------------------------------
-    // 检查业务层面是否成功
-    // ----------------------------------------------------
-    // 【后端返回格式】
-    // 成功：{ success: true, data: {...} }
-    // 失败：{ success: false, message: '错误信息' }
-    // 
-    // 【注意】HTTP 200 不代表业务成功
-    // 例如：用户名已存在，HTTP 200，但 success: false
-    // ----------------------------------------------------
     if (data.success) {
-      // 业务成功：直接返回数据
       return data;
     } else {
-      // 业务失败：创建错误并传递
+      // 业务失败，抛出后端返回的错误信息
       return Promise.reject(new Error(data.message || '请求失败'));
     }
   },
-  
-  // ========================================================
-  // 失败回调：HTTP状态码非 2xx 时执行
-  // ========================================================
-  // error: 错误对象
-  // - error.response: 服务器返回的响应（存在表示服务器有响应）
-  // - error.request: 请求对象（存在表示请求已发出但没收到响应）
-  // - error.message: 错误信息
-  // ========================================================
   async (error) => {
     console.error('API响应错误:', error);
-    
-    // ----------------------------------------------------
-    // 情况1：服务器返回了响应，但状态码不是 2xx
-    // ----------------------------------------------------
     if (error.response) {
-      switch (error.response.status) {
-        // ================================================
-        // 401 未授权：token过期或无效
-        // ================================================
+      const { status, data } = error.response;
+      
+      // 统一处理后端返回的message
+      const errorMsg = data?.message || '未知错误';
+
+      switch (status) {
+        case 400:
+          // 新增：处理400状态码，直接显示后端返回的错误信息
+          showNotification(errorMsg, 'error');
+          break;
         case 401: {
-          const originalRequest = error.config;
-          
+          const originalRequest = error.config; 
           if (!originalRequest._retry) {
-            originalRequest._retry = true;
-            
+            originalRequest._retry = true;  
             try {
-              const token = auth.getToken();
-              
+              const token = store.getters.getToken;
               if (!token) {
-                auth.logout();
+                store.dispatch('logout', router);
+                showNotification('登录已过期，请重新登录', 'error');
                 return Promise.reject(error);
               }
-              
               const refreshResponse = await refreshInstance.post('/api/auth/refresh-token', {}, {
                 headers: {
                   'Authorization': `Bearer ${token}`
                 }
               });
               
-              auth.loginSuccess(
-                refreshResponse.data.user,
-                refreshResponse.data.token,
-                localStorage.getItem('token') !== null
-              );
+              store.dispatch('loginSuccess', {
+                user: refreshResponse.data.user,
+                token: refreshResponse.data.token,
+                rememberMe: localStorage.getItem('token') !== null
+              });
               
               originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
               
@@ -291,63 +102,33 @@ api.interceptors.response.use(
               
             } catch (refreshError) {
               console.error('Token刷新失败:', refreshError);
-              auth.logout();
-              
-              if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-                return Promise.reject(refreshError);
-              }
-              
+              store.dispatch('logout', router);
+              showNotification('登录已过期，请重新登录', 'error');
               return Promise.reject(refreshError);
             }
           }
-          
-          auth.logout();
+          store.dispatch('logout');
           return Promise.reject(error);
         }
-        
-        // ================================================
-        // 403 禁止访问：权限不足
-        // ================================================
         case 403:
           showNotification('权限不足，无法访问该资源', 'error');
           break;
-          
-        // ================================================
-        // 404 资源不存在
-        // ================================================
         case 404:
           showNotification('请求的资源不存在', 'error');
           break;
-          
-        // ================================================
-        // 500 服务器错误
-        // ================================================
         case 500:
           showNotification('服务器内部错误，请稍后重试', 'error');
           break;
-          
-        // ================================================
-        // 其他错误
-        // ================================================
         default:
-          showNotification(`请求失败: ${error.response.data.message || '未知错误'}`, 'error');
+          // 其他状态码，统一显示后端返回的错误信息
+          showNotification(`请求失败: ${errorMsg}`, 'error');
       }
-    }
-    // ----------------------------------------------------
-    // 情况2：请求已发出，但没有收到响应
-    // ----------------------------------------------------
-    else if (error.request) {
-      // 可能原因：网络断开、服务器挂了、跨域问题
+    } else if (error.request) {
       showNotification('网络错误，无法连接到服务器', 'error');
-    }
-    // ----------------------------------------------------
-    // 情况3：请求配置出错，根本没发出去
-    // ----------------------------------------------------
-    else {
+    } else {
       showNotification('请求配置错误', 'error');
     }
     
-    // 把错误传递给调用者的 catch
     return Promise.reject(error);
   }
 );
@@ -551,6 +332,24 @@ const apiMethods = {
   },
   
   // ========================================================
+  // 表情包相关 API
+  // ========================================================
+  emojis: {
+    // 上传表情包
+    upload: (formData) => api.post('/api/emojis/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
+    
+    // 获取收藏表情包
+    getFavorites: () => api.get('/api/emojis/favorites'),
+    
+    // 删除收藏表情包
+    deleteFavorite: (emojiId) => api.delete(`/api/emojis/favorites/${emojiId}`)
+  },
+
+  // ========================================================
   // 历史记录相关 API
   // ========================================================
   history: {
@@ -604,19 +403,4 @@ const apiMethods = {
   }
 };
 
-// ============================================================
-// 导出API方法
-// ============================================================
-// 【使用方法】
-// import api from '@/utils/api';
-// 
-// // 登录
-// const result = await api.auth.login({ username, password });
-// 
-// // 获取博客列表
-// const blogs = await api.blogs.getList({ page: 1, limit: 10 });
-// 
-// // 发送消息
-// await api.messages.send({ to: userId, content: '你好' });
-// ============================================================
 export default apiMethods;

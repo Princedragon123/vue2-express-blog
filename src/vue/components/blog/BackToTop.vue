@@ -6,7 +6,7 @@
       @click="$emit('click')"
       aria-label="回到顶部"
     >
-      <i class="fa fa-chevron-up" aria-hidden="true"></i>
+      <svg-icon name="chevronUp" :size="20" aria-hidden="true"></svg-icon>
     </button>
   </transition>
 </template>

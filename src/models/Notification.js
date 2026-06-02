@@ -245,7 +245,7 @@ notificationSchema.index({ receiver: 1, createdAt: -1 });
 // ============================================================
 // 【集合名】notifications（自动转为小写复数）
 // ============================================================
-const Notification = mongoose.model('Notification', notificationSchema);
+const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
 
 // ============================================================
 // 导出通知模型

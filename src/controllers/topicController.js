@@ -377,7 +377,6 @@ const topicController = {
             const [articles, total] = await Promise.all([
                 Blog.find({ topic: id, status: 'published' })
                     .populate('author', 'username profile')
-                    .populate('category', 'name')
                     .sort({ createdAt: -1 })
                     .skip(skip)
                     .limit(Number(limit))

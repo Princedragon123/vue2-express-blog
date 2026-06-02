@@ -69,7 +69,7 @@
             v-else-if="!isLoading"
             :show-clear-search="!!searchKeyword"
             :title="'暂无博客文章'"
-            :description="searchKeyword ? `没有找到与\"${searchKeyword}\"相关的博客` : '稍后再来看看吧'"
+            :description="emptyDescription"
             @clear-search="handleClearSearch"
             @retry="fetchBlogs"
           />
@@ -186,6 +186,11 @@ export default {
         this.currentArticleType !== 'all' ||
         this.searchKeyword
       );
+    },
+    emptyDescription() {
+      return this.searchKeyword
+        ? `没有找到与"${this.searchKeyword}"相关的博客`
+        : '稍后再来看看吧';
     }
   },
 
@@ -540,6 +545,12 @@ export default {
   min-height: 100vh;
   font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive;
   background-color: #f7fafc;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.blog-page::-webkit-scrollbar {
+  display: none;
 }
 
 .blog-page__main {

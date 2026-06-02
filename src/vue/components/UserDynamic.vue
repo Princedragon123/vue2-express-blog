@@ -2,7 +2,7 @@
 <template>
   <div class="dynamic-page" :class="currentStyle">
     <button class="back-btn" @click="goBack">
-      <i class="fas fa-arrow-left"></i> 返回首页
+      <svg-icon name="arrowLeft" :size="18"></svg-icon> 返回首页
     </button>
     
     <main class="main-content">
@@ -26,7 +26,7 @@
           </div>
           
           <div v-else-if="error" class="error-state">
-            <i class="fas fa-exclamation-circle"></i>
+            <svg-icon name="exclamationCircle" :size="32"></svg-icon>
             <p>{{ error }}</p>
             <button class="btn-primary" @click="fetchDynamics">重新加载</button>
           </div>
@@ -55,9 +55,9 @@
 <script>
 import TopNavbar from './TopNavbar.vue';
 import MobileBottomNav from './MobileBottomNav.vue';
-import DynamicFilterTabs from './DynamicFilterTabs.vue';
-import DynamicItem from './DynamicItem.vue';
-import DynamicEmptyState from './DynamicEmptyState.vue';
+import DynamicFilterTabs from './dynamic/DynamicFilterTabs.vue';
+import DynamicItem from './dynamic/DynamicItem.vue';
+import DynamicEmptyState from './dynamic/DynamicEmptyState.vue';
 
 export default {
   name: 'UserDynamic',
@@ -90,11 +90,11 @@ export default {
       error: null,
       activeFilter: 'all',
       filterTabs: [
-        { value: 'all', label: '全部', icon: 'fas fa-list' },
-        { value: 'publish', label: '发布', icon: 'fas fa-pen-fancy' },
-        { value: 'like', label: '点赞', icon: 'fas fa-heart' },
-        { value: 'comment', label: '评论', icon: 'fas fa-comment' },
-        { value: 'follow', label: '关注', icon: 'fas fa-user-plus' }
+        { value: 'all', label: '全部', icon: 'list' },
+        { value: 'publish', label: '发布', icon: 'penFancy' },
+        { value: 'like', label: '点赞', icon: 'heart' },
+        { value: 'comment', label: '评论', icon: 'comment' },
+        { value: 'follow', label: '关注', icon: 'userPlus' }
       ]
     };
   },

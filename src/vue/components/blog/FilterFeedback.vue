@@ -13,7 +13,7 @@
       @click="$emit('clear')"
       aria-label="清除筛选条件"
     >
-      <i class="fa fa-times" aria-hidden="true"></i>
+      <svg-icon name="close" :size="14" aria-hidden="true"></svg-icon>
       清除
     </button>
   </div>

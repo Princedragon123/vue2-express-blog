@@ -188,7 +188,7 @@ topicSchema.index({ followersCount: -1, articlesCount: -1, createdAt: -1 });
 // ============================================================
 // 创建话题模型
 // ============================================================
-const Topic = mongoose.model('Topic', topicSchema);
+const Topic = mongoose.models.Topic || mongoose.model('Topic', topicSchema);
 
 // ============================================================
 // 导出话题模型

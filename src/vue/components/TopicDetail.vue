@@ -25,7 +25,7 @@
             </div>
             <div class="topic-cover" v-else>
               <div class="cover-placeholder">
-                <i class="fas fa-comments"></i>
+                <svg-icon name="comments" :size="48"></svg-icon>
                 <span>{{ topicData.name }}</span>
               </div>
             </div>
@@ -35,15 +35,15 @@
               <p class="topic-description">{{ topicData.description }}</p>
               <div class="topic-stats">
                 <span class="stat-item">
-                  <i class="fas fa-user"></i>
+                  <svg-icon name="user" :size="16"></svg-icon>
                   {{ topicData.followersCount }} 关注
                 </span>
                 <span class="stat-item">
-                  <i class="fas fa-file-alt"></i>
+                  <svg-icon name="fileText" :size="16"></svg-icon>
                   {{ topicData.articlesCount }} 文章
                 </span>
                 <span class="stat-item">
-                  <i class="fas fa-calendar-alt"></i>
+                  <svg-icon name="calendar" :size="16"></svg-icon>
                   {{ formatDate(topicData.createdAt) }}
                 </span>
               </div>
@@ -56,7 +56,7 @@
                   {{ topicData.isFollowing ? '已关注' : '关注' }}
                 </button>
                 <button class="create-btn" @click="createArticle">
-                  <i class="fas fa-plus"></i>
+                  <svg-icon name="plus" :size="16"></svg-icon>
                   发布文章
                 </button>
               </div>
@@ -95,15 +95,15 @@
                   </div>
                   <div class="article-stats">
                     <span class="stat-item">
-                      <i class="fas fa-thumbs-up"></i>
+                      <svg-icon name="thumbsUp" :size="14"></svg-icon>
                       {{ article.likes || 0 }}
                     </span>
                     <span class="stat-item">
-                      <i class="fas fa-comment"></i>
+                      <svg-icon name="comment" :size="14"></svg-icon>
                       {{ article.comments || 0 }}
                     </span>
                     <span class="stat-item">
-                      <i class="fas fa-star"></i>
+                      <svg-icon name="star" :size="14"></svg-icon>
                       {{ article.bookmarks || 0 }}
                     </span>
                   </div>
@@ -125,11 +125,11 @@
                 <img :src="article.image" :alt="article.title" class="short-article-img">
                 <div class="short-article-stats">
                   <span class="stat-item">
-                    <i class="fas fa-heart"></i>
+                    <svg-icon name="heart" :size="14"></svg-icon>
                     {{ article.likes }}
                   </span>
                   <span class="stat-item">
-                    <i class="fas fa-comment"></i>
+                    <svg-icon name="comment" :size="14"></svg-icon>
                     {{ article.comments }}
                   </span>
                 </div>
@@ -154,7 +154,7 @@
           
           <!-- 无文章提示 -->
           <div v-if="articles.length === 0" class="empty-state">
-            <i class="fas fa-file-alt"></i>
+            <svg-icon name="fileText" :size="48"></svg-icon>
             <p>暂无相关文章</p>
             <button class="btn-primary" @click="createArticle">发布第一篇文章</button>
           </div>

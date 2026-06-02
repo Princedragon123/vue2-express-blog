@@ -3,6 +3,7 @@
     <label class="form-label">文章内容</label>
     <div ref="quillEditorContainer" class="quill-editor"></div>
     <input type="file" ref="contentImageInput" class="content-image-input" accept="image/*" style="display: none;" @change="handleContentImageUpload">
+    <!-- change提交事件触发 -->
   </div>
 </template>
 
@@ -19,7 +20,7 @@ export default {
     },
     placeholder: {
       type: String,
-      default: '请输入文章内容...'
+      default: '请输入内容...'
     }
   },
   data() {
@@ -35,8 +36,10 @@ export default {
         return;
       }
       const toolbarOptions = [
+         // 数组是普通按钮
         ['bold', 'italic', 'underline', 'strike'],
         ['blockquote', 'code-block'],
+         // 对象下拉配置
         [{ 'header': 1 }, { 'header': 2 }],
         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
         [{ 'script': 'sub' }, { 'script': 'super' }],

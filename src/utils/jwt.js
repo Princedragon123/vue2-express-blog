@@ -189,9 +189,10 @@ exports.generateToken = (userId, role = 'user') => {
         const payload = {
             id: userId,
             role: role,
-            isDev: role === 'admin'
+            isDev: role === 'admin',
+            isSvip: role === 'svip'
         };
-        
+
         // ====================================================
         // 生成 Token
         // ====================================================
@@ -206,10 +207,14 @@ exports.generateToken = (userId, role = 'user') => {
         // 【过期时间设置】
         // - 管理员: 30 分钟（安全性更高）
         // - 普通用户: 7 天（体验更好）
+        // 先计算过期时间（声明变量，可读性高）
+        const tokenExpire = role === 'admin' ? DEV_JWT_EXPIRES_IN : JWT_EXPIRES_IN;
+
+        // 再赋值给 expiresIn
         const token = jwt.sign(payload, JWT_SECRET, {
-            expiresIn: role === 'admin' ? DEV_JWT_EXPIRES_IN : JWT_EXPIRES_IN
+            expiresIn: tokenExpire
         });
-        
+
         return token;
     } catch (error) {
         console.error('JWT 令牌生成失败:', error.message);
@@ -251,7 +256,7 @@ exports.verifyToken = (token) => {
         // 验证成功：返回 Payload 对象
         // 验证失败：抛出异常
         const decoded = jwt.verify(token, JWT_SECRET);
-        
+
         return decoded;
     } catch (error) {
         console.error('JWT 令牌验证失败:', error.message);

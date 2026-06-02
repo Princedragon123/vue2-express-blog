@@ -136,7 +136,7 @@ browseHistorySchema.index({ user: 1, blog: 1 }, { unique: true });
 // ============================================================
 // 'BrowseHistory' → 'browsehistories' 集合
 // ============================================================
-const BrowseHistory = mongoose.model('BrowseHistory', browseHistorySchema);
+const BrowseHistory = mongoose.models.BrowseHistory || mongoose.model('BrowseHistory', browseHistorySchema);
 
 // ============================================================
 // 【模块导出】

@@ -3,7 +3,7 @@
   <div class="my-creation-page" :class="currentStyle">
     <!-- 返回按钮 -->
     <button class="back-btn" @click="goBack">
-      <i class="fas fa-arrow-left"></i> 返回首页
+      <svg-icon name="arrowLeft" :size="18"></svg-icon> 返回首页
     </button>
     
     <!-- 主内容区 -->
@@ -20,7 +20,7 @@
       <div class="container">
         <!-- 加载状态 -->
         <div v-if="loading" class="loading-state">
-          <i class="fas fa-spinner fa-spin"></i>
+          <svg-icon name="spinner" :size="24" class-name="fa-spin"></svg-icon>
           <p>加载中...</p>
         </div>
         
@@ -37,17 +37,17 @@
               <div class="creation-meta">
                 <span class="creation-date">{{ creation.date }}</span>
                 <span class="creation-stats">
-                  <i class="fas fa-eye"></i> {{ creation.views }}
-                  <i class="fas fa-heart"></i> {{ creation.likes }}
-                  <i class="fas fa-comment"></i> {{ creation.comments }}
+                  <svg-icon name="eye" :size="14"></svg-icon> {{ creation.views }}
+                  <svg-icon name="heart" :size="14"></svg-icon> {{ creation.likes }}
+                  <svg-icon name="comment" :size="14"></svg-icon> {{ creation.comments }}
                 </span>
               </div>
               <div class="creation-actions">
                 <button class="action-btn edit-btn" @click="editCreation(creation.id)">
-                  <i class="fas fa-edit"></i> 编辑
+                  <svg-icon name="edit" :size="16"></svg-icon> 编辑
                 </button>
                 <button class="action-btn delete-btn" @click="deleteCreation(creation.id)">
-                  <i class="fas fa-trash"></i> 删除
+                  <svg-icon name="trash" :size="16"></svg-icon> 删除
                 </button>
               </div>
             </div>
@@ -60,7 +60,7 @@
               @click="changePage(currentPage - 1)" 
               :disabled="currentPage === 1"
             >
-              <i class="fas fa-chevron-left"></i> 上一页
+              <svg-icon name="chevronLeft" :size="16"></svg-icon> 上一页
             </button>
             
             <span class="page-info">
@@ -72,18 +72,18 @@
               @click="changePage(currentPage + 1)" 
               :disabled="currentPage === totalPages"
             >
-              下一页 <i class="fas fa-chevron-right"></i>
+              下一页 <svg-icon name="chevronRight" :size="16"></svg-icon>
             </button>
           </div>
         </div>
         
         <!-- 空创作状态 -->
         <div v-if="!loading && creations.length === 0" class="empty-state">
-          <i class="fas fa-edit"></i>
+          <svg-icon name="edit" :size="48"></svg-icon>
           <h3>暂无创作</h3>
           <p>你还没有发布任何攻略文章，快去创作第一篇吧！</p>
           <button class="btn-primary" @click="goToCreate">
-            <i class="fas fa-plus"></i> 发布攻略
+            <svg-icon name="plus" :size="16"></svg-icon> 发布攻略
           </button>
         </div>
       </div>

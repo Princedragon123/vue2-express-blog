@@ -75,7 +75,6 @@
 import ShareModal from './blog-modal/ShareModal.vue';
 import LongArticleView from './blog-modal/LongArticleView.vue';
 import ShortArticleView from './blog-modal/ShortArticleView.vue';
-import auth from '../utils/auth';
 
 export default {
   name: 'BlogModal',
@@ -147,7 +146,7 @@ export default {
     },
 
     async initUserInfo() {
-      if (auth.isLoggedIn()) {
+      if (this.$store.getters.isLoggedIn) {
         try {
           const response = await this.$http.auth.getCurrentUser();
           if (response.success && response.data) {
@@ -181,7 +180,7 @@ export default {
     async checkBookmarkStatus() {
       const blogId = this.blog?.id || this.blog?._id;
 
-      if (!auth.isLoggedIn() || !blogId) return;
+      if (!this.$store.getters.isLoggedIn || !blogId) return;
 
       try {
         const response = await this.$http.blogs.checkBookmarkStatus(blogId);
@@ -225,7 +224,7 @@ export default {
     async bookmarkBlog(blogId) {
       const id = blogId || this.blog?._id || this.blog?.id;
 
-      if (!auth.isLoggedIn() || !id) {
+      if (!this.$store.getters.isLoggedIn || !id) {
         this.showNotification('请先登录', 'error');
         return;
       }
@@ -318,7 +317,7 @@ export default {
         return;
       }
 
-      if (!auth.isLoggedIn()) {
+      if (!this.$store.getters.isLoggedIn) {
         this.showNotification('请先登录后再评论', 'warning');
         return;
       }
@@ -352,7 +351,7 @@ export default {
         return;
       }
 
-      if (!auth.isLoggedIn()) {
+      if (!this.$store.getters.isLoggedIn) {
         this.showNotification('请先登录后再回复', 'warning');
         return;
       }
@@ -385,7 +384,7 @@ export default {
     },
 
     async checkLikeStatus() {
-      if (!this.blog || !auth.isLoggedIn()) return;
+      if (!this.blog || !this.$store.getters.isLoggedIn) return;
 
       const id = this.blog._id || this.blog.id;
       if (!id) return;

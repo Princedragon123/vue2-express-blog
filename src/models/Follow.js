@@ -164,7 +164,7 @@ followSchema.index({ follower: 1, following: 1 }, { unique: true });
 // ============================================================
 // 【集合名】follows（自动转为小写复数）
 // ============================================================
-const Follow = mongoose.model('Follow', followSchema);
+const Follow = mongoose.models.Follow || mongoose.model('Follow', followSchema);
 
 // ============================================================
 // 导出关注模型

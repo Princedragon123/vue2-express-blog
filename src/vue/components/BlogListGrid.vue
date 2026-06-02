@@ -93,7 +93,7 @@
               class="blog-stats__item"
               aria-label="评论数"
             >
-              <i class="fa fa-comment" aria-hidden="true"></i>
+              <svg-icon name="comment" :size="14" aria-hidden="true"></svg-icon>
               {{ blog.comments || 0 }}
             </span>
             <span
@@ -104,7 +104,7 @@
               role="button"
               :aria-label="blog.isLiked ? '取消点赞' : '点赞'"
             >
-              <i class="fa fa-heart" aria-hidden="true"></i>
+              <svg-icon name="heart" :size="14" aria-hidden="true"></svg-icon>
               {{ blog.likes || 0 }}
             </span>
             <span
@@ -115,14 +115,14 @@
               role="button"
               :aria-label="blog.isBookmarked ? '取消收藏' : '收藏'"
             >
-              <i class="fa fa-bookmark" aria-hidden="true"></i>
+              <svg-icon name="bookmark" :size="14" aria-hidden="true"></svg-icon>
               {{ blog.bookmarks || 0 }}
             </span>
             <span
               class="blog-stats__item"
               aria-label="浏览数"
             >
-              <i class="fa fa-eye" aria-hidden="true"></i>
+              <svg-icon name="eye" :size="14" aria-hidden="true"></svg-icon>
               {{ blog.views || 0 }}
             </span>
           </div>
@@ -137,7 +137,7 @@
       aria-live="polite"
     >
       <div class="load-more-indicator__spinner">
-        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        <svg-icon name="spinner" :size="24" class-name="fa-spin" aria-hidden="true"></svg-icon>
         <span class="load-more-indicator__text">加载中...</span>
       </div>
     </div>
@@ -150,7 +150,7 @@
       aria-live="polite"
     >
       <div class="no-more-content__text">
-        <i class="fa fa-check-circle" aria-hidden="true"></i>
+        <svg-icon name="checkCircle" :size="20" aria-hidden="true"></svg-icon>
         <span>已经到底啦~</span>
       </div>
     </div>

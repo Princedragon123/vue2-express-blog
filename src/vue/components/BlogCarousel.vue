@@ -80,7 +80,7 @@
                   {{ blog.author.username }}
                 </span>
                 <span class="blog-carousel__views">
-                  <i class="fa fa-eye" aria-hidden="true"></i>
+                  <svg-icon name="eye" :size="14" aria-hidden="true"></svg-icon>
                   {{ blog.views }}
                 </span>
               </div>
@@ -95,14 +95,14 @@
         @click="handlePrev"
         aria-label="上一个轮播图"
       >
-        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        <svg-icon name="chevronLeft" :size="20" aria-hidden="true"></svg-icon>
       </button>
       <button
         class="blog-carousel__button blog-carousel__button--next"
         @click="handleNext"
         aria-label="下一个轮播图"
       >
-        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+        <svg-icon name="chevronRight" :size="20" aria-hidden="true"></svg-icon>
       </button>
       
       <!-- 指示器 -->

@@ -3,7 +3,7 @@
   <div class="followers-page" :class="currentStyle">
     <!-- 返回按钮 -->
     <button class="back-btn" @click="goBack">
-      <i class="fas fa-arrow-left"></i> 返回首页
+      <svg-icon name="arrowLeft" :size="18"></svg-icon> 返回首页
     </button>
     
     <!-- 主内容区 -->
@@ -44,7 +44,7 @@
         
         <!-- 空粉丝状态 -->
         <div v-if="followers.length === 0" class="empty-state">
-          <i class="fas fa-users"></i>
+          <svg-icon name="users" :size="48"></svg-icon>
           <h3>暂无粉丝</h3>
           <p>发布更多内容，吸引粉丝关注你吧</p>
           <button class="btn-primary" @click="$router.push('/blog')">
@@ -137,9 +137,14 @@ export default {
     async fetchFollowers() {
       try {
         this.isLoading = true;
-        // 获取当前用户ID
+        // 获取当前用户ID（删除硬编码虚拟ID）
         const userInfo = await this.$http.get('/api/auth/me');
-        const currentUserId = userInfo.user?.id || userInfo.user?._id || '659b4c44c6d2a34567890123';
+        const currentUserId = userInfo.user?.id || userInfo.user?._id;
+
+        // 无用户ID时直接抛出异常
+        if (!currentUserId) {
+          throw new Error('未获取到当前用户信息');
+        }
         
         // 调用API获取粉丝列表
         const data = await this.$http.get(`/api/users/${currentUserId}/followers`);
@@ -148,7 +153,8 @@ export default {
           this.followers = data.data.map(user => ({
             id: user._id,
             username: user.username,
-            avatar: user.profile?.avatar || 'https://via.placeholder.com/100',
+            // 删除虚拟占位头像
+            avatar: user.profile?.avatar,
             bio: user.profile?.bio || '',
             posts: user.stats?.postsCount || 0,
             followers: user.social?.followers?.length || 0,
@@ -159,37 +165,7 @@ export default {
         }
       } catch (error) {
         console.error('获取粉丝列表失败:', error);
-        
-        // 当API调用失败时使用模拟数据作为后备
-        this.followers = [
-          {
-            id: 1,
-            username: '游戏达人',
-            avatar: 'https://via.placeholder.com/100',
-            bio: '专注于分享各种游戏攻略和心得，欢迎关注！',
-            posts: 23,
-            followers: 156,
-            isFollowing: false
-          },
-          {
-            id: 2,
-            username: '编程新手',
-            avatar: 'https://via.placeholder.com/100',
-            bio: '正在学习编程，希望能和大家交流！',
-            posts: 8,
-            followers: 42,
-            isFollowing: true
-          },
-          {
-            id: 3,
-            username: '旅行小白',
-            avatar: 'https://via.placeholder.com/100',
-            bio: '喜欢旅行，记录美好时光！',
-            posts: 15,
-            followers: 87,
-            isFollowing: false
-          }
-        ];
+        // 此处已删除所有模拟虚拟数据
       } finally {
         this.isLoading = false;
       }

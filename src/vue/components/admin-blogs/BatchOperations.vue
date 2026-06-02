@@ -6,7 +6,7 @@
     </div>
     <div class="batch-actions">
       <button class="batch-btn danger" @click="$emit('batch-delete')" :disabled="selectedCount === 0">
-        <i class="fas fa-trash"></i> 批量删除
+        <svg-icon name="trash" :size="16"></svg-icon> 批量删除
       </button>
     </div>
   </div>

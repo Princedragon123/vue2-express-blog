@@ -1,121 +1,114 @@
-<!-- Search.vue - 搜索页面组件 -->
+<!-- Search.vue - 搜索页面组件【美化优化版】 -->
 <template>
   <div class="search-page">
-    <!-- 主内容区 -->
-    <main class="main-content">
-      <!-- 搜索框区域 -->
-      <div class="search-header">
-        <div class="container">
-          <div class="search-box-wrapper">
-            <div class="search-input-container">
-              <i class="fas fa-search search-icon"></i>
-              <input 
-                ref="searchInput"
-                type="text" 
-                v-model="searchQuery" 
-                placeholder="搜索攻略、用户" 
-                class="search-input"
-                @input="handleSearch"
-              >
-            </div>
-            <button class="cancel-btn" @click="$router.back()">取消</button>
+    <!-- 顶部搜索栏 -->
+    <header class="search-header">
+      <div class="container">
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <svg-icon name="search" :size="18" class-name="search-icon"></svg-icon>
+            <input 
+              ref="searchInput"
+              v-model="searchQuery" 
+              placeholder="搜索攻略、用户" 
+              class="search-input"
+              @input="handleSearch"
+            >
           </div>
+          <span class="cancel-btn" @click="$router.back()">取消</span>
         </div>
       </div>
-      
-      <!-- 搜索结果区域 -->
-      <div class="container">
-        <!-- 搜索结果 -->
-        <div v-if="isSearching" class="search-section">
-          <div class="section-header">
-            <h3>搜索结果</h3>
-          </div>
-          <div class="search-results">
-            <!-- 用户搜索结果 -->
-            <div v-if="users.length > 0" class="search-result-group">
-              <h4 class="result-group-title">用户</h4>
-              <div class="user-results">
-                <div 
-                  class="user-result-item" 
-                  v-for="user in users" 
-                  :key="user._id"
-                  @click="goToUserProfile(user._id)"
-                >
-                  <div class="user-avatar">
-                    <img :src="user.profile.avatar || 'https://via.placeholder.com/40'" :alt="user.username" class="avatar-img">
-                  </div>
-                  <div class="user-info">
-                    <h5 class="user-name">{{ user.username }}</h5>
-                    <p class="user-bio">{{ user.profile.bio || '暂无简介' }}</p>
-                    <div class="user-stats">
-                      <span>{{ user.stats?.blogsCount || 0 }} 文章</span>
-                      <span>{{ user.social?.followers?.length || 0 }} 粉丝</span>
-                    </div>
-                  </div>
-                </div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="main-content container">
+      <!-- 搜索结果 -->
+      <div v-if="isSearching" class="result-wrap">
+        <div class="result-title">搜索结果</div>
+
+        <!-- 用户列表 -->
+        <div v-if="users.length > 0" class="section-wrap">
+          <h4 class="sub-title">用户</h4>
+          <div class="user-list">
+            <div 
+              class="user-item" 
+              v-for="user in users" 
+              :key="user._id"
+              @click="goToUserProfile(user._id)"
+            >
+              <img 
+                class="user-avatar"
+                :src="user.profile.avatar || 'https://via.placeholder.com/40'" 
+                alt="avatar"
+              >
+              <div class="user-info">
+                <div class="username">{{ user.username }}</div>
+                <div class="user-desc">{{ user.profile.bio || '暂无个人简介' }}</div>
               </div>
-            </div>
-            
-            <!-- 博客搜索结果 -->
-            <div v-if="blogs.length > 0" class="search-result-group">
-              <h4 class="result-group-title">文章</h4>
-              <div class="blog-results">
-                <div 
-                  class="blog-result-item" 
-                  v-for="blog in blogs" 
-                  :key="blog._id"
-                  @click="goToBlogDetail(blog._id)"
-                >
-                  <div class="blog-image">
-                    <img :src="blog.image || 'https://via.placeholder.com/120x80'" :alt="blog.title" class="blog-img">
-                  </div>
-                  <div class="blog-info">
-                    <h5 class="blog-title">{{ blog.title }}</h5>
-                    <div class="blog-meta">
-                      <span class="blog-author">{{ blog.author?.username || '未知' }}</span>
-                      <span class="blog-views">{{ blog.views || 0 }} 浏览</span>
-                      <span class="blog-date">{{ formatDate(blog.createdAt) }}</span>
-                    </div>
-                  </div>
-                </div>
+              <div class="user-stat">
+                <span>{{ user.stats?.blogsCount || 0 }} 文章</span>
+                <span>{{ user.social?.followers?.length || 0 }} 粉丝</span>
               </div>
-            </div>
-            
-            <!-- 无搜索结果 -->
-            <div v-if="!isSearching && searchQuery" class="no-results">
-              <p>未找到相关结果</p>
             </div>
           </div>
         </div>
-        
-        <!-- 热点TOP10 -->
-        <div v-else class="search-section">
-          <div class="section-header">
-            <h3>热点TOP10</h3>
-          </div>
-          <div class="latest-blogs">
+
+        <!-- 文章列表 -->
+        <div v-if="blogs.length > 0" class="section-wrap">
+          <h4 class="sub-title">文章</h4>
+          <div class="blog-list">
             <div 
-              class="latest-blog-item" 
-              v-for="(blog, index) in hotBlogs" 
-              :key="blog.id"
-              @click="goToBlogDetail(blog.id)"
+              class="blog-item" 
+              v-for="blog in blogs" 
+              :key="blog._id"
+              @click="goToBlogDetail(blog._id)"
             >
-              <div class="hot-rank">{{ index + 1 }}</div>
-              <div class="latest-blog-image">
-                <img :src="blog.image" :alt="blog.title" class="latest-blog-img">
-              </div>
-              <div class="latest-blog-info">
-                <h4 class="latest-blog-title">{{ blog.title }}</h4>
-                <div class="latest-blog-meta">
-                  <span class="latest-blog-author">{{ blog.author }}</span>
-                  <span class="latest-blog-date">{{ blog.views }} 浏览</span>
+              <img 
+                class="blog-cover"
+                :src="blog.image || 'https://via.placeholder.com/120x80'" 
+                alt="cover"
+              >
+              <div class="blog-info">
+                <h5 class="blog-title">{{ blog.title }}</h5>
+                <div class="blog-meta">
+                  <span>{{ blog.author?.username || '未知作者' }}</span>
+                  <span>{{ blog.views || 0 }} 浏览</span>
+                  <span>{{ formatDate(blog.createdAt) }}</span>
                 </div>
               </div>
             </div>
-            <div v-if="hotBlogs.length === 0" class="no-results">
-              <p>暂无热点文章</p>
+          </div>
+        </div>
+
+        <!-- 无结果 -->
+        <div v-if="isSearching && users.length === 0 && blogs.length === 0" class="empty-tip">
+          暂无相关搜索结果
+        </div>
+      </div>
+
+      <!-- 热门榜单 -->
+      <div v-else class="hot-wrap">
+        <div class="result-title">热门 TOP10</div>
+        <div class="hot-list">
+          <div 
+            class="hot-item" 
+            v-for="(blog, index) in hotBlogs" 
+            :key="blog.id"
+            @click="goToBlogDetail(blog.id)"
+          >
+            <div class="rank-num" :class="rankClass(index + 1)">
+              {{ index + 1 }}
+            </div>
+            <img class="hot-cover" :src="blog.image" alt="">
+            <div class="hot-info">
+              <div class="hot-name">{{ blog.title }}</div>
+              <div class="hot-meta">{{ blog.author }} · {{ blog.views }} 浏览</div>
             </div>
           </div>
+        </div>
+
+        <div v-if="hotBlogs.length === 0" class="empty-tip">
+          暂无热门文章
         </div>
       </div>
     </main>
@@ -135,28 +128,25 @@ export default {
       searchTimeout: null
     };
   },
-  
-  // 组件挂载后自动聚焦到搜索框并获取数据
+
   mounted() {
     this.$nextTick(() => {
       if (this.$refs.searchInput) {
         this.$refs.searchInput.focus();
       }
     });
-    
-    // 获取热门博客
     this.fetchHotBlogs();
   },
-  
+
+  beforeDestroy() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+  },
+
   methods: {
-    // 处理搜索
     handleSearch() {
-      // 清除之前的定时器
-      if (this.searchTimeout) {
-        clearTimeout(this.searchTimeout);
-      }
-      
-      // 设置新的定时器，实现防抖
+      if (this.searchTimeout) clearTimeout(this.searchTimeout);
       this.searchTimeout = setTimeout(() => {
         if (this.searchQuery.trim()) {
           this.isSearching = true;
@@ -168,449 +158,342 @@ export default {
         }
       }, 300);
     },
-    
-    // 搜索用户和博客
+
     async searchUsersAndBlogs() {
       try {
         const query = this.searchQuery.trim();
-        
-        // 并行搜索用户和博客
         const [usersData, blogsData] = await Promise.all([
           this.$http.get(`/api/users/search?query=${encodeURIComponent(query)}`),
           this.$http.get(`/api/blogs/search?query=${encodeURIComponent(query)}`)
         ]);
-        
-        if (usersData.success) {
-          this.users = usersData.data;
-        } else {
-          this.users = [];
-        }
-        
-        if (blogsData.success) {
-          // 确保每个博客对象都有 _id 字段
-          this.blogs = blogsData.data.map(blog => ({
-            ...blog,
-            _id: blog._id || blog.id
-          }));
-        } else {
-          this.blogs = [];
-        }
+
+        this.users = usersData.success ? usersData.data : [];
+        this.blogs = blogsData.success 
+          ? blogsData.data.map(blog => ({ ...blog, _id: blog._id || blog.id })) 
+          : [];
       } catch (error) {
         console.error('搜索失败:', error);
         this.users = [];
         this.blogs = [];
       }
     },
-    
-    // 获取热门博客
+
     async fetchHotBlogs() {
       try {
         const data = await this.$http.get('/api/blogs/hot?limit=10', { noAuth: true });
-        
         if (data.success) {
-          const blogs = data.data.map(blog => ({
+          this.hotBlogs = data.data.map(blog => ({
             id: blog._id,
             title: blog.title,
             image: blog.image || 'https://via.placeholder.com/300x200',
             author: blog.author?.username || '未知',
             views: blog.views || 0
           }));
-          
-          // 直接更新 hotBlogs 数组
-          this.hotBlogs = blogs;
         }
       } catch (error) {
         console.error('获取热门博客失败:', error);
-        // 失败时显示空数组，让无结果提示显示
         this.hotBlogs = [];
       }
     },
-    
-    // 跳转到用户 profile
+
     goToUserProfile(userId) {
       this.$router.push(`/profile/${userId}`);
     },
-    
-    // 跳转到知乎风格详情页
     goToBlogDetail(blogId) {
-      if (blogId) {
-        this.$router.push(`/zhihu-detail/${blogId}`);
-      }
+      if (blogId) this.$router.push(`/zhihu-detail/${blogId}`);
     },
-    
-    // 格式化日期
     formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
+      if (!dateString) return '';
+      const d = new Date(dateString);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    },
+    rankClass(num) {
+      if (num === 1) return 'rank-top1';
+      if (num === 2) return 'rank-top2';
+      if (num === 3) return 'rank-top3';
+      return '';
     }
   }
 };
 </script>
 
 <style scoped>
+/* 全局基础 */
 .search-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
+  background: #f8f9fa;
+  color: #333;
+}
+.container {
+  width: 92%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+/* 顶部搜索栏 */
 .search-header {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  padding: 20px 0;
-  border-bottom: 1px solid var(--background-dark);
+  background: #fff;
+  padding: 16px 0;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 10px rgba(236, 72, 153, 0.2);
 }
-
-.search-box-wrapper {
+.search-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
 }
-
-.search-input-container {
-  position: relative;
+.search-input-wrap {
   flex: 1;
-  max-width: 600px;
+  position: relative;
 }
-
-.search-input {
-  width: 100%;
-  padding: 12px 40px 12px 40px;
-  border: 2px solid var(--primary-pink);
-  border-radius: 20px;
-  font-size: 16px;
-  outline: none;
-  transition: all 0.3s ease;
-  background: var(--background-light);
-}
-
-.search-input:focus {
-  border-color: var(--primary-pink);
-  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
-}
-
 .search-icon {
   position: absolute;
-  left: 15px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--primary-pink);
+  color: #999;
   font-size: 16px;
 }
-
-.cancel-btn {
-  background: none;
+.search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 16px 0 42px;
+  background: #f5f6f8;
+  border-radius: 21px;
   border: none;
-  color: var(--primary-pink);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 0 15px;
-  transition: all 0.3s ease;
+  outline: none;
+  font-size: 15px;
+  transition: all 0.25s;
 }
-
+.search-input:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.25);
+}
+.cancel-btn {
+  font-size: 15px;
+  color: #666;
+  white-space: nowrap;
+  cursor: pointer;
+}
 .cancel-btn:hover {
-  color: var(--secondary-pink);
+  color: #ec4899;
 }
 
-.search-section {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  margin: 20px 0;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 3px solid var(--background-dark);
+/* 主内容 */
+.main-content {
+  padding: 20px 0 40px;
 }
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.section-header h3 {
-  font-size: 18px;
+.result-title {
+  font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-  font-family: var(--font-family);
+  margin-bottom: 16px;
+  color: #222;
 }
-
-.latest-blogs {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.latest-blog-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.latest-blog-item:last-child {
-  border-bottom: none;
-}
-
-.hot-rank {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  margin-right: 15px;
-  color: var(--primary-pink);
-  background: var(--background-light);
-  border: 2px solid var(--primary-pink);
-}
-
-.latest-blog-image {
-  flex-shrink: 0;
-  width: 80px;
-  height: 60px;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-right: 15px;
-}
-
-.latest-blog-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.latest-blog-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.latest-blog-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.latest-blog-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #999;
-}
-
-.latest-blog-author {
+.sub-title {
+  font-size: 15px;
   font-weight: 500;
+  color: #555;
+  margin: 20px 0 12px;
 }
 
-.latest-blog-date {
-  color: #999;
+/* 区块通用 */
+.section-wrap,
+.hot-wrap {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  margin-bottom: 16px;
 }
 
-.no-results {
-  text-align: center;
-  padding: 60px 20px;
-  color: #999;
-}
-
-/* 搜索结果样式 */
-.search-results {
+/* 用户列表 */
+.user-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
-
-.search-result-group {
-  margin-bottom: 20px;
-}
-
-.result-group-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--background-dark);
-  font-family: var(--font-family);
-}
-
-/* 用户搜索结果样式 */
-.user-results {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.user-result-item {
+.user-item {
   display: flex;
   align-items: center;
-  padding: 10px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  gap: 12px;
+  padding: 8px 0;
   cursor: pointer;
+  border-radius: 12px;
+  padding: 10px;
+  transition: background 0.25s;
 }
-
-.user-result-item:hover {
-  background-color: #f5f5f5;
+.user-item:hover {
+  background: #f8f9fa;
 }
-
 .user-avatar {
-  flex-shrink: 0;
-  width: 50px;
-  height: 50px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  overflow: hidden;
-  margin-right: 15px;
-}
-
-.avatar-img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
-
 .user-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  min-width: 0;
 }
-
-.user-name {
+.username {
   font-size: 15px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 2px;
 }
-
-.user-bio {
+.user-desc {
   font-size: 13px;
   color: #999;
-  margin: 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-.user-stats {
-  display: flex;
-  gap: 15px;
+.user-stat {
   font-size: 12px;
   color: #999;
-}
-
-/* 博客搜索结果样式 */
-.blog-results {
   display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
-.blog-result-item {
+/* 文章列表 */
+.blog-list {
   display: flex;
-  padding: 10px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  flex-direction: column;
+  gap: 14px;
+}
+.blog-item {
+  display: flex;
+  gap: 12px;
   cursor: pointer;
+  border-radius: 12px;
+  padding: 10px;
+  transition: background 0.25s;
 }
-
-.blog-result-item:hover {
-  background-color: #f5f5f5;
+.blog-item:hover {
+  background: #f8f9fa;
 }
-
-.blog-image {
-  flex-shrink: 0;
-  width: 120px;
-  height: 80px;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-right: 15px;
-}
-
-.blog-img {
-  width: 100%;
-  height: 100%;
+.blog-cover {
+  width: 110px;
+  height: 75px;
+  border-radius: 10px;
   object-fit: cover;
+  flex-shrink: 0;
 }
-
 .blog-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  justify-content: space-between;
+  min-width: 0;
 }
-
 .blog-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  color: #222;
   margin: 0;
-  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  overflow: hidden;
 }
-
 .blog-meta {
-  display: flex;
-  gap: 10px;
   font-size: 12px;
   color: #999;
+  display: flex;
+  gap: 12px;
+}
+
+/* 热门榜单 */
+.hot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hot-item {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 10px;
+  transition: background 0.25s;
 }
-
-.blog-author {
+.hot-item:hover {
+  background: #f8f9fa;
+}
+.rank-num {
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  line-height: 24px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  background: #f0f0f0;
+  color: #666;
+  flex-shrink: 0;
+}
+.rank-top1 {
+  background: #ffecd2;
+  color: #f59e0b;
+}
+.rank-top2 {
+  background: #eef2ff;
+  color: #6366f1;
+}
+.rank-top3 {
+  background: #fef2f2;
+  color: #ef4444;
+}
+.hot-cover {
+  width: 70px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.hot-info {
+  flex: 1;
+  min-width: 0;
+}
+.hot-name {
+  font-size: 14px;
   font-weight: 500;
+  color: #222;
+  margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hot-meta {
+  font-size: 12px;
+  color: #999;
 }
 
-/* 响应式调整 */
+/* 空状态 */
+.empty-tip {
+  text-align: center;
+  padding: 50px 0;
+  color: #aaa;
+  font-size: 14px;
+}
+
+/* 移动端适配 */
 @media (max-width: 768px) {
-  .search-box-wrapper {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+  .blog-cover {
+    width: 90px;
+    height: 62px;
   }
-  
-  .search-input-container {
-    max-width: 100%;
+  .hot-cover {
+    width: 60px;
+    height: 46px;
   }
-  
-  .user-result-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .user-avatar {
-    margin-right: 0;
-  }
-  
-  .blog-result-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .blog-image {
-    width: 100%;
-    height: 150px;
-    margin-right: 0;
+  .blog-meta {
+    gap: 6px;
   }
 }
 </style>

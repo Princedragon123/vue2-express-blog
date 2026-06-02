@@ -18,13 +18,13 @@
         <div class="blog-excerpt">{{ blog.excerpt || generateExcerpt(blog.content) }}</div>
         <div class="blog-stats">
           <span class="stat-item">
-            <i class="fas fa-eye"></i> {{ blog.views || 0 }}
+            <svg-icon name="eye" :size="14"></svg-icon> {{ blog.views || 0 }}
           </span>
           <span class="stat-item">
-            <i class="fas fa-heart"></i> {{ blog.likes || 0 }}
+            <svg-icon name="heart" :size="14"></svg-icon> {{ blog.likes || 0 }}
           </span>
           <span class="stat-item">
-            <i class="fas fa-comment"></i> {{ blog.comments || 0 }}
+            <svg-icon name="comment" :size="14"></svg-icon> {{ blog.comments || 0 }}
           </span>
         </div>
       </div>
@@ -32,11 +32,11 @@
     
     <div class="blog-actions" @click.stop>
       <button class="action-btn view-btn" @click="$emit('view', blog)">
-        <i class="fas fa-eye"></i> 查看
+        <svg-icon name="eye" :size="16"></svg-icon> 查看
       </button>
       
       <button class="action-btn delete-btn" @click="$emit('delete', blog)">
-        <i class="fas fa-trash"></i> 删除
+        <svg-icon name="trash" :size="16"></svg-icon> 删除
       </button>
     </div>
   </div>

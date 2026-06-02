@@ -2,19 +2,19 @@
   <div class="interaction-section">
     <div class="interaction-buttons">
       <button class="interaction-btn" :class="{ 'liked': isLiked }" aria-label="点赞" tabindex="0" @click="handleLike">
-        <i class="fa fa-heart"></i>
+        <svg-icon name="heart" :size="18"></svg-icon>
         <span>{{ likes }}</span>
       </button>
       <button class="interaction-btn" aria-label="评论" tabindex="0" @click="$emit('open-comments')">
-        <i class="fa fa-comment"></i>
+        <svg-icon name="comment" :size="18"></svg-icon>
         <span>{{ comments }}</span>
       </button>
       <button class="interaction-btn" :class="{ 'bookmarked': isBookmarked }" aria-label="收藏" tabindex="0" @click="handleBookmark">
-        <i class="fa fa-bookmark"></i>
+        <svg-icon name="bookmark" :size="18"></svg-icon>
         <span>{{ bookmarks }}</span>
       </button>
       <button class="interaction-btn" aria-label="分享" tabindex="0" @click="$emit('open-share')">
-        <i class="fa fa-share-alt"></i>
+        <svg-icon name="shareAlt" :size="18"></svg-icon>
         <span>分享</span>
       </button>
     </div>

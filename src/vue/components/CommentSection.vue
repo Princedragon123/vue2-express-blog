@@ -98,7 +98,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
       <div v-for="comment in sortedComments" :key="comment._id" class="comment-item" :class="{ 'zhihu-comment': isZhihuStyle, 'pinned': comment.isPinned }">
         <!-- 置顶标记 -->
         <div v-if="comment.isPinned" class="pinned-badge">
-          <i class="fa fa-thumb-tack"></i>
+          <svg-icon name="thumbTack" :size="14"></svg-icon>
           <span>置顶</span>
         </div>
         <!-- 评论作者头像 -->
@@ -126,7 +126,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
               :class="{ 'zhihu-reply': isZhihuStyle }" 
               @click="comment.isReplying = !comment.isReplying"
             >
-              <i v-if="!isZhihuStyle" class="fa fa-reply"></i>
+              <svg-icon v-if="!isZhihuStyle" name="reply" :size="14"></svg-icon>
               <span>{{ isZhihuStyle ? '回复' : '回复' }}</span>
             </button>
             <button 
@@ -135,7 +135,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
               :class="{ 'zhihu-delete': isZhihuStyle }" 
               @click="deleteComment(comment._id)"
             >
-              <i v-if="!isZhihuStyle" class="fa fa-trash"></i>
+              <svg-icon v-if="!isZhihuStyle" name="trash" :size="14"></svg-icon>
               <span>{{ isZhihuStyle ? '删除' : '删除' }}</span>
             </button>
             <button 
@@ -144,7 +144,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
               :class="{ 'zhihu-pin': isZhihuStyle, 'active': comment.isPinned }" 
               @click="pinComment(comment)"
             >
-              <i class="fa fa-thumb-tack"></i>
+              <svg-icon name="thumbTack" :size="14"></svg-icon>
               <span>{{ comment.isPinned ? '取消置顶' : '置顶' }}</span>
             </button>
           </div>
@@ -165,7 +165,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
               @click="submitReply(comment)" 
               :disabled="!comment.replyText || !comment.replyText.trim()"
             >
-              <i class="fa fa-paper-plane"></i>
+              <svg-icon name="paperPlane" :size="16"></svg-icon>
             </button>
             <button class="cancel-reply-btn" @click="comment.isReplying = false">取消</button>
           </div>
@@ -203,7 +203,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
                     :class="{ 'zhihu-reply': isZhihuStyle }" 
                     @click="reply.isReplying = !reply.isReplying"
                   >
-                    <i v-if="!isZhihuStyle" class="fa fa-reply"></i>
+                    <svg-icon v-if="!isZhihuStyle" name="reply" :size="14"></svg-icon>
                     <span>{{ isZhihuStyle ? '回复' : '回复' }}</span>
                   </button>
                   <button 
@@ -212,7 +212,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
                     :class="{ 'zhihu-delete': isZhihuStyle }" 
                     @click="deleteComment(reply._id)"
                   >
-                    <i v-if="!isZhihuStyle" class="fa fa-trash"></i>
+                    <svg-icon v-if="!isZhihuStyle" name="trash" :size="14"></svg-icon>
                     <span>{{ isZhihuStyle ? '删除' : '删除' }}</span>
                   </button>
                 </div>
@@ -233,7 +233,7 @@ A: 使用 v-text 而不是 v-html，或使用 DOMPurify
                     @click="submitReply(reply, comment)" 
                     :disabled="!reply.replyText.trim()"
                   >
-                    <i class="fa fa-paper-plane"></i>
+                    <svg-icon name="paperPlane" :size="16"></svg-icon>
                   </button>
                   <button class="cancel-reply-btn" @click="reply.isReplying = false">取消</button>
                 </div>

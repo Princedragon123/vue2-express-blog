@@ -261,7 +261,7 @@ commentSchema.index({ author: 1, createdAt: -1 });
 // ============================================================
 // 【集合名】comments（自动转为小写复数）
 // ============================================================
-const Comment = mongoose.model('Comment', commentSchema);
+const Comment = mongoose.models.Comment || mongoose.model('Comment', commentSchema);
 
 // ============================================================
 // 导出评论模型

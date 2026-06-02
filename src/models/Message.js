@@ -239,7 +239,7 @@ messageSchema.index({ receiver: 1, status: 1 });
 // ============================================================
 // 【集合名】messages（自动转为小写复数）
 // ============================================================
-const Message = mongoose.model('Message', messageSchema);
+const Message = mongoose.models.Message || mongoose.model('Message', messageSchema);
 
 // ============================================================
 // 导出消息模型

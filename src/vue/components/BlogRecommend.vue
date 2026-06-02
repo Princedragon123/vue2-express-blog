@@ -34,7 +34,7 @@
     <!-- 标题栏 -->
     <div class="blog-recommend__header">
       <h3 class="blog-recommend__title">
-        <i class="fa fa-fire" aria-hidden="true"></i>
+        <svg-icon name="fire" :size="18" aria-hidden="true"></svg-icon>
         热门推荐
       </h3>
       <button
@@ -43,11 +43,12 @@
         :disabled="isRefreshing"
         aria-label="换一批推荐"
       >
-        <i
-          class="fa fa-refresh"
-          :class="{ 'blog-recommend__refresh--rotating': isRefreshing }"
+        <svg-icon
+          name="refresh"
+          :size="16"
           aria-hidden="true"
-        ></i>
+          :class-name="isRefreshing ? 'blog-recommend__refresh--rotating' : ''"
+        ></svg-icon>
         换一批
       </button>
     </div>
@@ -80,11 +81,11 @@
           </h4>
           <div class="blog-recommend__meta">
             <span class="blog-recommend__author">
-              <i class="fa fa-user" aria-hidden="true"></i>
+              <svg-icon name="user" :size="14" aria-hidden="true"></svg-icon>
               {{ blog.author.username }}
             </span>
             <span class="blog-recommend__views">
-              <i class="fa fa-eye" aria-hidden="true"></i>
+              <svg-icon name="eye" :size="14" aria-hidden="true"></svg-icon>
               {{ blog.views }}
             </span>
           </div>

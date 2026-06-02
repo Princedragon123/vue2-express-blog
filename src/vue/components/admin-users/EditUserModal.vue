@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3>编辑用户</h3>
         <button class="modal-close" @click="$emit('close')">
-          <i class="fas fa-times"></i>
+          <svg-icon name="close" :size="20"></svg-icon>
         </button>
       </div>
       <div class="modal-body">
@@ -41,6 +41,7 @@
           <label class="form-label">角色</label>
           <select :value="user.role" @change="$emit('update:role', $event.target.value)" class="form-select">
             <option value="user">普通用户</option>
+              <option value="svip">svip用户</option>
             <option value="admin">管理员</option>
           </select>
         </div>

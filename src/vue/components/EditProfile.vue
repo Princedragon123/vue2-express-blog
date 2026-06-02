@@ -7,28 +7,28 @@
           <h1 class="page-title">编辑个人资料</h1>
           <p class="page-subtitle">更新你的个人信息和头像</p>
         </div>
-        
+
         <div v-if="error" class="error-message">
           <p>{{ error }}</p>
           <button class="btn-primary" @click="fetchUserInfo">重新加载</button>
         </div>
-        
+
         <div v-else-if="isLoading" class="loading-state">
           <div class="spinner"></div>
           <p>加载中...</p>
         </div>
-        
+
         <div v-else class="edit-profile-form">
           <AvatarUploader
             :avatar="formData.avatar"
             @upload="handleAvatarUpload"
           />
-          
+
           <BackgroundEditor
             :cover-image="formData.coverImage"
             @upload="handleCoverUpload"
           />
-          
+
           <ProfileForm
             :username.sync="formData.username"
             :bio.sync="formData.bio"
@@ -36,7 +36,7 @@
             :website.sync="formData.website"
             :occupation.sync="formData.occupation"
           />
-          
+
           <FormActions
             :is-submitting="isSubmitting"
             @cancel="cancelEdit"
@@ -45,27 +45,26 @@
         </div>
       </div>
     </main>
-    
+
     <MobileBottomNav />
   </div>
 </template>
 
 <script>
-import MobileBottomNav from './MobileBottomNav.vue';
-import AvatarUploader from './AvatarUploader.vue';
-import BackgroundEditor from './BackgroundEditor.vue';
-import ProfileForm from './ProfileForm.vue';
-import FormActions from './FormActions.vue';
-import auth from '../utils/auth';
+import MobileBottomNav from "./MobileBottomNav.vue";
+import AvatarUploader from "./my-profile/AvatarUploader.vue";
+import BackgroundEditor from "./my-profile/BackgroundEditor.vue";
+import ProfileForm from "./my-profile/ProfileForm.vue";
+import FormActions from "./my-profile/FormActions.vue";
 
 export default {
-  name: 'EditProfile',
+  name: "EditProfile",
   components: {
     MobileBottomNav,
     AvatarUploader,
     BackgroundEditor,
     ProfileForm,
-    FormActions
+    FormActions,
   },
   data() {
     return {
@@ -73,195 +72,218 @@ export default {
       isSubmitting: false,
       error: null,
       formData: {
-        username: '',
-        avatar: '',
-        coverImage: '',
-        bio: '',
-        location: '',
-        website: '',
-        occupation: ''
-      }
+        username: "",
+        avatar: "",
+        coverImage: "",
+        bio: "",
+        location: "",
+        website: "",
+        occupation: "",
+      },
     };
   },
-  
+
   mounted() {
     this.fetchUserInfo();
   },
-  
+
   methods: {
     getAuthToken() {
-      return localStorage.getItem('token') || sessionStorage.getItem('token');
+      return localStorage.getItem("token") || sessionStorage.getItem("token");
     },
-    
+
     async fetchUserInfo() {
       this.isLoading = true;
       this.error = null;
-      
+
       try {
         const token = this.getAuthToken();
         if (!token) {
-          this.error = '请先登录';
+          this.error = "请先登录";
           this.isLoading = false;
           return;
         }
-        
-        const meData = await this.$http.get('/api/auth/me');
-        
+
+        const meData = await this.$http.get("/api/auth/me");
+
         if (!meData.data) {
-          this.error = '获取用户信息失败';
+          this.error = "获取用户信息失败";
           this.isLoading = false;
           return;
         }
-        
+
         const userData = meData.data;
         const userId = userData.id || userData._id;
-        
+
         if (!userId) {
-          this.error = '用户信息不完整';
+          this.error = "用户信息不完整";
           this.isLoading = false;
           return;
         }
-        
+
         const userResponseData = await this.$http.get(`/api/users/${userId}`);
-        
-        if (userResponseData.success && userResponseData.data && userResponseData.data.user) {
-          const detailedUser = userResponseData.data.user;
+
+        // ✅ 修复：从 data.user 里取！
+        if (userResponseData.success && userResponseData.data) {
+          const responseData = userResponseData.data;
+          const detailedUser = responseData.user || responseData;  // 兼容两种情况
           const profile = detailedUser.profile || {};
           
+          // 🐾 调试信息：打印获取到的数据
+          console.log("📥 获取到的完整响应:", userResponseData);
+          console.log("📥 获取到的用户详细信息:", detailedUser);
+          console.log("📥 获取到的 profile:", profile);
+          console.log("📥 avatar:", profile.avatar);
+          console.log("📥 coverImage:", profile.coverImage);
+
           this.formData = {
-            username: detailedUser.username || '',
-            avatar: profile.avatar || '',
-            coverImage: profile.coverImage || '',
-            bio: profile.bio || '',
-            location: profile.location || '',
-            website: profile.website || '',
-            occupation: profile.occupation || ''
+            username: detailedUser.username || "",
+            avatar: profile.avatar || "",
+            coverImage: profile.coverImage || "",
+            bio: profile.bio || "",
+            location: profile.location || "",
+            website: profile.website || "",
+            occupation: profile.occupation || "",
           };
+          
+          // 🐾 调试信息：打印 formData
+          console.log("📥 formData:", this.formData);
         } else {
-          this.error = '获取用户详细信息失败';
+          this.error = "获取用户详细信息失败";
         }
       } catch (error) {
-        console.error('获取用户信息失败:', error);
-        this.error = error.message || '获取用户信息失败';
+        console.error("获取用户信息失败:", error);
+        this.error = error.message || "获取用户信息失败";
       } finally {
         this.isLoading = false;
       }
     },
-    
+
     async handleAvatarUpload(event) {
       const file = event.target.files[0];
       if (file) {
         const formData = new FormData();
-        formData.append('avatar', file);
-        
+        formData.append("avatar", file);
+
         this.isSubmitting = true;
-        
+
         try {
-          const data = await this.$http.post('/api/users/upload-avatar', formData);
-          
+          const data = await this.$http.post(
+            "/api/users/upload-avatar",
+            formData,
+          );
+
           if (data.success) {
             this.formData.avatar = data.data.url;
-            this.showNotification('头像上传成功！', 'success');
+            this.showNotification("头像上传成功！", "success");
           } else {
-            this.showNotification(`头像上传失败: ${data.message}`, 'error');
+            this.showNotification(`头像上传失败: ${data.message}`, "error");
           }
         } catch (error) {
-          console.error('上传头像失败:', error);
-          this.showNotification('上传头像失败，请稍后重试', 'error');
+          console.error("上传头像失败:", error);
+          this.showNotification("上传头像失败，请稍后重试", "error");
         } finally {
           this.isSubmitting = false;
         }
       }
     },
-    
+
     async handleCoverUpload(event) {
       const file = event.target.files[0];
       if (file) {
         const formData = new FormData();
-        formData.append('coverImage', file);
-        
+        formData.append("coverImage", file);
+
         this.isSubmitting = true;
-        
+
         try {
-          const data = await this.$http.post('/api/users/upload-cover', formData);
-          
+          const data = await this.$http.post(
+            "/api/users/upload-cover",
+            formData,
+          );
+
           if (data.success) {
             this.formData.coverImage = data.data.url;
-            this.showNotification('背景图上传成功！', 'success');
+            this.showNotification("背景图上传成功！", "success");
           } else {
-            this.showNotification(`背景图上传失败: ${data.message}`, 'error');
+            this.showNotification(`背景图上传失败: ${data.message}`, "error");
           }
         } catch (error) {
-          console.error('上传背景图失败:', error);
-          this.showNotification('上传背景图失败，请稍后重试', 'error');
+          console.error("上传背景图失败:", error);
+          this.showNotification("上传背景图失败，请稍后重试", "error");
         } finally {
           this.isSubmitting = false;
         }
       }
     },
-    
+
     async saveChanges() {
       if (!this.formData.username.trim()) {
-        this.showNotification('请输入用户名', 'warning');
+        this.showNotification("请输入用户名", "warning");
         return;
       }
-      
+
       this.isSubmitting = true;
-      
+
       try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
         if (!token) {
-          this.showNotification('请先登录', 'warning');
+          this.showNotification("请先登录", "warning");
           this.isSubmitting = false;
-          this.$router.push('/login');
+          this.$router.push("/login");
           return;
         }
-        
+
         const userData = {
           bio: this.formData.bio,
           location: this.formData.location,
           website: this.formData.website,
           occupation: this.formData.occupation,
-          coverImage: this.formData.coverImage
+          coverImage: this.formData.coverImage,
         };
-        
-        const data = await this.$http.put(`/api/users/${this.getUserId()}`, userData);
-        
+
+        const data = await this.$http.put(
+          `/api/users/${this.getUserId()}`,
+          userData,
+        );
+
         if (data.success) {
-          this.showNotification('个人资料更新成功！', 'success');
-          this.$router.push('/my-profile');
+          this.showNotification("个人资料更新成功！", "success");
+          this.$router.push("/my-profile");
         } else {
-          this.showNotification(`更新失败: ${data.message}`, 'error');
+          this.showNotification(`更新失败: ${data.message}`, "error");
         }
       } catch (error) {
-        console.error('更新个人资料失败:', error);
-        this.showNotification('更新失败，请稍后重试', 'error');
+        console.error("更新个人资料失败:", error);
+        this.showNotification("更新失败，请稍后重试", "error");
       } finally {
         this.isSubmitting = false;
       }
     },
-    
+
     cancelEdit() {
-      this.$router.push('/my-profile');
+      this.$router.push("/my-profile");
     },
-    
+
     getUserId() {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
       if (token) {
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
+          const payload = JSON.parse(atob(token.split(".")[1]));
           return payload.id || payload._id;
         } catch (error) {
-          console.error('解析token失败:', error);
-          return '';
+          console.error("解析token失败:", error);
+          return "";
         }
       }
-      return '';
+      return "";
     },
-    
+
     async updateAuthState() {
       try {
-        const response = await this.$http.get('/auth/me');
+        const response = await this.$http.get("/auth/me");
         if (response.success && response.data) {
           const userData = response.data;
           const user = {
@@ -270,19 +292,23 @@ export default {
             email: userData.email,
             role: userData.role,
             avatar: userData.profile?.avatar,
-            profile: userData.profile
+            profile: userData.profile,
           };
-          
-          const token = auth.getToken();
-          auth.loginSuccess(user, token, localStorage.getItem('token') !== null);
+
+          const token = this.$store.getters.getToken;
+          this.$store.dispatch('loginSuccess', {
+            user,
+            token,
+            rememberMe: localStorage.getItem("token") !== null
+          });
         }
       } catch (error) {
-        console.warn('更新认证状态失败（非致命错误）:', error.message);
+        console.warn("更新认证状态失败（非致命错误）:", error.message);
       }
     },
-    
-    showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
+
+    showNotification(message, type = "info") {
+      const notification = document.createElement("div");
       notification.className = `notification notification-${type}`;
       notification.innerHTML = `
         <div class="notification-content">
@@ -290,35 +316,35 @@ export default {
           <span>${message}</span>
         </div>
       `;
-      
+
       document.body.appendChild(notification);
-      
+
       setTimeout(() => {
-        notification.classList.add('show');
+        notification.classList.add("show");
       }, 10);
-      
+
       setTimeout(() => {
-        notification.classList.remove('show');
+        notification.classList.remove("show");
         setTimeout(() => {
           document.body.removeChild(notification);
         }, 300);
       }, 3000);
     },
-    
+
     getNotificationIcon(type) {
       switch (type) {
-        case 'success':
-          return '✅';
-        case 'error':
-          return '❌';
-        case 'warning':
-          return '⚠️';
+        case "success":
+          return "✅";
+        case "error":
+          return "❌";
+        case "warning":
+          return "⚠️";
         default:
-          return 'ℹ️';
+          return "ℹ️";
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -390,8 +416,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {

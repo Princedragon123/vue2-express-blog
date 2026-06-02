@@ -46,7 +46,7 @@
             :aria-controls="`category-panel-${index}`"
             :aria-label="category.label"
           >
-            <i :class="category.icon" aria-hidden="true"></i>
+            <svg-icon :name="category.icon" :size="16" aria-hidden="true"></svg-icon>
             <span class="blog-category-nav__text">{{ category.label }}</span>
           </button>
         </li>
@@ -65,14 +65,14 @@
  * 分类配置（常量，不会改变）
  */
 const CATEGORIES = [
-  { value: 'all', label: '全部', icon: 'fa fa-home' },
-  { value: 'short', label: '短文章', icon: 'fa fa-picture-o', type: 'articleType' },
-  { value: 'long', label: '长文章', icon: 'fa fa-file-text', type: 'articleType' },
-  { value: 'game', label: '游戏攻略', icon: 'fa fa-gamepad' },
-  { value: 'travel', label: '旅游攻略', icon: 'fa fa-plane' },
-  { value: 'food', label: '美食攻略', icon: 'fa fa-cutlery' },
-  { value: 'tech', label: '科技攻略', icon: 'fa fa-laptop' },
-  { value: 'fitness', label: '健身攻略', icon: 'fa fa-heartbeat' }
+  { value: 'all', label: '全部', icon: 'home' },
+  { value: 'short', label: '短文章', icon: 'image', type: 'articleType' },
+  { value: 'long', label: '长文章', icon: 'fileText', type: 'articleType' },
+  { value: 'game', label: '游戏攻略', icon: 'gamepad' },
+  { value: 'travel', label: '旅游攻略', icon: 'plane' },
+  { value: 'food', label: '美食攻略', icon: 'cutlery' },
+  { value: 'tech', label: '科技攻略', icon: 'laptop' },
+  { value: 'fitness', label: '健身攻略', icon: 'heartbeat' }
 ];
 
 export default {

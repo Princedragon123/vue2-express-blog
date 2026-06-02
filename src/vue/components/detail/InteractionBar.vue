@@ -2,19 +2,19 @@
   <div class="interaction-section">
     <div class="interaction-buttons">
       <button class="interaction-btn" @click="$emit('like')">
-        <i class="fas fa-heart"></i>
+        <svg-icon name="heart" :size="18"></svg-icon>
         <span>{{ likes }}</span>
       </button>
       <button class="interaction-btn">
-        <i class="fas fa-comment"></i>
+        <svg-icon name="comment" :size="18"></svg-icon>
         <span>{{ comments }}</span>
       </button>
       <button class="interaction-btn" @click="$emit('toggle-bookmark')">
-        <i :class="['fas', isBookmarked ? 'fa-bookmark' : 'fa-bookmark']"></i>
+        <svg-icon name="bookmark" :size="18"></svg-icon>
         <span>{{ bookmarks }}</span>
       </button>
       <button class="interaction-btn" @click="$emit('toggle-share')">
-        <i class="fas fa-share"></i>
+        <svg-icon name="share" :size="18"></svg-icon>
         <span>分享</span>
       </button>
 
@@ -22,28 +22,28 @@
         <div class="share-menu-header">
           <h4>分享到</h4>
           <button class="share-close-btn" @click="$emit('close-share')">
-            <i class="fas fa-times"></i>
+            <svg-icon name="close" :size="18"></svg-icon>
           </button>
         </div>
         <div class="share-options">
           <button class="share-option" @click="$emit('share', 'wechat')">
-            <i class="fab fa-weixin"></i>
+            <svg-icon name="wechat" :size="20"></svg-icon>
             <span>微信</span>
           </button>
           <button class="share-option" @click="$emit('share', 'weibo')">
-            <i class="fab fa-weibo"></i>
+            <svg-icon name="weibo" :size="20"></svg-icon>
             <span>微博</span>
           </button>
           <button class="share-option" @click="$emit('share', 'copy')">
-            <i class="fas fa-link"></i>
+            <svg-icon name="link" :size="20"></svg-icon>
             <span>复制链接</span>
           </button>
           <button class="share-option" @click="$emit('share', 'qq')">
-            <i class="fab fa-qq"></i>
+            <svg-icon name="qq" :size="20"></svg-icon>
             <span>QQ</span>
           </button>
           <button class="share-option" @click="$emit('share', 'private')">
-            <i class="fas fa-envelope"></i>
+            <svg-icon name="envelope" :size="20"></svg-icon>
             <span>私信分享</span>
           </button>
         </div>

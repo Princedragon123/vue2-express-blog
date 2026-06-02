@@ -101,7 +101,7 @@ const router = express.Router();
 
 // 导入通知控制器
 // 控制器包含具体的业务逻辑处理函数
-const notificationController = require('../controllers/notificationController');
+const notificationController = require('../controllers/NotificationController');
 
 // 导入身份验证中间件
 // authMiddleware 用于验证请求中的 JWT token

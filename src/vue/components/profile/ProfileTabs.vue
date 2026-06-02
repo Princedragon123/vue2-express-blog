@@ -4,10 +4,10 @@
       v-for="tab in tabs"
       :key="tab.name"
       class="profile-tabs__tab tab-item"
-      :class="{ 'tab-item--active': modelValue === tab.name }"
-      @click="$emit('update:modelValue', tab.name)"
+      :class="{ 'tab-item--active': value === tab.name }"
+      @click="$emit('input', tab.name)"
       role="tab"
-      :aria-selected="modelValue === tab.name"
+      :aria-selected="value === tab.name"
     >
       <span class="profile-tabs__icon" aria-hidden="true">{{ tab.icon }}</span>
       <span class="profile-tabs__label">{{ tab.label }}</span>
@@ -19,7 +19,7 @@
 export default {
   name: 'ProfileTabs',
   props: {
-    modelValue: {
+    value: {
       type: String,
       default: 'posts'
     },

@@ -25,12 +25,12 @@
         
         <div class="blogs-list-container">
           <div v-if="isLoading" class="loading">
-            <i class="fas fa-spinner fa-spin"></i>
+            <svg-icon name="spinner" :size="24" class-name="fa-spin"></svg-icon>
             <p>加载博客列表中...</p>
           </div>
           
           <div v-else-if="blogs.length === 0" class="empty-state">
-            <i class="fas fa-book"></i>
+            <svg-icon name="book" :size="48"></svg-icon>
             <h4>暂无博客</h4>
             <p>没有符合条件的博客文章</p>
           </div>
@@ -93,8 +93,6 @@ export default {
       selectedBlogs: [],
       selectAll: false,
       statusFilter: 'all',
-      categoryFilter: 'all',
-      categories: [],
       pagination: {
         currentPage: 1,
         pageSize: 10,
@@ -105,15 +103,10 @@ export default {
   
   created() {
     this.fetchBlogs();
-    this.loadCategories();
   },
   
   watch: {
     searchQuery() {
-      this.pagination.currentPage = 1;
-      this.fetchBlogs();
-    },
-    categoryFilter() {
       this.pagination.currentPage = 1;
       this.fetchBlogs();
     }
@@ -133,7 +126,6 @@ export default {
         const response = await this.$http.admin.getAllBlogs({
           page: this.pagination.currentPage,
           limit: this.pagination.pageSize,
-          category: this.categoryFilter !== 'all' ? this.categoryFilter : undefined,
           search: this.searchQuery || undefined
         });
         
@@ -153,17 +145,6 @@ export default {
         this.blogs = [];
       } finally {
         this.isLoading = false;
-      }
-    },
-    
-    async loadCategories() {
-      try {
-        const response = await this.$http.admin.getCategories();
-        if (response && response.success) {
-          this.categories = response.data || [];
-        }
-      } catch (error) {
-        console.error('加载分类失败:', error);
       }
     },
     

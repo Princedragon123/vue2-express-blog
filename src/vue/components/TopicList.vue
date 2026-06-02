@@ -23,7 +23,7 @@
             @input="searchTopics"
           >
           <button class="create-topic-btn" @click="showCreateModal = true">
-            <i class="fas fa-plus"></i> 创建话题
+            <svg-icon name="plus" :size="16"></svg-icon> 创建话题
           </button>
         </div>
         
@@ -65,13 +65,13 @@
               <p class="topic-description">{{ topic.description }}</p>
               <div class="topic-stats">
                 <span class="stat-item">
-            <i class="fa fa-user"></i>
-            {{ topic.followersCount }} 关注
-          </span>
-          <span class="stat-item">
-            <i class="fa fa-file-text"></i>
-            {{ topic.articlesCount }} 文章
-          </span>
+                  <svg-icon name="user" :size="14"></svg-icon>
+                  {{ topic.followersCount }} 关注
+                </span>
+                <span class="stat-item">
+                  <svg-icon name="fileText" :size="14"></svg-icon>
+                  {{ topic.articlesCount }} 文章
+                </span>
               </div>
             </div>
             <div class="topic-actions">
@@ -93,7 +93,7 @@
         
         <!-- 无话题提示 -->
         <div v-if="topics.length === 0" class="empty-state">
-          <i class="fas fa-comments"></i>
+          <svg-icon name="comments" :size="48"></svg-icon>
           <p>暂无话题</p>
         </div>
       </div>
@@ -104,7 +104,7 @@
           <div class="modal-header">
             <h2>创建新话题</h2>
             <button class="close-btn" @click="showCreateModal = false">
-              <i class="fas fa-times"></i>
+              <svg-icon name="close" :size="20"></svg-icon>
             </button>
           </div>
           <div class="modal-body">

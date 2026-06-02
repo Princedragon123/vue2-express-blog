@@ -270,14 +270,16 @@ const socketService = {
             });
             
             // ========================================================
-            // 监听用户断开连接事件
+            // 监听断开连接事件（基础层 - 职责：用户在线状态管理）
             // ========================================================
-            // 【触发时机】
-            // 1. 用户关闭浏览器/标签页
-            // 2. 用户网络断开
-            // 3. 用户主动调用 socket.disconnect()
-            // 4. 服务器调用 socket.disconnect()
-            // 
+            // 【职责范围】
+            // - 清理 connectedUsers 映射表（影响私聊、消息推送）
+            // - 不处理游戏房间逻辑（由 chessService 负责）
+            //
+            // 【执行顺序】Socket.IO 保证按注册顺序触发
+            // 1. 先执行这里（清理在线状态）
+            // 2. 再执行 chessService.handleDisconnect（处理游戏房间）
+            //
             // 【面试常问】
             // Q: 如何处理用户异常断开？
             // A: 监听disconnect事件，清理连接映射
@@ -287,7 +289,7 @@ const socketService = {
             // ========================================================
             socket.on('disconnect', () => {
                 console.log(`[WebSocket] 用户断开连接: ${socket.userId}`);
-                
+
                 // 从映射表中删除该用户
                 // 【重要】不删除会导致：
                 // 1. 内存泄漏
@@ -295,8 +297,9 @@ const socketService = {
                 // 3. 可能向已断开的用户推送消息
                 if (socket.userId) {
                     connectedUsers.delete(socket.userId);
+                    console.log(`[WebSocket] 用户 ${socket.userId} 已从在线列表移除`);
                 }
-                
+
                 console.log(`[WebSocket] 当前在线用户数: ${connectedUsers.size}`);
             });
         });
@@ -452,4 +455,7 @@ const socketService = {
 // 【设计模式】单例模式
 // 整个应用只有一个socketService实例
 // 所有模块共享同一个WebSocket连接
+
+// 导出 io 实例供其他服务复用（如 chessService）
 module.exports = socketService;
+module.exports.io = socketService.io;

@@ -106,33 +106,16 @@ class SocketService {
   // 【注意】构造函数只执行一次（因为是单例）
   // ============================================================
   constructor() {
-    // socket实例（连接成功后赋值）
-    // 【类型】Socket.io客户端实例
-    // 【初始值】null
+
     this.socket = null;
-    
-    // 连接状态
-    // 【类型】boolean
-    // 【用途】判断是否可以发送消息
     this.isConnected = false;
-    
-    // ========================================================
-    // 重连相关配置
-    // ========================================================
     // 当前重连次数
-    this.reconnectAttempts = 0;
-    
+    this.reconnectAttempts = 0;  
     // 最大重连次数
-    // 【作用】防止无限重连
     this.maxReconnectAttempts = 5;
-    
     // 重连间隔（毫秒）
-    // 【作用】每次重连之间的等待时间
     this.reconnectDelay = 1000;
-    
     // 当前登录的用户ID
-    // 【作用】重连后自动重新登录
-    // 【存储时机】调用login()方法时
     this.currentUserId = null;
   }
   
@@ -143,7 +126,7 @@ class SocketService {
   // 
   // 【参数说明】
   // url: WebSocket服务器地址
-  // 默认值：'http://localhost:3001'
+  // 默认值：'http://8.148.151.114:3001'
   // 
   // 【返回值】
   // Promise - 连接成功resolve，失败reject
@@ -165,26 +148,18 @@ class SocketService {
   // Q: reconnection: true是什么意思？
   // A: 启用socket.io的自动重连功能
   // ============================================================
-  connect(url = 'http://localhost:3001') {
+  connect(url = '') {
+    const socketUrl = url || (window.location.protocol + '//' + window.location.host);
     return new Promise((resolve, reject) => {
       try {
-        // ========================================================
-        // 创建socket连接
-        // ========================================================
-        // io(url, options)
-        // url: 服务器地址
-        // options: 配置选项
-        this.socket = io(url, {
+        this.socket = io(socketUrl, {
           // 是否自动重连
           // 【重要】启用后，断线会自动尝试重连
-          reconnection: true,
-          
+          reconnection: true,       
           // 最大重连次数
-          reconnectionAttempts: this.maxReconnectAttempts,
-          
+          reconnectionAttempts: this.maxReconnectAttempts,   
           // 重连间隔（毫秒）
-          reconnectionDelay: this.reconnectDelay,
-          
+          reconnectionDelay: this.reconnectDelay,    
           // 连接超时时间（毫秒）
           // 【作用】连接超过20秒未成功则超时
           timeout: 20000
@@ -205,14 +180,6 @@ class SocketService {
           resolve(); // Promise成功
         });
         
-        // ========================================================
-        // 监听连接错误事件
-        // ========================================================
-        // 【触发时机】连接失败
-        // 【处理】
-        // 1. 更新连接状态
-        // 2. reject Promise
-        // ========================================================
         this.socket.on('connect_error', (error) => {
           console.error('[Socket] 连接错误:', error);
           this.isConnected = false;

@@ -1,614 +1,104 @@
-<!-- 
-=============================================================================
-  App.vue - 根组件
-=============================================================================
-
-【组件职责】
-  这是整个应用的根组件，负责：
-  1. 作为所有页面的容器
-  2. 管理全局布局（顶部导航、底部导航）
-  3. 路由视图渲染
-  4. 认证状态管理
-
-【学习重点】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │  1. 根组件的作用：所有页面的容器                                          │
-  │  2. router-view：路由视图出口                                            │
-  │  3. 条件渲染：v-if 控制导航栏显示                                        │
-  │  4. 认证状态管理：auth 工具的使用                                        │
-  │  5. 路由监听：watch 监听 $route 变化                                     │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【组件结构】
-  ┌─────────────────────────────────────────┐
-  │  TopNavbar（顶部导航栏）                  │
-  ├─────────────────────────────────────────┤
-  │                                         │
-  │  router-view（路由视图出口）              │
-  │  - 这里渲染当前路由对应的组件              │
-  │                                         │
-  ├─────────────────────────────────────────┤
-  │  MobileBottomNav（移动端底部导航）        │
-  └─────────────────────────────────────────┘
-
-=============================================================================
-  JavaScript 知识点
-=============================================================================
-
-【1. ES6 模块化 import/export】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【导入方式】                                                            │
-  │  import Vue from 'vue'              // 导入默认导出                     │
-  │  import { ref, reactive } from 'vue' // 导入命名导出                    │
-  │  import * as utils from './utils'   // 导入全部                        │
-  │  import './styles.css'              // 只执行，不导入                   │
-  │                                                                         │
-  │  【导出方式】                                                            │
-  │  export default { ... }             // 默认导出（一个文件只能有一个）   │
-  │  export const name = 'xxx'          // 命名导出（可以有多个）           │
-  │  export { a, b, c }                 // 批量导出                         │
-  │  export { a as alias }              // 重命名导出                       │
-  │                                                                         │
-  │  【面试题】Q: export default 和 export 有什么区别？                      │
-  │  A: 1. export default 一个文件只能有一个，export 可以有多个             │
-  │     2. import 时，default 不需要{}，命名导出需要{}                      │
-  │     3. export default 可以匿名，export 必须有名字                       │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【2. async/await 异步编程】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【基本语法】                                                            │
-  │  async function getData() {                                             │
-  │    try {                                                                │
-  │      const response = await fetch('/api/data')                         │
-  │      const data = await response.json()                                │
-  │      return data                                                        │
-  │    } catch (error) {                                                    │
-  │      console.error(error)                                               │
-  │    }                                                                    │
-  │  }                                                                      │
-  │                                                                         │
-  │  【async】声明异步函数，自动返回 Promise                                 │
-  │  【await】等待 Promise 完成，只能在 async 函数内使用                     │
-  │                                                                         │
-  │  【面试题】Q: async/await 相比 Promise.then 有什么优势？                 │
-  │  A: 1. 代码更像是同步代码，可读性更好                                   │
-  │     2. 错误处理更统一（用 try/catch）                                   │
-  │     3. 调试时断点更清晰                                                 │
-  │                                                                         │
-  │  【面试题】Q: await 后面不是 Promise 会怎样？                            │
-  │  A: 会被自动包装成 Promise.resolve(value)                               │
-  │     await 123 等价于 await Promise.resolve(123)                        │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【3. 箭头函数】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【语法】                                                                │
-  │  const fn = (a, b) => a + b            // 单行，自动 return            │
-  │  const fn = (a, b) => { return a + b } // 多行，需要显式 return        │
-  │  const fn = a => a * 2                 // 单参数可省略括号              │
-  │  const fn = () => 'hello'              // 无参数需要空括号              │
-  │                                                                         │
-  │  【特点】                                                                │
-  │  1. 没有 this，继承外层作用域的 this                                    │
-  │  2. 没有 arguments 对象                                                 │
-  │  3. 不能作为构造函数（不能 new）                                        │
-  │                                                                         │
-  │  【面试题】Q: 箭头函数和普通函数的 this 有什么区别？                      │
-  │  A: 普通函数的 this 在调用时确定，箭头函数的 this 在定义时确定          │
-  │     箭头函数没有自己的 this，会捕获定义时外层的 this                    │
-  │                                                                         │
-  │  【面试题】Q: 什么时候不能用箭头函数？                                    │
-  │  A: 1. 对象方法中（this 会指向外层而不是对象）                          │
-  │     2. 构造函数中（不能 new）                                           │
-  │     3. 需要 arguments 时                                                │
-  │     4. Vue 的生命周期和 methods 中（需要组件实例的 this）               │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【4. 解构赋值】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【对象解构】                                                            │
-  │  const { name, age } = user                  // 基本用法               │
-  │  const { name: userName } = user             // 重命名                 │
-  │  const { name = 'default' } = user           // 默认值                 │
-  │  const { profile: { avatar } } = user        // 嵌套解构               │
-  │                                                                         │
-  │  【数组解构】                                                            │
-  │  const [first, second] = arr                // 基本用法                │
-  │  const [first, ...rest] = arr               // 剩余元素                │
-  │  const [, , third] = arr                    // 跳过元素                │
-  │                                                                         │
-  │  【函数参数解构】                                                        │
-  │  function fn({ name, age = 18 }) { ... }     // 参数解构+默认值        │
-  │                                                                         │
-  │  【面试题】Q: 如何交换两个变量的值？                                      │
-  │  A: [a, b] = [b, a]  // 利用数组解构                                    │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【5. 可选链操作符 ?.】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【用法】                                                                │
-  │  user?.name           // 如果 user 是 undefined/null，返回 undefined   │
-  │  user.profile?.avatar // 链式调用，任一为空则返回 undefined             │
-  │  user.getName?.()     // 方法调用，方法不存在则返回 undefined           │
-  │  arr?.[0]             // 数组访问                                       │
-  │                                                                         │
-  │  【好处】避免 "Cannot read property 'x' of undefined" 错误              │
-  │                                                                         │
-  │  【面试题】Q: user && user.profile && user.profile.avatar 的简化写法？   │
-  │  A: user?.profile?.avatar                                              │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-=============================================================================
-  HTML 知识点
-=============================================================================
-
-【1. HTML5 语义化标签】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【常用语义标签】                                                        │
-  │  <header>   页面或区块的头部                                            │
-  │  <nav>      导航区域                                                    │
-  │  <main>     页面主要内容（一个页面只能有一个）                           │
-  │  <article>  独立的内容块（如文章、帖子）                                 │
-  │  <section>  文档中的节                                                  │
-  │  <aside>    侧边栏                                                      │
-  │  <footer>   页面或区块的底部                                            │
-  │                                                                         │
-  │  【面试题】Q: 为什么要使用语义化标签？                                    │
-  │  A: 1. 对开发者友好：代码结构清晰，易于维护                             │
-  │     2. 对搜索引擎友好：SEO 优化                                         │
-  │     3. 对屏幕阅读器友好：无障碍访问                                     │
-  │     4. 比 div 更有语义，便于机器解析                                    │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【2. data-* 自定义属性】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【HTML 中定义】                                                         │
-  │  <div data-user-id="123" data-role="admin">...</div>                   │
-  │                                                                         │
-  │  【JavaScript 中访问】                                                   │
-  │  const el = document.querySelector('div')                              │
-  │  el.dataset.userId    // "123"（自动转为驼峰）                          │
-  │  el.dataset.role      // "admin"                                       │
-  │                                                                         │
-  │  【Vue 中使用】                                                          │
-  │  <div :data-id="userId">...</div>                                      │
-  │                                                                         │
-  │  【面试题】Q: data-* 属性有什么用？                                       │
-  │  A: 在 HTML 元素上存储自定义数据，通过 JS 的 dataset API 访问           │
-  │     常用于存储与元素相关的数据，而不需要额外的 JS 变量                   │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【3. Vue 模板指令】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【v-if vs v-show】                                                      │
-  │  v-if   条件为 false 时，元素不渲染到 DOM                               │
-  │  v-show 条件为 false 时，元素仍在 DOM，只是 display: none               │
-  │                                                                         │
-  │  【使用场景】                                                            │
-  │  v-if   运行时条件很少改变，或初始条件为 false                          │
-  │  v-show 需要频繁切换显示/隐藏                                           │
-  │                                                                         │
-  │  【面试题】Q: v-if 和 v-show 的区别？                                    │
-  │  A: v-if 是真正的条件渲染，会销毁和重建 DOM                             │
-  │     v-show 只是 CSS 切换，DOM 始终存在                                  │
-  │     v-if 有更高的切换开销，v-show 有更高的初始渲染开销                  │
-  │                                                                         │
-  │  【v-for 的 key】                                                        │
-  │  <div v-for="item in list" :key="item.id">                             │
-  │                                                                         │
-  │  【面试题】Q: 为什么 v-for 要加 key？                                    │
-  │  A: 1. Vue 使用 diff 算法比较新旧虚拟 DOM                               │
-  │     2. key 帮助 Vue 识别节点，实现高效的复用和重排序                    │
-  │     3. 不用 key 或用 index 作为 key 可能导致状态错乱                    │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-=============================================================================
-  CSS 知识点
-=============================================================================
-
-【1. Flexbox 弹性布局】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【容器属性】                                                            │
-  │  display: flex;              // 开启 flex 布局                          │
-  │  flex-direction: row/column; // 主轴方向                                │
-  │  justify-content: center;    // 主轴对齐                                │
-  │  align-items: center;        // 交叉轴对齐                              │
-  │  flex-wrap: wrap;            // 换行                                    │
-  │  gap: 10px;                  // 子元素间距                              │
-  │                                                                         │
-  │  【子元素属性】                                                          │
-  │  flex: 1;                    // 占据剩余空间                            │
-  │  flex-grow: 1;               // 放大比例                                │
-  │  flex-shrink: 0;             // 不缩小                                  │
-  │  align-self: flex-end;       // 单独设置对齐                            │
-  │                                                                         │
-  │  【常见布局】                                                            │
-  │  水平垂直居中：                                                          │
-  │  .container {                                                          │
-  │    display: flex;                                                      │
-  │    justify-content: center;                                            │
-  │    align-items: center;                                                │
-  │  }                                                                     │
-  │                                                                         │
-  │  【面试题】Q: flex: 1 是什么意思？                                       │
-  │  A: flex: 1 是 flex-grow: 1; flex-shrink: 1; flex-basis: 0%; 的简写    │
-  │     表示元素会等比例分配剩余空间                                         │
-  │                                                                         │
-  │  【面试题】Q: 如何实现三栏布局（左固定、右固定、中间自适应）？            │
-  │  A: .container { display: flex; }                                      │
-  │     .left { width: 200px; }                                            │
-  │     .center { flex: 1; }                                               │
-  │     .right { width: 200px; }                                           │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【2. 响应式设计】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【媒体查询】                                                            │
-  │  @media (min-width: 768px) { ... }   // 宽度 >= 768px 时应用           │
-  │  @media (max-width: 767px) { ... }   // 宽度 <= 767px 时应用           │
-  │                                                                         │
-  │  【移动优先 vs 桌面优先】                                                 │
-  │  移动优先：先写移动端样式，用 min-width 逐步增强                         │
-  │  桌面优先：先写桌面端样式，用 max-width 逐步降级                         │
-  │                                                                         │
-  │  【常用断点】                                                            │
-  │  手机：< 768px                                                          │
-  │  平板：768px - 1024px                                                   │
-  │  桌面：> 1024px                                                         │
-  │                                                                         │
-  │  【面试题】Q: 移动端适配方案有哪些？                                      │
-  │  A: 1. 媒体查询 @media                                                  │
-  │     2. rem + 动态设置 html font-size                                    │
-  │     3. vw/vh 视口单位                                                  │
-  │     4. flex 弹性布局                                                   │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【3. CSS 选择器优先级】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【优先级计算】                                                          │
-  │  !important         最高优先级（慎用）                                  │
-  │  内联样式 style=""   1000                                              │
-  │  ID 选择器 #id       100                                               │
-  │  类选择器 .class     10                                                │
-  │  属性选择器 [attr]   10                                                │
-  │  伪类 :hover         10                                                │
-  │  元素选择器 div      1                                                 │
-  │  伪元素 ::before     1                                                 │
-  │  通配符 *            0                                                 │
-  │                                                                         │
-  │  【面试题】Q: 以下选择器优先级如何？                                      │
-  │  A: #app .container div.item:hover                                     │
-  │     = 100 (ID) + 10 (类) + 1 (元素) + 10 (类) + 10 (伪类)              │
-  │     = 131                                                              │
-  │                                                                         │
-  │  【面试题】Q: 如何覆盖第三方组件的样式？                                  │
-  │  A: 1. 使用更具体的选择器                                               │
-  │     2. 使用 !important（不推荐）                                        │
-  │     3. 使用 ::v-deep（Vue scoped 样式穿透）                            │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【4. BFC 块级格式化上下文】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【什么是 BFC？】                                                        │
-  │  BFC 是一个独立的渲染区域，内部元素不会影响外部元素                      │
-  │                                                                         │
-  │  【如何创建 BFC？】                                                      │
-  │  1. float 不为 none                                                    │
-  │  2. position 为 absolute 或 fixed                                      │
-  │  3. display 为 flex/grid/inline-block                                  │
-  │  4. overflow 不为 visible                                              │
-  │                                                                         │
-  │  【BFC 的作用】                                                          │
-  │  1. 清除浮动：父元素设置 overflow: hidden                               │
-  │  2. 防止 margin 重叠：创建新的 BFC                                      │
-  │  3. 阻止元素被浮动元素覆盖                                              │
-  │                                                                         │
-  │  【面试题】Q: 如何清除浮动？                                             │
-  │  A: 1. 父元素添加 overflow: hidden（创建 BFC）                          │
-  │     2. 父元素添加 ::after { content: ''; display: table; clear: both; }│
-  │     3. 父元素添加 display: flow-root（专门用于清除浮动）               │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-=============================================================================
-  Vue 知识点
-=============================================================================
-
-【1. Vue 生命周期】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【生命周期钩子】                                                        │
-  │  beforeCreate  实例初始化之后，数据观测和事件配置之前                   │
-  │  created       实例创建完成，数据观测、属性和方法已配置                 │
-  │  beforeMount   挂载开始之前，render 函数首次被调用                      │
-  │  mounted       挂载完成，DOM 已生成，可以访问 this.$el                  │
-  │  beforeUpdate  数据更新时，DOM 重新渲染之前                             │
-  │  updated       数据更新后，DOM 重新渲染完成                             │
-  │  beforeDestroy 实例销毁之前，实例仍然可用                               │
-  │  destroyed     实例销毁后，所有事件监听和子组件已销毁                   │
-  │                                                                         │
-  │  【面试题】Q: created 和 mounted 的区别？                                │
-  │  A: created 时 DOM 还没渲染，不能访问 this.$el                         │
-  │     mounted 时 DOM 已渲染完成，可以操作 DOM                            │
-  │     通常在 created 发起异步请求，在 mounted 操作 DOM                    │
-  │                                                                         │
-  │  【面试题】Q: 在哪个生命周期发起数据请求？                                │
-  │  A: 推荐在 created 中发起：                                            │
-  │     1. 更早获取数据，减少加载时间                                       │
-  │     2. SSR 场景下 created 可用而 mounted 不可用                        │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-【2. computed vs watch vs methods】
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │                                                                         │
-  │  【computed 计算属性】                                                   │
-  │  - 基于依赖自动计算                                                     │
-  │  - 有缓存，依赖不变就不重新计算                                         │
-  │  - 必须有返回值                                                         │
-  │  - 适合：派生数据、格式化显示                                           │
-  │                                                                         │
-  │  【watch 监听器】                                                        │
-  │  - 监听数据变化执行副作用                                               │
-  │  - 无缓存                                                               │
-  │  - 可以是异步操作                                                       │
-  │  - 适合：异步操作、复杂逻辑                                             │
-  │                                                                         │
-  │  【methods 方法】                                                        │
-  │  - 每次调用都执行                                                       │
-  │  - 无缓存                                                               │
-  │  - 适合：事件处理、需要传参的场景                                       │
-  │                                                                         │
-  │  【面试题】Q: computed 和 methods 的区别？                               │
-  │  A: computed 有缓存，依赖不变时直接返回缓存结果                         │
-  │     methods 每次调用都重新执行                                          │
-  │     多次使用时 computed 性能更好                                        │
-  │                                                                         │
-  └─────────────────────────────────────────────────────────────────────────┘
-
-=============================================================================
-  面试常问
-=============================================================================
-
-  Q: App.vue 和其他组件有什么区别？
-  A: App.vue 是根组件，所有其他组件都是它的子组件。
-     它只初始化一次，整个应用生命周期都存在。
-
-  Q: router-view 是什么？
-  A: 路由视图出口，根据当前 URL 渲染对应的组件。
-     例如：/login 时渲染 Login.vue，/blog 时渲染 Blog.vue。
-
-  Q: 为什么根组件的 data 可以是对象，子组件必须是函数？
-  A: 根组件只会实例化一次，不存在数据共享问题。
-     子组件可能被多次使用，函数形式确保每个实例有独立的数据副本。
-
-  Q: Vue 组件间通信方式有哪些？
-  A: 1. props / $emit（父子组件）
-     2. provide / inject（跨层级）
-     3. $refs（父访问子）
-     4. $parent / $children（父子访问）
-     5. EventBus（任意组件）
-     6. Vuex（全局状态管理）
-     7. $attrs / $listeners（属性透传）
-
-=============================================================================
--->
 <template>
-  <div class="app-container">
-    <!-- 
-      顶部导航栏 
-      【v-if 条件】不在登录、注册、忘记密码页面显示
-      【原因】这些页面需要独立的简洁布局
-    -->
-    <TopNavbar v-if="!isLoginOrRegisterPage" />
+  <div class="app-container" :class="{ 'full-screen-container': isYmtPage }">
+  
+    <TopNavbar v-if="!isLoginOrRegisterPage && !isYmtPage" />
     
-    <!-- 
-      路由视图出口
-      【作用】根据当前 URL 渲染对应的页面组件
-      【原理】Vue Router 会匹配路由配置，渲染对应组件
-    -->
-    <main>
+    <main :class="{ 'full-screen': isYmtPage }">
       <router-view></router-view>
     </main>
     
-    <!-- 
-      移动端底部导航栏
-      【v-if 条件】仅在用户登录后显示
-      【作用】移动端快捷导航
-    -->
-    <MobileBottomNav v-if="isLoggedIn" />
+    <MobileBottomNav v-if="isLoggedIn && !isYmtPage" />
+    
+    <MusicPlayer v-if="isLoggedIn && !isYmtPage" />
   </div>
 </template>
 
 <script>
-// ============================================================
-// 组件导入区
-// ============================================================
-// 【学习重点】ES6 模块导入
-// 
-// import：从其他文件导入组件/工具
-// 相对路径：./ 表示当前目录，../ 表示上级目录
-// ============================================================
-import TopNavbar from './components/TopNavbar.vue'    // 顶部导航栏组件
-import MobileBottomNav from './components/MobileBottomNav.vue' // 移动端底部导航
-import auth from './utils/auth'  // 认证状态管理工具
+
+import TopNavbar from './components/TopNavbar.vue'
+import MobileBottomNav from './components/MobileBottomNav.vue'
+import MusicPlayer from './components/music.vue'
 
 export default {
-  name: 'App',  // 组件名称（用于 Vue DevTools 调试）
-  
-  // ============================================================
-  // components 注册区
-  // ============================================================
-  // 【学习重点】局部组件注册
-  // 
-  // 注册后的组件可以在 template 中直接使用
-  // 如：<TopNavbar /> 而不需要写完整路径
-  // ============================================================
+  name: 'App',  
   components: {
     TopNavbar,
-    MobileBottomNav
+    MobileBottomNav,
+    MusicPlayer
   },
   
-  // ============================================================
-  // data 数据区
-  // ============================================================
-  // 【学习重点】根组件的 data
-  // 
-  // 根组件的 data 可以是对象（因为只会初始化一次）
-  // 子组件的 data 必须是函数（防止数据共享）
-  // ============================================================
   data() {
     return {
-      // 根组件目前没有需要存储的本地数据
-      // 所有状态都通过 auth 工具管理
     }
   },
   
-  // ============================================================
-  // computed 计算属性区
-  // ============================================================
-  // 【学习重点】计算属性的使用
-  // 
-  // 【特点】
-  // - 基于依赖自动计算
-  // - 有缓存，依赖不变就不重新计算
-  // - 适合派生数据
-  // ============================================================
+
   computed: {
-    // 【isLoggedIn】
-    // 作用：判断用户是否已登录
-    // 返回值：Boolean
-    // 使用场景：控制底部导航栏显示、权限判断
+
     isLoggedIn() {
-      return auth.state.isAuthenticated
+      return this.$store.getters.isLoggedIn
     },
     
-    // 【currentUser】
-    // 作用：获取当前登录用户信息
-    // 返回值：Object | null
-    // 使用场景：显示用户头像、用户名等
     currentUser() {
-      return auth.state.user
+      return this.$store.getters.currentUser
     },
-    
-    // 【isLoginOrRegisterPage】
-    // 作用：判断当前是否为登录/注册页面
-    // 返回值：Boolean
-    // 使用场景：控制顶部导航栏是否显示
-    // 原因：登录页面不需要导航栏
+
     isLoginOrRegisterPage() {
       const currentPath = this.$route.path
       return currentPath === '/login' || currentPath === '/register'
+    },
+    
+    isYmtPage() {
+      const currentPath = this.$route.path
+      return currentPath === '/ymt'
     }
   },
   
-  // ============================================================
-  // created 生命周期钩子
-  // ============================================================
-  // 【学习重点】根组件初始化
-  // 
-  // 【执行时机】组件实例创建后立即执行
-  // 【作用】初始化应用状态
-  // 
-  // 【流程】
-  // 1. 初始化认证状态（检查 token 是否有效）
-  // 2. 如果已登录，刷新用户信息
-  // ============================================================
   created() {
-    // 初始化认证状态（从 localStorage/sessionStorage 恢复登录状态）
-    auth.init()
-    // 如果已登录，获取最新的用户信息
-    if (auth.state.isAuthenticated) {
+    this.$store.dispatch('init')
+    if (this.isLoggedIn) {
       this.refreshUserInfo()
     }
   },
   
-  // ============================================================
-  // watch 监听器
-  // ============================================================
-  // 【学习重点】监听路由变化
-  // 
-  // 【作用】路由切换时检查登录状态
-  // 【场景】token 过期时自动跳转到登录页
-  // 
-  // 【'$route'】
-  // - 以 $ 开头的属性是 Vue 内置的特殊属性
-  // - $route 包含当前路由信息（path、params、query 等）
-  // ============================================================
   watch: {
-    // 监听路由变化，检查登录状态
     '$route': 'checkLoginStatus'
   },
   
-  // ============================================================
-  // methods 方法区
-  // ============================================================
+  
   methods: {
-    // ============================================================
-    // 检查登录状态
-    // ============================================================
-    // 【作用】路由切换时验证登录状态
-    // 【场景】token 过期时自动跳转到登录页
-    // ============================================================
     checkLoginStatus() {
-      // 重新初始化认证状态
-      auth.init()
-      // 检查登录状态并在过期时跳转到登录页
-      auth.checkAuthAndRedirect(this.$router)
+      this.$store.dispatch('init')
+      const token = this.$store.getters.getToken
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]))
+          if (payload.exp && payload.exp < Date.now() / 1000) {
+            this.$store.dispatch('logout', this.$router)
+          }
+        } catch (error) {
+          this.$store.dispatch('logout', this.$router)
+        }
+      }
     },
     
-    // ============================================================
-    // 刷新用户信息
-    // ============================================================
-    // 【作用】从服务器获取最新的用户信息
-    // 【场景】应用初始化时同步用户数据
-    // 【流程】
-    // 1. 调用 API 获取用户信息
-    // 2. 更新 auth 状态
-    // ============================================================
     async refreshUserInfo() {
       try {
         const response = await this.$http.auth.getCurrentUser();
         if (response.success && response.data) {
           const userData = response.data;
-          // 构造用户对象
           const user = {
-            id: userData._id,           // 用户ID
-            username: userData.username, // 用户名
-            email: userData.email,       // 邮箱
-            role: userData.role,         // 角色
-            avatar: userData.profile?.avatar, // 头像
-            profile: userData.profile    // 个人资料
+            id: userData._id,
+            username: userData.username,
+            email: userData.email,
+            role: userData.role,
+            avatar: userData.profile?.avatar,
+            profile: userData.profile
           };
           
-          // 更新auth状态
-          const token = auth.getToken();
-          // 判断 token 存储位置（localStorage 或 sessionStorage）
-          auth.loginSuccess(user, token, localStorage.getItem('token') !== null);
+          const token = this.$store.getters.getToken;
+          const rememberMe = localStorage.getItem('token') !== null;
+          this.$store.dispatch('loginSuccess', { user, token, rememberMe });
         }
       } catch (error) {
         console.error('刷新用户信息失败:', error);
@@ -625,9 +115,28 @@ export default {
   flex-direction: column;
 }
 
+.app-container.full-screen-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 100vw;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
 main {
   flex: 1;
   padding-bottom: 70px; /* 为移动端底部导航栏留出空间 */
+}
+
+main.full-screen {
+  padding-bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
 }
 
 /* 响应式设计 - 断点定义 */
@@ -643,6 +152,13 @@ main {
   .app-container {
     max-width: 1400px;
     margin: 0 auto;
+  }
+  
+  .app-container.full-screen-container {
+    max-width: 100vw;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
   }
 }
 </style>

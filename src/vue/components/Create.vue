@@ -3,20 +3,21 @@
     <main class="main-content">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">{{ isEditMode ? '编辑攻略' : '创作攻略' }}</h1>
-          <p class="page-subtitle">{{ isEditMode ? '修改你的攻略内容' : '分享你的经验和知识' }}</p>
+          <h1 class="page-title">{{ isEditMode ? "编辑攻略" : "创作攻略" }}</h1>
+          <p class="page-subtitle">
+            {{ isEditMode ? "修改你的攻略内容" : "分享你的经验和知识" }}
+          </p>
         </div>
       </div>
-      
+
       <div class="container">
         <form class="create-form" @submit.prevent="submitForm">
-          
           <div class="form-section">
             <label class="form-label">文章类型</label>
             <div class="article-type-selector">
-              <button 
-                type="button" 
-                class="type-btn" 
+              <button
+                type="button"
+                class="type-btn"
                 :class="{ active: formData.articleType === 'long' }"
                 @click="setArticleType('long')"
                 :disabled="isEditMode"
@@ -25,9 +26,9 @@
                 <span>长文章</span>
                 <small>知乎风格</small>
               </button>
-              <button 
-                type="button" 
-                class="type-btn" 
+              <button
+                type="button"
+                class="type-btn"
                 :class="{ active: formData.articleType === 'short' }"
                 @click="setArticleType('short')"
                 :disabled="isEditMode"
@@ -37,23 +38,29 @@
                 <small>小红书风格</small>
               </button>
             </div>
-            <p v-if="isEditMode" class="form-hint" style="color: #666;">编辑模式下不支持切换文章类型</p>
+            <p v-if="isEditMode" class="form-hint" style="color: #666">
+              编辑模式下不支持切换文章类型
+            </p>
           </div>
-          
+
           <div class="form-section">
             <label for="title" class="form-label">文章标题</label>
-            <input 
-              type="text" 
-              id="title" 
-              class="form-input" 
+            <input
+              type="text"
+              id="title"
+              class="form-input"
               placeholder="请输入文章标题"
               v-model="formData.title"
-            >
+            />
           </div>
-          
+
           <div class="form-section" v-if="!isEditMode">
             <label for="category" class="form-label">选择分类</label>
-            <select id="category" class="form-select" v-model="formData.category">
+            <select
+              id="category"
+              class="form-select"
+              v-model="formData.category"
+            >
               <option value="">请选择分类</option>
               <option value="游戏攻略">游戏攻略</option>
               <option value="旅游攻略">旅游攻略</option>
@@ -64,12 +71,14 @@
               <option value="学习攻略">学习攻略</option>
             </select>
           </div>
-          
+
           <div class="form-section" v-if="formData.topic">
             <label class="form-label">当前话题</label>
             <div class="topic-selector topic-locked">
               <div class="topic-display">
-                <span class="topic-name">{{ getTopicName(formData.topic) }}</span>
+                <span class="topic-name">{{
+                  getTopicName(formData.topic)
+                }}</span>
               </div>
               <div class="topic-lock-hint">
                 <span class="nav-icon">🔒</span>
@@ -78,9 +87,8 @@
               </div>
             </div>
           </div>
-          
+
           <div v-if="formData.articleType === 'long'">
-            
             <div class="form-section">
               <label class="form-label">封面图片（可选）</label>
               <ImageUploader
@@ -90,14 +98,14 @@
                 @notify="showNotification"
               />
             </div>
-            
+
             <QuillEditorWrapper
               ref="quillEditor"
               v-model="formData.content"
               @notify="showNotification"
               @uploading="isSubmitting = $event"
             />
-            
+
             <TagInput
               v-model="formData.tags"
               label="标签"
@@ -105,9 +113,8 @@
               inputId="tags"
             />
           </div>
-          
+
           <div v-else-if="formData.articleType === 'short'">
-            
             <div class="form-section">
               <label class="form-label">封面图片</label>
               <ImageUploader
@@ -117,7 +124,7 @@
                 @notify="showNotification"
               />
             </div>
-            
+
             <div class="form-section">
               <label class="form-label">媒体文件</label>
               <p class="form-hint">支持多张图片或视频，最多9张</p>
@@ -129,21 +136,23 @@
                 @notify="showNotification"
               />
             </div>
-            
+
             <div class="form-section">
               <label for="shortContent" class="form-label">文章内容</label>
               <p class="form-hint">最多2000字</p>
-              <textarea 
-                id="shortContent" 
-                v-model="formData.shortContent" 
-                class="form-textarea" 
+              <textarea
+                id="shortContent"
+                v-model="formData.shortContent"
+                class="form-textarea"
                 placeholder="分享你的经验和知识..."
                 rows="5"
                 maxlength="2000"
               ></textarea>
-              <div class="char-count">{{ formData.shortContent.length }}/2000</div>
+              <div class="char-count">
+                {{ formData.shortContent.length }}/2000
+              </div>
             </div>
-            
+
             <TagInput
               v-model="formData.hashtags"
               label="话题标签"
@@ -151,25 +160,45 @@
               placeholder="输入话题标签，用空格分隔"
               inputId="hashtags"
             />
-            
+
             <div class="form-section">
               <label for="location" class="form-label">位置信息（可选）</label>
-              <input 
-                type="text" 
-                id="location" 
-                class="form-input" 
+              <input
+                type="text"
+                id="location"
+                class="form-input"
                 placeholder="例如：北京故宫"
                 v-model="formData.location"
-              >
+              />
             </div>
           </div>
-          
+
           <div class="form-section form-actions">
-            <button type="button" class="btn btn-secondary" @click="cancelCreate">取消</button>
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="cancelCreate"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="isSubmitting"
+            >
               <span class="nav-icon" v-if="isSubmitting">🔄</span>
-              <span class="nav-icon" v-else>{{ isEditMode ? '📝' : '🚀' }}</span>
-              {{ isSubmitting ? (isEditMode ? '更新中...' : '发布中...') : (isEditMode ? '更新攻略' : '发布攻略') }}
+              <span class="nav-icon" v-else>{{
+                isEditMode ? "📝" : "🚀"
+              }}</span>
+              {{
+                isSubmitting
+                  ? isEditMode
+                    ? "更新中..."
+                    : "发布中..."
+                  : isEditMode
+                  ? "更新攻略"
+                  : "发布攻略"
+              }}
             </button>
           </div>
         </form>
@@ -179,59 +208,43 @@
 </template>
 
 <script>
-
-import QuillEditorWrapper from './create/QuillEditorWrapper.vue';
-import ImageUploader from './create/ImageUploader.vue';
-import MediaUploader from './create/MediaUploader.vue';
-import TagInput from './create/TagInput.vue';
-import { showNotification } from '../utils/notification';
+import QuillEditorWrapper from "./create/QuillEditorWrapper.vue";
+import ImageUploader from "./create/ImageUploader.vue";
+import MediaUploader from "./create/MediaUploader.vue";
+import TagInput from "./create/TagInput.vue";
+import { showNotification } from "../utils/notification";
 
 export default {
-  name: 'Create',
+  name: "Create",
   components: {
     QuillEditorWrapper,
     ImageUploader,
     MediaUploader,
-    TagInput
+    TagInput,
   },
   data() {
     return {
       isSubmitting: false,
-      
       isEditMode: false,
-      
       currentBlogId: null,
-      
       formData: {
-        title: '',
-        
-        category: '',
-        
-        topic: '',
-        
-        topicName: '',
-        
-        imageUrl: '',
-        
-        content: '',
-        
-        tags: '',
-        
-        articleType: 'long',
-        
+        title: "",
+        category: "",
+        topic: "",
+        topicName: "",
+        imageUrl: "",
+        content: "",
+        tags: "",
+        articleType: "long",
         mediaFiles: [],
-        
-        shortContent: '',
-        
-        hashtags: '',
-        
-        location: ''
+        shortContent: "",
+        hashtags: "",
+        location: "",
       },
-      
-      originalImageUrl: null
+      originalImageUrl: null,
     };
   },
-  
+
   mounted() {
     if (this.$route.query.topic) {
       this.formData.topic = this.$route.query.topic;
@@ -239,96 +252,100 @@ export default {
         this.formData.topicName = this.$route.query.topicName;
       }
     }
-    
+
     if (this.$route.params.id) {
       this.isEditMode = true;
       this.currentBlogId = this.$route.params.id;
       this.loadBlogDetail(this.currentBlogId);
     }
   },
-  
+
   methods: {
+    showNotification(message, type = "success") {
+      // 调用你导入的工具函数
+      showNotification(message, type);
+    },
     onAddMedia(media) {
       this.formData.mediaFiles.push(media);
     },
     onRemoveMedia(index) {
       this.formData.mediaFiles.splice(index, 1);
     },
-
     parseTags(tagString) {
       if (!tagString) return [];
       let processed = tagString
-        .replace(/,/g, ' ')
-        .replace(/，/g, ' ')
-        .replace(/、/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/,/g, " ")
+        .replace(/，/g, " ")
+        .replace(/、/g, " ")
+        .replace(/\s+/g, " ")
         .trim();
-      let tags = processed.split(' ').filter(tag => tag.trim());
-      tags = tags.map(tag => {
-        tag = tag.trim();
-        if (tag.startsWith('#')) {
-          return tag.slice(1);
-        }
-        return tag;
-      }).filter(tag => tag);
+      let tags = processed.split(" ").filter((tag) => tag.trim());
+      tags = tags
+        .map((tag) => {
+          tag = tag.trim();
+          if (tag.startsWith("#")) {
+            return tag.slice(1);
+          }
+          return tag;
+        })
+        .filter((tag) => tag);
       return tags;
     },
-    
     formatTags(tags) {
-      if (!tags || !Array.isArray(tags)) return '';
-      return tags.map(tag => `#${tag}`).join(' ');
+      if (!tags || !Array.isArray(tags)) return "";
+      return tags.map((tag) => `#${tag}`).join(" ");
     },
-    
     getTopicName(topicId) {
       return this.formData.topicName || topicId;
     },
 
     setArticleType(type) {
       if (this.isEditMode) {
-        showNotification('编辑模式下不支持切换文章类型', 'warning');
+        showNotification("编辑模式下不支持切换文章类型", "warning");
         return;
       }
       this.formData.articleType = type;
-      if (type === 'long') {
+      if (type === "long") {
         this.formData.mediaFiles = [];
-        this.formData.shortContent = '';
-        this.formData.hashtags = '';
-        this.formData.location = '';
-      } else if (type === 'short') {
-        this.formData.content = '';
-        this.formData.tags = '';
+        this.formData.shortContent = "";
+        this.formData.hashtags = "";
+        this.formData.location = "";
+      } else if (type === "short") {
+        this.formData.content = "";
+        this.formData.tags = "";
       }
     },
-    
+
     cancelCreate() {
       if (this.$refs.imageUploader) {
         this.$refs.imageUploader.clearFile();
       }
       this.formData = {
-        title: '',
-        category: '',
-        topic: '',
-        topicName: '',
-        imageUrl: '',
-        content: '',
-        tags: '',
-        articleType: 'long',
+        title: "",
+        category: "",
+        topic: "",
+        topicName: "",
+        imageUrl: "",
+        content: "",
+        tags: "",
+        articleType: "long",
         mediaFiles: [],
-        shortContent: '',
-        hashtags: '',
-        location: ''
+        shortContent: "",
+        hashtags: "",
+        location: "",
       };
       if (this.$refs.imageUploader) {
         this.$refs.imageUploader.clearFile();
       }
-      this.$router.push('/my-creation');
+      this.$router.push("/my-creation");
     },
-    
+
     async loadBlogDetail(blogId) {
       try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
         if (!token) {
-          showNotification('请先登录', 'warning');
+          showNotification("请先登录", "warning");
           return;
         }
         const data = await this.$http.get(`/api/blogs/${blogId}`);
@@ -336,80 +353,91 @@ export default {
           const blog = data.data;
           let imageUrl = blog.image;
           if (imageUrl) {
-            if (imageUrl && imageUrl.startsWith('/static/uploads/')) {
-            } else if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-              imageUrl = `/static/uploads/${imageUrl.replace(/^\/+|^\/*/, '')}`;
+            if (imageUrl && imageUrl.startsWith("/static/uploads/")) {
+            } else if (
+              imageUrl &&
+              !imageUrl.startsWith("http://") &&
+              !imageUrl.startsWith("https://")
+            ) {
+              imageUrl = `/static/uploads/${imageUrl.replace(/^\/+|^\/*/, "")}`;
             }
           }
           const mediaFiles = blog.mediaFiles || [];
-          const processedMediaFiles = mediaFiles.map(media => {
+          const processedMediaFiles = mediaFiles.map((media) => {
             let mediaUrl = media.url;
-            if (mediaUrl && !mediaUrl.startsWith('http://') && !mediaUrl.startsWith('https://')) {
-              if (!mediaUrl.startsWith('/static/uploads/')) {
-                mediaUrl = `/static/uploads/${mediaUrl.replace(/^\/+|^\/*/, '')}`;
+            if (
+              mediaUrl &&
+              !mediaUrl.startsWith("http://") &&
+              !mediaUrl.startsWith("https://")
+            ) {
+              if (!mediaUrl.startsWith("/static/uploads/")) {
+                mediaUrl = `/static/uploads/${mediaUrl.replace(
+                  /^\/+|^\/*/,
+                  "",
+                )}`;
               }
             }
             return {
               url: mediaUrl,
-              mediaType: media.mediaType || 'image'
+              mediaType: media.mediaType || "image",
             };
           });
           this.formData = {
             title: blog.title,
             content: blog.content,
-            topic: blog.topic ? blog.topic._id : '',
-            topicName: blog.topic ? blog.topic.name : '',
+            topic: blog.topic ? blog.topic._id : "",
+            topicName: blog.topic ? blog.topic.name : "",
             imageUrl: imageUrl,
             tags: this.formatTags(blog.tags),
-            articleType: blog.articleType || 'long',
+            articleType: blog.articleType || "long",
             mediaFiles: processedMediaFiles,
-            shortContent: blog.shortContent || '',
+            shortContent: blog.shortContent || "",
             hashtags: this.formatTags(blog.hashtags),
-            location: blog.location || ''
+            location: blog.location || "",
           };
-          if (this.formData.articleType === 'long') {
+          if (this.formData.articleType === "long") {
             this.$nextTick(() => {
               if (this.$refs.quillEditor) {
-                this.$refs.quillEditor.setContent(blog.content || '');
+                this.$refs.quillEditor.setContent(blog.content || "");
               }
             });
           }
           this.originalImageUrl = imageUrl;
           this.currentBlogId = blogId;
         } else {
-          showNotification(`加载文章失败: ${data.message}`, 'error');
+          showNotification(`加载文章失败: ${data.message}`, "error");
         }
       } catch (error) {
-        console.error('加载文章详情失败:', error);
-        showNotification('加载文章详情失败，请稍后重试', 'error');
+        console.error("加载文章详情失败:", error);
+        showNotification("加载文章详情失败，请稍后重试", "error");
       }
     },
-    
+
     validateForm() {
       if (!this.formData.title.trim()) {
-        showNotification('请输入文章标题', 'warning');
+        showNotification("请输入文章标题", "warning");
         return false;
       }
       if (this.formData.title.trim().length < 5) {
-        showNotification('标题长度至少为 5 个字符', 'warning');
+        showNotification("标题长度至少为 5 个字符", "warning");
         return false;
       }
       if (!this.formData.imageUrl) {
-        showNotification('请设置封面图片', 'warning');
+        showNotification("请设置封面图片", "warning");
         return false;
       }
-      if (this.formData.articleType === 'long') {
+      if (this.formData.articleType === "long") {
         if (!this.formData.content.trim()) {
-          showNotification('请输入文章内容', 'warning');
+          showNotification("请输入文章内容", "warning");
           return false;
         }
-      } else if (this.formData.articleType === 'short') {
+      } else if (this.formData.articleType === "short") {
         if (!this.formData.shortContent.trim()) {
-          showNotification('请输入文章内容', 'warning');
+          showNotification("请输入文章内容", "warning");
           return false;
         }
         if (this.formData.mediaFiles.length === 0) {
-          showNotification('请上传媒体文件', 'warning');
+          showNotification("请上传媒体文件", "warning");
           return false;
         }
       }
@@ -421,7 +449,7 @@ export default {
         title: this.formData.title,
         topic: this.formData.topic,
         articleType: this.formData.articleType,
-        image: imageUrl
+        image: imageUrl,
       };
 
       if (this.formData.category) {
@@ -430,24 +458,24 @@ export default {
         if (!existingTags.includes(categoryTag)) {
           existingTags.unshift(categoryTag);
         }
-        this.formData.tags = existingTags.join(', ');
+        this.formData.tags = existingTags.join(", ");
       }
 
-      if (this.formData.articleType === 'long') {
+      if (this.formData.articleType === "long") {
         submitData.content = this.formData.content;
-        submitData.video = '';
+        submitData.video = "";
         submitData.tags = this.parseTags(this.formData.tags);
         submitData.mediaFiles = [];
-        submitData.shortContent = '';
+        submitData.shortContent = "";
         submitData.hashtags = [];
-        submitData.location = '';
-      } else if (this.formData.articleType === 'short') {
+        submitData.location = "";
+      } else if (this.formData.articleType === "short") {
         submitData.mediaFiles = this.formData.mediaFiles;
         submitData.shortContent = this.formData.shortContent;
         submitData.hashtags = this.parseTags(this.formData.hashtags);
         submitData.location = this.formData.location;
-        submitData.content = '';
-        submitData.video = '';
+        submitData.content = "";
+        submitData.video = "";
         submitData.tags = [];
       }
 
@@ -459,19 +487,25 @@ export default {
 
       this.isSubmitting = true;
       try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
         if (!token) {
-          showNotification('请先登录', 'warning');
+          showNotification("请先登录", "warning");
           this.isSubmitting = false;
           return;
         }
 
-        const imageFile = this.$refs.imageUploader ? this.$refs.imageUploader.getFile() : null;
+        const imageFile = this.$refs.imageUploader
+          ? this.$refs.imageUploader.getFile()
+          : null;
         let uploadData = null;
         if (imageFile) {
           const imageFormData = new FormData();
-          imageFormData.append('image', imageFile);
-          uploadData = await this.$http.post('/api/blogs/upload-image', imageFormData);
+          imageFormData.append("image", imageFile);
+          uploadData = await this.$http.post(
+            "/api/blogs/upload-image",
+            imageFormData,
+          );
           if (!uploadData.success) {
             throw new Error(`图片上传失败: ${uploadData.message}`);
           }
@@ -481,19 +515,19 @@ export default {
         if (uploadData) {
           imageUrl = uploadData.data.url;
         } else if (this.isEditMode) {
-          if (imageUrl && imageUrl.startsWith('blob:')) {
-            imageUrl = this.originalImageUrl || '';
+          if (imageUrl && imageUrl.startsWith("blob:")) {
+            imageUrl = this.originalImageUrl || "";
           } else if (!imageUrl) {
-            imageUrl = this.originalImageUrl || '';
+            imageUrl = this.originalImageUrl || "";
           }
         } else {
           if (!uploadData) {
-            imageUrl = '';
+            imageUrl = "";
           }
         }
 
         if (!imageUrl) {
-          showNotification('封面图片上传失败，请重试', 'error');
+          showNotification("封面图片上传失败，请重试", "error");
           this.isSubmitting = false;
           return;
         }
@@ -502,38 +536,53 @@ export default {
 
         let data;
         if (this.isEditMode) {
-          data = await this.$http.put(`/api/blogs/${this.currentBlogId}`, submitData);
+          data = await this.$http.put(
+            `/api/blogs/${this.currentBlogId}`,
+            submitData,
+          );
         } else {
-          data = await this.$http.post('/api/blogs', submitData);
+          data = await this.$http.post("/api/blogs", submitData);
         }
 
         if (data.success) {
-          showNotification(this.isEditMode ? '攻略更新成功！' : '攻略发布成功！', 'success');
+          showNotification(
+            this.isEditMode ? "攻略更新成功！" : "攻略发布成功！",
+            "success",
+          );
           this.cancelCreate();
         } else {
-          showNotification(this.isEditMode ? `更新失败: ${data.message}` : `发布失败: ${data.message}`, 'error');
+          showNotification(
+            this.isEditMode
+              ? `更新失败: ${data.message}`
+              : `发布失败: ${data.message}`,
+            "error",
+          );
         }
       } catch (error) {
-        console.error('发布失败:', error);
-        showNotification(`发布失败: ${error.message}`, 'error');
+        console.error("发布失败:", error);
+        showNotification(`发布失败: ${error.message}`, "error");
       } finally {
         this.isSubmitting = false;
       }
-    }
+    },
   },
-  
+
   beforeDestroy() {
     if (this.$refs.imageUploader) {
       this.$refs.imageUploader.clearFile();
     }
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
 .create-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--background-light) 0%,
+    var(--background-dark) 100%
+  );
   font-family: var(--font-family);
 }
 
@@ -683,7 +732,11 @@ export default {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+  background: linear-gradient(
+    135deg,
+    var(--primary-pink),
+    var(--secondary-pink)
+  );
   color: white;
 }
 

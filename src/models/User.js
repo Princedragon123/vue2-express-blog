@@ -185,8 +185,8 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: {
-            values: ['user', 'admin'],
-            message: '角色只能是 user 或 admin'
+            values: ['user', 'admin','svip'],
+            message: '角色只能是 user 或 admin 或 svip'
         },
         default: 'user'
     },
@@ -291,6 +291,12 @@ const userSchema = new mongoose.Schema({
             type: Number,
             default: 0
         }
+    },
+
+    // 收藏表情包
+    favoriteEmojis: {
+        type: Array,
+        default: []
     },
     
     // 最后登录时间
@@ -457,7 +463,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 // Q: 为什么集合名是 users 而不是 User？
 // A: Mongoose 自动将模型名转为小写复数形式
 // ============================================================
-const User = mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // ============================================================
 // 导出用户模型

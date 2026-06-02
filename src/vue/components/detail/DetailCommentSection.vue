@@ -12,39 +12,41 @@
 
     <div class="comments-list">
       <div v-if="isLoading" class="loading-comments">
-        <i class="fas fa-spinner fa-spin"></i>
+        <svg-icon name="spinner" :size="24" class-name="fa-spin"></svg-icon>
         <span>加载评论中...</span>
       </div>
 
       <div v-else-if="comments.length === 0" class="no-comments">
-        <i class="fas fa-comments"></i>
+        <svg-icon name="comments" :size="32"></svg-icon>
         <span>暂无评论，快来写下第一条评论吧！</span>
       </div>
 
-      <div v-else class="comment-item" v-for="comment in comments" :key="comment._id">
-        <img v-lazy="getCommenterAvatar(comment)" alt="评论者头像" class="commenter-avatar">
-        <div class="comment-content">
-          <div class="comment-header">
-            <span class="commenter-name">{{ comment.author.username }}</span>
-            <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-          </div>
-          <div class="comment-text">{{ comment.content }}</div>
-          <div class="comment-actions">
-            <button class="comment-action-btn" @click="$emit('toggle-reply', comment._id)">
-              <i class="fas fa-reply"></i>
-              <span>回复</span>
-            </button>
-          </div>
+      <template v-else>
+        <div class="comment-item" v-for="comment in comments" :key="comment._id">
+          <img v-lazy="getCommenterAvatar(comment)" alt="评论者头像" class="commenter-avatar">
+          <div class="comment-content">
+            <div class="comment-header">
+              <span class="commenter-name">{{ comment.author.username }}</span>
+              <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+            </div>
+            <div class="comment-text">{{ comment.content }}</div>
+            <div class="comment-actions">
+              <button class="comment-action-btn" @click="$emit('toggle-reply', comment._id)">
+                <svg-icon name="reply" :size="14"></svg-icon>
+                <span>回复</span>
+              </button>
+            </div>
 
-          <div v-if="replyingTo === comment._id" class="reply-input-section">
-            <div class="reply-input-wrapper">
-              <input type="text" class="reply-input" placeholder="写下你的回复..." :value="replyInput" @input="$emit('update:replyInput', $event.target.value)" @keyup.enter="$emit('submit-reply', comment._id)">
-              <button class="reply-submit-btn" @click="$emit('submit-reply', comment._id)">发送</button>
-              <button class="reply-cancel-btn" @click="$emit('cancel-reply')">取消</button>
+            <div v-if="replyingTo === comment._id" class="reply-input-section">
+              <div class="reply-input-wrapper">
+                <input type="text" class="reply-input" placeholder="写下你的回复..." :value="replyInput" @input="$emit('update:replyInput', $event.target.value)" @keyup.enter="$emit('submit-reply', comment._id)">
+                <button class="reply-submit-btn" @click="$emit('submit-reply', comment._id)">发送</button>
+                <button class="reply-cancel-btn" @click="$emit('cancel-reply')">取消</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
   </div>
 </template>
