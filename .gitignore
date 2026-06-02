@@ -122,3 +122,28 @@ src/uploads/videos/
 
 # 歌词文件（版权问题）
 src/uploads/musicLyrics/
+
+# ============================================================
+# 工具脚本 & 测试文件（开发工具，不需要上传）
+# ============================================================
+
+# MongoDB 导入导出工具
+export-mongodb.js
+export-mongodb.bat
+import-mongodb.js
+
+# 检查/测试脚本
+check-follows.js
+check-image-paths.js
+test_api.js
+test_follow_api.js
+test-jwt.js
+
+# 打包文件
+dist.zip
+
+# ============================================================
+# 中文文档（个人笔记/学习文档，不上传）
+# ============================================================
+*.md
+!docs/*.md
