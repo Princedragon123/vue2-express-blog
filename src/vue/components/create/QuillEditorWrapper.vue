@@ -1,7 +1,13 @@
 <template>
   <div class="form-section">
     <label class="form-label">文章内容</label>
-    <div ref="quillEditorContainer" class="quill-editor"></div>
+    <div 
+      ref="quillEditorContainer" 
+      class="quill-editor"
+      @dragover.prevent="handleDragOver"
+      @dragleave.prevent="handleDragLeave"
+      @drop.prevent="handleDrop"
+    ></div>
     <input type="file" ref="contentImageInput" class="content-image-input" accept="image/*" style="display: none;" @change="handleContentImageUpload">
     <!-- change提交事件触发 -->
   </div>
@@ -25,7 +31,8 @@ export default {
   },
   data() {
     return {
-      quillEditor: null
+      quillEditor: null,
+      dropZoneActive: false
     };
   },
   methods: {
@@ -71,9 +78,14 @@ export default {
       this.quillEditor.on('text-change', () => {
         this.$emit('input', this.quillEditor.root.innerHTML);
       });
+      
+      // 添加粘贴事件监听
+      this.quillEditor.root.addEventListener('paste', this.handlePaste);
     },
     destroyQuillEditor() {
       if (this.quillEditor) {
+        // 移除粘贴事件监听
+        this.quillEditor.root.removeEventListener('paste', this.handlePaste);
         this.quillEditor.off();
         if (this.$refs.quillEditorContainer) {
           this.$refs.quillEditorContainer.innerHTML = '';
@@ -97,27 +109,71 @@ export default {
     handleContentImageUpload(event) {
       const file = event.target.files[0];
       if (file) {
-        const formData = new FormData();
-        formData.append('image', file);
-        this.$emit('uploading', true);
-        this.$http.post('/api/blogs/upload-image', formData)
-          .then(data => {
-            if (data.success) {
-              const range = this.quillEditor.getSelection();
-              this.quillEditor.insertEmbed(range.index, 'image', data.data.url);
-              this.$emit('notify', '图片插入成功！', 'success');
-            } else {
-              this.$emit('notify', `图片上传失败: ${data.message}`, 'error');
-            }
-          })
-          .catch(() => {
-            this.$emit('notify', '上传图片失败，请稍后重试', 'error');
-          })
-          .finally(() => {
-            this.$emit('uploading', false);
-            event.target.value = '';
-          });
+        this.uploadImage(file);
       }
+    },
+    handleDragOver(event) {
+      this.dropZoneActive = true;
+      this.$refs.quillEditorContainer.classList.add('drag-over');
+    },
+    handleDragLeave(event) {
+      this.dropZoneActive = false;
+      this.$refs.quillEditorContainer.classList.remove('drag-over');
+    },
+    handleDrop(event) {
+      this.dropZoneActive = false;
+      this.$refs.quillEditorContainer.classList.remove('drag-over');
+      
+      const files = event.dataTransfer.files;
+      if (files && files.length > 0) {
+        const imageFile = Array.from(files).find(file => file.type.startsWith('image/'));
+        if (imageFile) {
+          this.uploadImage(imageFile);
+        }
+      }
+    },
+    handlePaste(event) {
+      const items = event.clipboardData && event.clipboardData.items;
+      if (!items) return;
+      
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          // 拦截粘贴事件，阻止默认粘贴行为
+          event.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            this.uploadImage(file);
+          }
+          break;
+        }
+      }
+    },
+    uploadImage(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      this.$emit('uploading', true);
+      this.$http.post('/api/blogs/upload-image', formData)
+        .then(data => {
+          if (data.success) {
+            const range = this.quillEditor.getSelection(true);
+            this.quillEditor.insertEmbed(range.index, 'image', data.data.url);
+            this.quillEditor.setSelection(range.index + 1);
+            this.$emit('notify', '图片插入成功！', 'success');
+          } else {
+            this.$emit('notify', `图片上传失败: ${data.message}`, 'error');
+          }
+        })
+        .catch(() => {
+          this.$emit('notify', '上传图片失败，请稍后重试', 'error');
+        })
+        .finally(() => {
+          this.$emit('uploading', false);
+          // 清空input，避免重复选择同一文件不触发change事件
+          if (this.$refs.contentImageInput) {
+            this.$refs.contentImageInput.value = '';
+          }
+        });
     },
     setContent(html) {
       if (this.quillEditor && html) {
@@ -148,12 +204,36 @@ export default {
   box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
   margin: 0 auto;
   max-width: 100%;
+  position: relative;
 }
 
 .quill-editor:focus {
   outline: none;
   border-color: var(--primary-pink) !important;
   box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3), 0 0 0 3px rgba(236, 72, 153, 0.2);
+}
+
+.quill-editor.drag-over {
+  border-color: var(--primary-pink) !important;
+  background-color: rgba(236, 72, 153, 0.05);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3), inset 0 0 0 2px var(--primary-pink);
+}
+
+.quill-editor.drag-over::before {
+  content: '松开鼠标插入图片';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-pink);
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 3px solid var(--primary-pink);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3);
+  z-index: 1000;
 }
 
 ::v-deep .ql-toolbar.ql-snow {

@@ -1,28 +1,19 @@
-// ============================================================
 // chessService.js - 井字棋 WebSocket 游戏服务
-// ============================================================
-// 
-// 【文件职责】
 // 管理井字棋游戏的 WebSocket 通信和房间逻辑，包括：
 // 1. 房间创建、加入、离开
 // 2. 游戏状态管理（棋盘、回合、胜负）
 // 3. 实时消息推送
 // 4. 断线处理
-// 
-// 【设计原则】
 // - 单一职责：每个方法只负责一件事
 // - 可复用性：游戏逻辑与 Socket 解耦
 // - 安全性：所有操作都进行权限验证
 // - 容错性：处理异常连接和非法操作
-// ============================================================
 
 const socketIo = require('socket.io');
 const ChessRecord = require('../models/ChessRecord');
 const socketService = require('./socketService');
 
-// ============================================================
 // 游戏常量定义
-// ============================================================
 const CHESS_CONSTANTS = {
   // 棋盘大小
   BOARD_SIZE: 9,
@@ -60,9 +51,7 @@ const CHESS_CONSTANTS = {
   },
 };
 
-// ============================================================
 // 工具函数
-// ============================================================
 
 /**
  * 生成指定长度的随机数字房间号
@@ -129,9 +118,7 @@ function createEmptyBoard() {
   return Array(CHESS_CONSTANTS.BOARD_SIZE).fill(null);
 }
 
-// ============================================================
 // 井字棋服务对象
-// ============================================================
 const chessService = {
   
   // Socket.io 实例
@@ -149,9 +136,7 @@ const chessService = {
   // 断线检查定时器
   reconnectCheckTimer: null,
   
-  // ============================================================
   // 初始化服务
-  // ============================================================
   init: (server) => {
     // 复用 socketService 的 io 实例，而不是创建新的
     // 这样前端连接的实例和后端监听的实例是同一个
@@ -223,9 +208,7 @@ const chessService = {
     console.log('[Chess] 井字棋服务初始化完成');
   },
   
-  // ============================================================
   // 断线重连检查定时器
-  // ============================================================
   startReconnectCheck: () => {
     chessService.reconnectCheckTimer = setInterval(() => {
       const now = Date.now();
@@ -253,12 +236,8 @@ const chessService = {
     }, CHESS_CONSTANTS.RECONNECT.CHECK_INTERVAL);
   },
   
-  // ============================================================
   // 获取房间列表
-  // ============================================================
-  // ============================================================
   // 创建房间
-  // ============================================================
   handleCreateRoom: (socket, { userId, userRole }) => {
     // 权限验证
     if (!CHESS_CONSTANTS.ALLOWED_ROLES.includes(userRole)) {
@@ -319,9 +298,7 @@ const chessService = {
     console.log(`[Chess] 用户 ${userId} 创建房间 ${roomId}`);
   },
   
-  // ============================================================
   // 加入房间
-  // ============================================================
   handleJoinRoom: (socket, { userId, userRole, roomId }) => {
     // 权限验证
     if (!CHESS_CONSTANTS.ALLOWED_ROLES.includes(userRole)) {
@@ -391,9 +368,7 @@ const chessService = {
     console.log(`[Chess] 用户 ${userId} 加入房间 ${roomId}`);
   },
   
-  // ============================================================
   // 离开房间
-  // ============================================================
   handleLeaveRoom: (socket, { userId, roomId }) => {
     const room = chessService.rooms.get(roomId);
     if (!room) return;
@@ -410,9 +385,7 @@ const chessService = {
     console.log(`[Chess] 用户 ${userId} 离开房间 ${roomId}`);
   },
   
-  // ============================================================
   // 落子
-  // ============================================================
   handleMakeMove: (socket, { userId, roomId, position }) => {
     const room = chessService.rooms.get(roomId);
     if (!room) {
@@ -496,9 +469,7 @@ const chessService = {
     }
   },
   
-  // ============================================================
   // 再来一局
-  // ============================================================
   handleRematch: (socket, { userId, roomId }) => {
     const room = chessService.rooms.get(roomId);
     if (!room) return;
@@ -536,18 +507,11 @@ const chessService = {
     console.log(`[Chess] 房间 ${roomId} 重新开始第 ${room.gameCount + 1} 局`);
   },
   
-  // ============================================================
   // 断开连接处理
-  // ============================================================
-  // ============================================================
   // 处理断开连接（游戏层 - 职责：游戏房间状态管理）
-  // ============================================================
-  // 【职责范围】
   // - 暂存断线用户的房间状态（30秒超时等待重连）
   // - 通知对手对方已断线
   // - 不处理用户在线状态（由 socketService 负责）
-  //
-  // 【与 socketService 的协调】
   // socketService.disconnect 先执行（清理在线状态）
   // chessService.handleDisconnect 后执行（处理游戏房间）
   // 两者职责清晰，互不干扰 ✅
@@ -585,9 +549,7 @@ const chessService = {
     }
   },
   
-  // ============================================================
   // 重连处理
-  // ============================================================
   handleReconnect: (socket, { userId, roomId }) => {
     // 检查是否有断线暂存记录
     const disconnectInfo = chessService.disconnectedUsers.get(userId);
@@ -637,9 +599,7 @@ const chessService = {
     console.log(`[Chess] 用户 ${userId} 重连成功，房间 ${roomId}`);
   },
   
-  // ============================================================
   // 清理房间
-  // ============================================================
   cleanupRoom: (roomId) => {
     const room = chessService.rooms.get(roomId);
     if (!room) return;
@@ -655,9 +615,7 @@ const chessService = {
     chessService.io.socketsLeave(roomId);
   },
   
-  // ============================================================
   // 保存战绩（同步版本，已废弃）
-  // ============================================================
   saveGameRecord: async (room, winner, moves) => {
     try {
       // 确定房主和客人的结果
@@ -700,9 +658,7 @@ const chessService = {
     }
   },
   
-  // ============================================================
   // 保存战绩（异步版本，不阻塞游戏流程）
-  // ============================================================
   saveGameRecordAsync: (room, winner, moves) => {
     // 使用 setImmediate 将数据库操作放到下一个事件循环
     setImmediate(async () => {

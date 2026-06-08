@@ -172,9 +172,7 @@ export default {
     },
   },
   methods: {
-    // ============================================================
     // 创建房间
-    // ============================================================
     async handleCreateRoom() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -193,9 +191,7 @@ export default {
       }
     },
 
-    // ============================================================
     // 加入房间
-    // ============================================================
     async handleJoinRoom() {
       if (!this.joinRoomId || this.joinRoomId.length !== 6) return;
       if (this.isLoading) return;
@@ -217,9 +213,7 @@ export default {
       }
     },
 
-    // ============================================================
     // 离开房间
-    // ============================================================
     handleLeaveRoom() {
       if (this.roomId) {
         chessSocket.leaveRoom(this.userId, this.roomId);
@@ -228,9 +222,7 @@ export default {
       this.gameStarted = false;
     },
 
-    // ============================================================
     // 复制房间号
-    // ============================================================
     copyRoomId() {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(this.roomId).then(() => {

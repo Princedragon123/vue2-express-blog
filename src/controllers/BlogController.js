@@ -1,108 +1,60 @@
-// ============================================================
 // BlogController.js - 博客控制器
-// ============================================================
-// 
-// 【文件职责】
 // 处理博客相关的所有HTTP请求，包括：
 // 1. 博客CRUD操作（创建、读取、更新、删除）
 // 2. 评论管理（创建、删除、置顶）
 // 3. 点赞和收藏功能
 // 4. 搜索功能
 // 5. 推荐算法
-// 
-// 【学习重点】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │  1. Mongoose查询：populate、sort、skip、limit                           │
-// │  2. 并行查询：Promise.all 提高性能                                      │
-// │  3. 分页实现：skip + limit 模式                                         │
-// │  4. 权限验证：检查用户是否有权操作                                      │
-// │  5. 通知系统：创建通知并通过WebSocket推送                               │
-// │  6. 推荐算法：加权随机推荐                                              │
-// │  7. 搜索实现：文本索引 + 正则表达式fallback                             │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【面试常问】
-// Q1: populate是什么？有什么用？
 // A: 类似SQL的JOIN，用于填充关联文档的详细信息
-// 
-// Q2: 为什么用Promise.all？
 // A: 并行执行多个查询，提高性能，减少等待时间
-// 
-// Q3: 分页如何实现？
 // A: skip跳过前面的记录，limit限制返回数量
-// 
-// Q4: 如何防止重复点赞？
 // A: 创建Like集合记录点赞关系，查询时检查是否已存在
-// 
-// Q5: 推荐算法怎么实现的？
 // A: 计算新鲜度+热度权重，加权随机抽取
-// 
-// Q6: 如何处理浏览量统计？
 // A: 使用内存Set记录已浏览，避免重复计数
-// ============================================================
 
-// ============================================================
 // 导入依赖模块
-// ============================================================
-// 【mongoose】MongoDB对象建模工具
 // 作用：提供Schema定义、模型创建、查询构建等功能
 const mongoose = require('mongoose');
 
-// ============================================================
 // 导入数据模型
-// ============================================================
-// 【Blog】博客模型
 // 字段：title, content, author, category, likes, views等
 const Blog = require('../models/Blog');
 
-// 【User】用户模型
 // 字段：username, password, profile, stats 等
 const User = require('../models/User');
 
-// 【Comment】评论模型
 // 字段：content, author, blog, parentId 等
 const Comment = require('../models/Comment');
 
-// 【Bookmark】收藏模型
 // 字段：user, blog, createdAt等
 const Bookmark = require('../models/Bookmark');
 
-// 【Like】点赞模型
 // 字段：user, contentId, contentType 等
 const Like = require('../models/Like');
 
-// 【Notification】通知模型
 // 字段：receiver, sender, type, content 等
 const Notification = require('../models/Notification');
 
-// ============================================================
 // 导入工具模块
-// =============================================================
 
-// 【隐私检查工具】
 // canViewBlog: 检查用户是否可以查看博客
 // filterBlogsByPrivacy: 批量过滤私密博客
 const { canViewBlog, filterBlogsByPrivacy } = require('../utils/privacy');
 
-// 【分页工具】
 // parsePaginationParams: 解析分页参数
 // generatePaginationResponse: 生成分页响应
 const { parsePaginationParams, generatePaginationResponse } = require('../utils/pagination');
 
-// 【错误处理工具】
 // handleControllerError: 统一处理控制器错误
 const { handleControllerError } = require('../utils/errorHandler');
 
-// 【过滤服务】
 // validateComment: 验证评论内容
 const filterService = require('../services/filterService');
 
-// 【上传服务】
 // singleUpload: 单文件上传中间件
 // generateFileUrl: 生成文件访问 URL
 const uploadService = require('../services/uploadService');
 
-// 【WebSocket 服务】
 // sendNotification: 实时推送通知
 const socketService = require('../services/socketService');
 
@@ -148,7 +100,6 @@ const BlogController = {
                 ];
             }
             
-            // 【调试信息】打印最终查询条件
             console.log('🔍 MongoDB 查询条件:', JSON.stringify(query, null, 2));
             
             // 并行执行两个查询
@@ -330,9 +281,7 @@ const BlogController = {
             
             console.log('✅ 权限检查通过');
             
-            // ============================================================
             // 浏览量统计（防重复）
-            // ============================================================
             // 生成唯一标识：用户ID或会话ID
             const sessionId = req.headers['x-session-id'] || req.ip;
             const viewKey = `view_${blog._id}_${userId || sessionId}`;
@@ -504,9 +453,7 @@ const BlogController = {
                 }
             }
             
-            // ============================================================
             // 创建通知
-            // ============================================================
             if (parentId) {
                 // 回复评论：通知被回复的评论作者
                 const parentComment = await Comment.findById(parentId);
@@ -547,9 +494,7 @@ const BlogController = {
                 }
             }
             
-            // ============================================================
             // 处理@提及
-            // ============================================================
             // 正则匹配 @用户名
             const mentionedUsers = content.match(/@([\u4e00-\u9fa5a-zA-Z0-9_]+)/g);
             if (mentionedUsers) {
@@ -1408,18 +1353,9 @@ const BlogController = {
         }
     },
     
-    // ============================================================
     // 上传文章图片（富文本编辑器用）
-    // ============================================================
-    // 【路由】POST /api/blogs/upload-image
-    // 【作用】上传文章中的图片
-    // 
-    // 【请求】
     // FormData: image = 文件
-    // 
-    // 【返回】
     // { url: '图片 URL', alt: '文件名', width: 800, height: 600 }
-    // ============================================================
     uploadBlogImage: [
         uploadService.singleUpload('image'),
         async (req, res) => {

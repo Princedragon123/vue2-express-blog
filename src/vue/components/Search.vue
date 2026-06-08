@@ -1,4 +1,3 @@
-<!-- Search.vue - 搜索页面组件【美化优化版】 -->
 <template>
   <div class="search-page">
     <!-- 顶部搜索栏 -->

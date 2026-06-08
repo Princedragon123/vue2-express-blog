@@ -31,10 +31,8 @@ export default {
     return {
     }
   },
-  
 
   computed: {
-
     isLoggedIn() {
       return this.$store.getters.isLoggedIn
     },
@@ -64,7 +62,6 @@ export default {
   watch: {
     '$route': 'checkLoginStatus'
   },
-  
   
   methods: {
     checkLoginStatus() {

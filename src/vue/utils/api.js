@@ -133,77 +133,48 @@ api.interceptors.response.use(
   }
 );
 
-// ============================================================
 // API 方法封装
-// ============================================================
-// 【模块化设计】按功能分组封装API方法
-// 【优点】
 // 1. 代码更清晰，便于维护
 // 2. IDE自动提示更友好
 // 3. 统一管理所有API调用
-// ============================================================
 const apiMethods = {
-  // ========================================================
   // 直接HTTP方法（兼容现有代码）
-  // ========================================================
-  // 【用途】有些地方可能直接使用 this.$http.get()
   // 这里提供直接访问底层axios实例的方法
-  // ========================================================
   get: (url, config) => api.get(url, config),
   post: (url, data, config) => api.post(url, data, config),
   put: (url, data, config) => api.put(url, data, config),
   delete: (url, config) => api.delete(url, config),
   
-  // ========================================================
   // 认证相关API
-  // ========================================================
   auth: {
     // 登录
-    // 【参数】{ username, password }
-    // 【返回】{ success, user, token }
     login: (data) => api.post('/api/auth/login', data),
     
     // 注册
-    // 【参数】{ username, email, password }
-    // 【返回】{ success, user, token }
     register: (data) => api.post('/api/auth/register', data),
     
     // 获取当前用户信息
-    // 【返回】{ success, user }
     getCurrentUser: () => api.get('/api/auth/me'),
     
     // 登出
-    // 【返回】{ success }
     logout: () => api.post('/api/auth/logout')
   },
   
-  // ========================================================
   // 博客相关API
-  // ========================================================
   blogs: {
     // 获取博客列表
-    // 【参数】{ page, limit, category, author, keyword }
-    // 【返回】{ success, blogs, total, page, totalPages }
     getList: (params) => api.get('/api/blogs', { params }),
     
     // 获取博客详情
-    // 【参数】博客ID
-    // 【返回】{ success, blog }
     getDetail: (id) => api.get(`/api/blogs/${id}`),
     
     // 创建博客
-    // 【参数】{ title, content, category, tags, ... }
-    // 【返回】{ success, blog }
     create: (data) => api.post('/api/blogs', data),
     
     // 更新博客
-    // 【参数】博客ID, 更新数据
-    // 【返回】{ success, blog }
     update: (id, data) => api.put(`/api/blogs/${id}`, data),
     
     // 删除博客
-    // 【参数】博客ID
-    // 【返回】{ success }
     delete: (id) => api.delete(`/api/blogs/${id}`),
     
     // 点赞博客
@@ -248,9 +219,7 @@ const apiMethods = {
     }),
   },
   
-  // ========================================================
   // 消息相关API
-  // ========================================================
   messages: {
     // 获取联系人列表
     getContacts: (params) => api.get('/api/messages/contacts', { params }),
@@ -265,7 +234,6 @@ const apiMethods = {
     share: (data) => api.post('/api/messages/share', data),
     
     // 上传附件
-    // 【注意】需要设置 Content-Type: multipart/form-data
     uploadAttachment: (formData) => api.post('/api/messages/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -279,9 +247,7 @@ const apiMethods = {
     delete: (id) => api.delete(`/api/messages/${id}`)
   },
   
-  // ========================================================
   // 通知相关API
-  // ========================================================
   notifications: {
     // 获取通知列表
     getList: (params) => api.get('/api/notifications', { params }),
@@ -299,9 +265,7 @@ const apiMethods = {
     delete: (notificationId) => api.delete(`/api/notifications/${notificationId}`)
   },
   
-  // ========================================================
   // 用户相关API
-  // ========================================================
   users: {
     // 获取用户信息
     getInfo: (id) => api.get(`/api/users/${id}`),
@@ -331,9 +295,7 @@ const apiMethods = {
     getBookmarkedPosts: (id) => api.get(`/api/users/${id}/bookmarked-posts`)
   },
   
-  // ========================================================
   // 表情包相关 API
-  // ========================================================
   emojis: {
     // 上传表情包
     upload: (formData) => api.post('/api/emojis/upload', formData, {
@@ -349,25 +311,18 @@ const apiMethods = {
     deleteFavorite: (emojiId) => api.delete(`/api/emojis/favorites/${emojiId}`)
   },
 
-  // ========================================================
   // 历史记录相关 API
-  // ========================================================
   history: {
     // 添加到历史记录
     add: (blogId) => api.post('/api/history', { blogId })
   },
   
-  // ========================================================
   // 管理员相关 API
-  // ========================================================
   admin: {
     // 获取仪表盘统计数据
-    // 【返回】{ success, data: { totalUsers, activeUsers, totalBlogs } }
     getDashboardStats: () => api.get('/api/admin/stats'),
     
     // 获取所有博客（支持筛选）
-    // 【参数】{ page, limit, status, keyword }
-    // 【返回】{ success, blogs, total, page, totalPages }
     getAllBlogs: (params) => api.get('/api/admin/blogs', { params }),
     
     // 删除博客
@@ -377,8 +332,6 @@ const apiMethods = {
     updateBlogStatus: (id, data) => api.put(`/api/admin/blogs/${id}/status`, data),
     
     // 获取所有用户
-    // 【参数】{ page, limit, keyword }
-    // 【返回】{ success, users, total, page, totalPages }
     getAllUsers: (params) => api.get('/api/admin/users', { params }),
     
     // 获取用户详情
@@ -394,8 +347,6 @@ const apiMethods = {
     unbanUser: (id) => api.put(`/api/admin/users/${id}/unban`),
     
     // 删除用户
-    // 【参数】id - 用户 ID, data - 请求体数据（如 confirmUserId）
-    // 【返回】{ success, message }
     deleteUser: (id, data) => api.delete(`/api/admin/users/${id}`, { data }),
     
     // 获取分类列表

@@ -196,7 +196,7 @@ export default {
         this.error = null;
         
         const { id } = this.$route.params;
-        
+        currentTextAnim
         const data = await this.$http.get(`/api/topics/${id}`);
         if (data.success) {
           this.topicData = data.data;

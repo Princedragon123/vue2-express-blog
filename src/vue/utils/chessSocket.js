@@ -1,8 +1,4 @@
-// ============================================================
 // chessSocket.js - 井字棋游戏 WebSocket 客户端封装
-// ============================================================
-// 
-// 【文件职责】
 // 封装井字棋游戏的 WebSocket 通信，提供：
 // 1. Promise 化的 API 调用
 // 2. 事件监听管理
@@ -10,19 +6,14 @@
 // 4. 超时机制
 // 5. 消息队列
 // 6. 心跳检测
-// 
-// 【设计原则】
 // - 复用全局 socket 实例（来自 socket.js）
 // - Promise 封装异步操作
 // - 事件监听器自动清理
 // - 超时自动拒绝
-// ============================================================
 
 import socketService from './socket';
 
-// ============================================================
 // 配置常量
-// ============================================================
 const CONFIG = {
   REQUEST_TIMEOUT: 10000, // 请求超时时间 10秒
   HEARTBEAT_INTERVAL: 30000, // 心跳间隔 30秒
@@ -30,9 +21,7 @@ const CONFIG = {
   MESSAGE_QUEUE_LIMIT: 100, // 消息队列上限
 };
 
-// ============================================================
 // ChessSocket 类
-// ============================================================
 class ChessSocket {
   constructor() {
     this.socket = null;
@@ -44,9 +33,7 @@ class ChessSocket {
     this.requestId = 0; // 请求ID计数器
   }
 
-  // ============================================================
   // 初始化：绑定全局 socket 实例
-  // ============================================================
   init() {
     if (this.isInitialized) return;
     
@@ -66,9 +53,7 @@ class ChessSocket {
     }
   }
 
-  // ============================================================
   // 设置消息队列处理
-  // ============================================================
   _setupMessageQueue() {
     if (!this.socket) return;
 
@@ -85,9 +70,7 @@ class ChessSocket {
     });
   }
 
-  // ============================================================
   // 发送队列中的消息
-  // ============================================================
   _flushMessageQueue() {
     while (this.messageQueue.length > 0 && this.socket && this.socket.connected) {
       const message = this.messageQueue.shift();
@@ -95,9 +78,7 @@ class ChessSocket {
     }
   }
 
-  // ============================================================
   // 启动心跳检测
-  // ============================================================
   _startHeartbeat() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
@@ -110,9 +91,7 @@ class ChessSocket {
     }, CONFIG.HEARTBEAT_INTERVAL);
   }
 
-  // ============================================================
   // 停止心跳检测
-  // ============================================================
   _stopHeartbeat() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
@@ -120,9 +99,7 @@ class ChessSocket {
     }
   }
 
-  // ============================================================
   // 创建带超时的请求（简化版）
-  // ============================================================
   _createRequest(event, data, responseEvent) {
     return new Promise((resolve, reject) => {
       if (!this.socket || !this.socket.connected) {
@@ -177,9 +154,7 @@ class ChessSocket {
     });
   }
 
-  // ============================================================
   // 创建房间
-  // ============================================================
   createRoom(userId, userRole) {
     return this._createRequest(
       'chess:createRoom',
@@ -188,9 +163,7 @@ class ChessSocket {
     );
   }
 
-  // ============================================================
   // 加入房间
-  // ============================================================
   joinRoom(userId, userRole, roomId) {
     return this._createRequest(
       'chess:joinRoom',
@@ -199,9 +172,7 @@ class ChessSocket {
     );
   }
 
-  // ============================================================
   // 离开房间
-  // ============================================================
   leaveRoom(userId, roomId) {
     if (!this.socket) return;
     
@@ -215,9 +186,7 @@ class ChessSocket {
     }
   }
 
-  // ============================================================
   // 画圈/画叉
-  // ============================================================
   makeMove(userId, roomId, position) {
     if (!this.socket || !this.socket.connected) {
       console.warn('[ChessSocket] WebSocket 未连接，无法画圈/画叉');
@@ -227,9 +196,7 @@ class ChessSocket {
     this.socket.emit('chess:makeMove', { userId, roomId, position });
   }
 
-  // ============================================================
   // 再来一局
-  // ============================================================
   rematch(userId, roomId) {
     if (!this.socket || !this.socket.connected) {
       console.warn('[ChessSocket] WebSocket 未连接，无法再来一局');
@@ -239,9 +206,7 @@ class ChessSocket {
     this.socket.emit('chess:rematch', { userId, roomId });
   }
 
-  // ============================================================
   // 重连
-  // ============================================================
   reconnect(userId, roomId) {
     return this._createRequest(
       'chess:reconnect',
@@ -250,9 +215,7 @@ class ChessSocket {
     );
   }
 
-  // ============================================================
   // 事件监听封装
-  // ============================================================
 
   onRoomCreated(callback) {
     this._on('chess:roomCreated', callback);
@@ -290,17 +253,13 @@ class ChessSocket {
     this._on('chess:error', callback);
   }
 
-  // ============================================================
   // 内部方法：注册事件监听
-  // ============================================================
   _on(event, callback) {
     if (!this.socket) return;
     this.socket.on(event, callback);
   }
 
-  // ============================================================
   // 清理所有资源
-  // ============================================================
   cleanup() {
     // 停止心跳
     this._stopHeartbeat();

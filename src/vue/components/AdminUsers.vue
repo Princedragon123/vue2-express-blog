@@ -1,4 +1,3 @@
-<!-- AdminUsers.vue - 管理员用户管理组件【最终版】 -->
 <template>
   <div class="admin-users">
     <main class="admin-content">
@@ -236,7 +235,6 @@ export default {
     },
     
     async deleteUser(user) {
-      if (!confirm(`确定删除用户【${user.username}】？此操作不可恢复！`)) return;
       
       const confirmId = prompt(`请输入用户ID：${user._id} 确认删除`);
       if (confirmId !== user._id) {

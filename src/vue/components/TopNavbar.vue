@@ -3,8 +3,6 @@
     <div class="container">
       <!-- 
         Logo 区域
-        【作用】显示网站名称，点击可返回首页
-        【快捷键】Ctrl + Shift + 双击跳转到 ymt 页面
       -->
       <div class="navbar-brand">
         <h2 
@@ -16,9 +14,6 @@
       
       <!-- 
         搜索框区域
-        【v-if 条件】不在搜索页面时显示普通搜索框
-        【v-else】在搜索页面时显示动态加载效果
-        【@click】点击跳转到搜索页面
       -->
       <div v-if="$route.path !== '/search'" class="search-container">
         <div class="search-box" @click="$router.push('/search')">
@@ -40,9 +35,6 @@
       
       <!-- 
         导航菜单（平板和电脑端）
-        【router-link】Vue Router 导航组件
-        【:class="{ active: 条件 }"】动态绑定激活样式
-        【v-if】根据登录状态和权限控制显示
       -->
       <div class="desktop-nav-menu">
         <!-- 发现页面 - 始终显示 -->
@@ -84,8 +76,6 @@
       
       <!-- 
         右侧菜单
-        【用户头像】点击跳转到个人中心
-        【@error】头像加载失败时显示默认图片
       -->
       <div class="navbar-menu">
         <!-- 用户头像 - 登录后显示 -->
@@ -98,9 +88,7 @@
 </template>
 
 <script>
-// ============================================================
 // 组件导入区
-// ============================================================
 import { getAuthorAvatar } from './../utils/avatarUtils'
 import api from './../utils/api'
 
@@ -144,9 +132,7 @@ export default {
       }
     },
     
-    // ============================================================
     // ✅ 修复：统一调用头像工具函数（和编辑页完全一致）
-    // ============================================================
     getUserAvatar() {
       const user = this.userInfo || this.$store.getters.currentUser;
       if (!user) return getAuthorAvatar(null, 40);

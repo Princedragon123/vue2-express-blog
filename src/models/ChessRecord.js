@@ -1,75 +1,19 @@
-// ============================================================
 // ChessRecord.js - 井字棋战绩统计模型
-// ============================================================
-// 
-// 【文件职责】
 // 记录用户井字棋游戏的战绩数据，包括：
 // 1. 用户基本信息
 // 2. 游戏场次统计（总场次、胜、负、平局）
 // 3. 胜率计算
 // 4. 最近游戏记录
 // 5. 连续胜利记录
-// 
-// 【学习重点】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │  1. Mongoose Schema 嵌套对象设计                                       │
-// │  2. 虚拟字段（virtuals）计算属性                                       │
-// │  3. 实例方法：更新战绩、计算胜率                                       │
-// │  4. 数组子文档：最近游戏记录                                           │
-// │  5. 索引优化：userId 唯一索引                                          │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【数据结构设计】
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │                                                                         │
-// │  ChessRecord                                                            │
-// │  ─────────                                                              │
-// │      │                                                                  │
-// │      ├── userId (String, 唯一索引)                                      │
-// │      │                                                                  │
-// │      ├── stats (嵌套对象)                                               │
-// │      │   ├── totalGames (Number)  总场次                                │
-// │      │   ├── wins (Number)        胜利场次                              │
-// │      │   ├── losses (Number)      失败场次                              │
-// │      │   ├── draws (Number)       平局场次                              │
-// │      │   └── winStreak (Number)   当前连胜场次                          │
-// │      │                                                                  │
-// │      ├── recentGames (Array)      最近10场游戏记录                      │
-// │      │   └── {                                                          │
-// │      │       ├── roomId (String)                                        │
-// │      │       ├── opponentId (String)                                    │
-// │      │       ├── result (String)  'win' | 'lose' | 'draw'              │
-// │      │       ├── playedAs (String) 'X' | 'O'                           │
-// │      │       ├── moves (Number)   总步数                                │
-// │      │       └── playedAt (Date)                                        │
-// │      │       }                                                          │
-// │      │                                                                  │
-// │      └── timestamps (自动管理)                                          │
-// │          ├── createdAt                                                  │
-// │          └── updatedAt                                                  │
-// │                                                                         │
-// └─────────────────────────────────────────────────────────────────────────┘
-// 
-// 【面试常问】
-// Q1: 为什么用嵌套对象而不是平铺字段？
 // A: 逻辑分组清晰，相关数据组织在一起，便于维护
-// 
-// Q2: 虚拟字段和实例方法的区别？
 // A: 虚拟字段是计算属性（getter），实例方法是可执行的操作
-// 
-// Q3: 为什么要限制 recentGames 最多10条？
 // A: 控制文档大小，避免无限增长，保留最近记录即可
-// ============================================================
 
 const mongoose = require('mongoose');
 
-// ============================================================
 // 定义井字棋战绩 Schema
-// ============================================================
 const chessRecordSchema = new mongoose.Schema({
-    // ========================================================
     // 用户ID（唯一索引，每个用户一条记录）
-    // ========================================================
     userId: {
         type: String,
         required: [true, '用户ID不能为空'],
@@ -77,9 +21,7 @@ const chessRecordSchema = new mongoose.Schema({
         trim: true
     },
 
-    // ========================================================
     // 统计信息（嵌套对象）
-    // ========================================================
     stats: {
         // 总游戏场次
         totalGames: {
@@ -124,9 +66,7 @@ const chessRecordSchema = new mongoose.Schema({
         }
     },
 
-    // ========================================================
     // 最近游戏记录（数组，最多保留10条）
-    // ========================================================
     recentGames: [{
         // 房间ID
         roomId: {
@@ -178,19 +118,10 @@ const chessRecordSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// ============================================================
 // 虚拟字段：胜率
-// ============================================================
-// 【语法】schema.virtual('fieldName').get(function() { ... })
-// 【特点】不存储到数据库，每次访问时动态计算
-// 
-// 【计算公式】
 // 胜率 = 胜利场次 / 总场次 * 100
-// 
-// 【面试常问】
 // Q: 虚拟字段会存储到数据库吗？
 // A: 不会，只在 toJSON/toObject 时可选择包含
-// ============================================================
 chessRecordSchema.virtual('winRate').get(function() {
     if (this.stats.totalGames === 0) {
         return 0;
@@ -198,19 +129,13 @@ chessRecordSchema.virtual('winRate').get(function() {
     return ((this.stats.wins / this.stats.totalGames) * 100).toFixed(2);
 });
 
-// ============================================================
 // 实例方法：更新战绩
-// ============================================================
-// 【调用方式】record.updateGameResult(result, opponentId, roomId, playedAs, moves)
-// 
-// 【工作流程】
 // 1. 总场次 +1
 // 2. 根据结果更新胜/负/平
 // 3. 更新连胜记录
 // 4. 添加最近游戏记录
 // 5. 限制最近记录数量
 // 6. 保存到数据库
-// ============================================================
 chessRecordSchema.methods.updateGameResult = async function(result, opponentId, roomId, playedAs, moves) {
     // 总场次 +1
     this.stats.totalGames += 1;
@@ -260,17 +185,10 @@ chessRecordSchema.methods.updateGameResult = async function(result, opponentId, 
     await this.save();
 };
 
-// ============================================================
 // 静态方法：获取或创建用户战绩
-// ============================================================
-// 【语法】schema.statics.methodName = function() { ... }
-// 【调用方式】ChessRecord.getOrCreate(userId)
-// 
-// 【工作流程】
 // 1. 查找用户战绩记录
 // 2. 如果不存在则创建新记录
 // 3. 返回记录
-// ============================================================
 chessRecordSchema.statics.getOrCreate = async function(userId) {
     let record = await this.findOne({ userId });
     
@@ -282,15 +200,9 @@ chessRecordSchema.statics.getOrCreate = async function(userId) {
     return record;
 };
 
-// ============================================================
 // 静态方法：获取排行榜
-// ============================================================
-// 【调用方式】ChessRecord.getLeaderboard(limit)
-// 
-// 【排序规则】
 // 1. 胜率优先（虚拟字段无法直接排序，用 wins/totalGames）
 // 2. 次选总场次
-// ============================================================
 chessRecordSchema.statics.getLeaderboard = async function(limit = 10) {
     try {
         console.log('[ChessRecord] 查询排行榜, limit:', limit);
@@ -309,12 +221,8 @@ chessRecordSchema.statics.getLeaderboard = async function(limit = 10) {
     }
 };
 
-// ============================================================
 // 创建模型
-// ============================================================
 const ChessRecord = mongoose.models.ChessRecord || mongoose.model('ChessRecord', chessRecordSchema);
 
-// ============================================================
 // 导出模型
-// ============================================================
 module.exports = ChessRecord;

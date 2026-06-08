@@ -146,9 +146,7 @@ export default {
     this.stopReconnectCountdown();
   },
   methods: {
-    // ============================================================
     // 事件监听
-    // ============================================================
     registerEvents() {
       chessSocket.onOpponentJoined((data) => {
         // 房主收到对手加入通知
@@ -227,9 +225,7 @@ export default {
       }
     },
 
-    // ============================================================
     // 房间事件处理
-    // ============================================================
     async onRoomCreated(data) {
       this.roomId = data.roomId;
       this.youAre = data.youAre;
@@ -264,9 +260,7 @@ export default {
       this.gameState = 'lobby';
     },
 
-    // ============================================================
     // 工具方法
-    // ============================================================
     async attemptReconnect() {
       if (this.isReconnecting || !this.roomId) return;
       
