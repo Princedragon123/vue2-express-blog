@@ -1,36 +1,60 @@
 <template>
   <div class="media-upload-section">
     <div class="media-preview-list">
-      <div v-for="(media, index) in mediaFiles" :key="index" class="media-preview-item">
-        <img v-if="media.mediaType === 'image'" :src="media.url" :alt="`媒体 ${index + 1}`" class="media-preview-img">
+      <div
+        v-for="(media, index) in mediaFiles"
+        :key="index"
+        class="media-preview-item"
+      >
+        <img
+          v-if="media.mediaType === 'image'"
+          :src="media.url"
+          :alt="`媒体 ${index + 1}`"
+          class="media-preview-img"
+        />
         <video v-else class="media-preview-video" controls>
-          <source :src="media.url" type="video/mp4">
+          <source :src="media.url" type="video/mp4" />
         </video>
-        <button type="button" class="remove-media-btn" @click="handleRemove(index)">
-          移除
+        <button
+          type="button"
+          class="remove-media-btn"
+          @click="handleRemove(index)"
+        >
+          ×
         </button>
       </div>
     </div>
-    <div v-if="mediaFiles.length < maxCount" class="media-upload-placeholder" @click="handleClick">
+    <div
+      v-if="mediaFiles.length < maxCount"
+      class="media-upload-placeholder"
+      @click="handleClick"
+    >
       <span class="nav-icon">🖼️</span>
       <p>添加图片或视频</p>
-      <input type="file" class="media-input" accept="image/*,video/*" multiple @change="handleFileChange" ref="fileInput">
+      <input
+        type="file"
+        class="media-input"
+        accept="image/*,video/*"
+        multiple
+        @change="handleFileChange"
+        ref="fileInput"
+      />
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'MediaUploader',
+  name: "MediaUploader",
   props: {
     mediaFiles: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     maxCount: {
       type: Number,
-      default: 9
-    }
+      default: 9,
+    },
   },
   methods: {
     handleClick() {
@@ -41,59 +65,71 @@ export default {
       if (files.length > 0) {
         const remainingSlots = this.maxCount - this.mediaFiles.length;
         const filesToUpload = Array.from(files).slice(0, remainingSlots);
-        filesToUpload.forEach(file => {
+        filesToUpload.forEach((file) => {
           this.uploadFile(file);
         });
       }
-      event.target.value = '';
+      event.target.value = "";
     },
     uploadFile(file) {
       const formData = new FormData();
-      if (file.type.startsWith('video/')) {
-        formData.append('video', file);
-        this.$http.post('/api/blogs/upload-video', formData)
-          .then(data => {
+      if (file.type.startsWith("video/")) {
+        formData.append("video", file);
+        this.$http
+          .post("/api/blogs/upload-video", formData)
+          .then((data) => {
             if (data.success) {
-              this.$emit('add-media', {
+              this.$emit("add-media", {
                 url: data.data.url,
-                mediaType: 'video',
+                mediaType: "video",
                 name: data.data.name,
-                size: data.data.size
+                size: data.data.size,
               });
-              this.$emit('notify', '视频上传成功！', 'success');
+              this.$emit("notify", "视频上传成功！", "success");
             } else {
-              this.$emit('notify', `视频上传失败：${data.message}`, 'error');
+              this.$emit("notify", `视频上传失败：${data.message}`, "error");
             }
           })
           .catch(() => {
-            this.$emit('notify', '上传视频失败，请稍后重试', 'error');
+            this.$emit("notify", "上传视频失败，请稍后重试", "error");
           });
       } else {
-        formData.append('image', file);
-        this.$http.post('/api/blogs/upload-image', formData)
-          .then(data => {
+        formData.append("image", file);
+        this.$http
+          .post("/api/blogs/upload-image", formData)
+          .then((data) => {
             if (data.success) {
-              this.$emit('add-media', {
+              this.$emit("add-media", {
                 url: data.data.url,
-                mediaType: 'image'
+                mediaType: "image",
               });
-              this.$emit('notify', '图片上传成功！', 'success');
+              this.$emit("notify", "图片上传成功！", "success");
             } else {
-              this.$emit('notify', `图片上传失败：${data.message}`, 'error');
+              this.$emit("notify", `图片上传失败：${data.message}`, "error");
             }
           })
           .catch(() => {
-            this.$emit('notify', '上传图片失败，请稍后重试', 'error');
+            this.$emit("notify", "上传图片失败，请稍后重试", "error");
           });
       }
     },
-    handleRemove(index) {
-      if (confirm('确定要移除这个媒体文件吗？')) {
-        this.$emit('remove-media', index);
-        this.$emit('notify', '媒体文件已移除', 'info');
+    async handleRemove(index) {
+      const media = this.mediaFiles[index];
+      if (confirm("确定删除这个文件吗")) {
+        try {
+          await this.$http.detele("api/blogs/remove-file", {
+            data: { fileUrl: media.url }   
+          })
+           this.$emit('remove-media',index)
+           this.$emit('notify','文件已删除')
+        } catch(error){
+          console.error('删除文件失败',error)
+          this.$emit('remove-media',index)
+          this.$emit('notify','文件已从列表删除，但服务器清理可能失败','warning')
+        }
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -136,7 +172,11 @@ export default {
   position: absolute;
   top: 5px;
   right: 5px;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-pink) 0%,
+    var(--secondary-pink) 100%
+  );
   color: white;
   border: none;
   border-radius: 50%;

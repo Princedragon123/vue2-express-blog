@@ -1,258 +1,237 @@
 <template>
-  <div class="create-page">
-    <main class="main-content">
-      <div class="page-header">
-        <div class="container">
-          <h1 class="page-title">{{ isEditMode ? "编辑攻略" : "创作攻略" }}</h1>
-          <p class="page-subtitle">
-            {{ isEditMode ? "修改你的攻略内容" : "分享你的经验和知识" }}
-          </p>
-        </div>
-      </div>
+  <article class="create-page" aria-label="创作页面">
+    <main class="create-page__main" role="main">
+      <header class="create-page__header">
+        <h1 class="create-page__title">{{ isEditMode ? '编辑攻略' : '创作攻略' }}</h1>
+        <p class="create-page__subtitle">
+          {{ isEditMode ? '修改你的攻略内容' : '分享你的经验和知识' }}
+        </p>
+      </header>
 
-      <div class="container">
-        <form class="create-form" @submit.prevent="submitForm">
-          <div class="form-section">
-            <label class="form-label">文章类型</label>
-            <div class="article-type-selector">
-              <button
-                type="button"
-                class="type-btn"
-                :class="{ active: formData.articleType === 'long' }"
-                @click="setArticleType('long')"
-                :disabled="isEditMode"
-              >
-                <span class="nav-icon">📝</span>
-                <span>长文章</span>
-                <small>知乎风格</small>
-              </button>
-              <button
-                type="button"
-                class="type-btn"
-                :class="{ active: formData.articleType === 'short' }"
-                @click="setArticleType('short')"
-                :disabled="isEditMode"
-              >
-                <span class="nav-icon">📱</span>
-                <span>短文章</span>
-                <small>小红书风格</small>
-              </button>
-            </div>
-            <p v-if="isEditMode" class="form-hint" style="color: #666">
-              编辑模式下不支持切换文章类型
-            </p>
-          </div>
-
-          <div class="form-section">
-            <label for="title" class="form-label">文章标题</label>
-            <input
-              type="text"
-              id="title"
-              class="form-input"
-              placeholder="请输入文章标题"
-              v-model="formData.title"
-            />
-          </div>
-
-          <div class="form-section" v-if="!isEditMode">
-            <label for="category" class="form-label">选择分类</label>
-            <select
-              id="category"
-              class="form-select"
-              v-model="formData.category"
+      <form class="create-form" @submit.prevent="submitForm">
+        <!-- 文章类型选择 -->
+        <section class="create-form__section" aria-label="文章类型选择">
+          <label class="create-form__label">文章类型</label>
+          <div class="type-selector">
+            <button
+              type="button"
+              class="type-btn"
+              :class="{ 'type-btn--active': formData.articleType === 'long' }"
+              :disabled="isEditMode"
+              @click="setArticleType('long')"
             >
-              <option value="">请选择分类</option>
-              <option value="游戏攻略">游戏攻略</option>
-              <option value="旅游攻略">旅游攻略</option>
-              <option value="美食攻略">美食攻略</option>
-              <option value="科技攻略">科技攻略</option>
-              <option value="健身攻略">健身攻略</option>
-              <option value="美妆攻略">美妆攻略</option>
-              <option value="学习攻略">学习攻略</option>
-            </select>
+              <span class="type-btn__icon">📝</span>
+              <span class="type-btn__text">长文章</span>
+              <small class="type-btn__hint">知乎风格</small>
+            </button>
+            <button
+              type="button"
+              class="type-btn"
+              :class="{ 'type-btn--active': formData.articleType === 'short' }"
+              :disabled="isEditMode"
+              @click="setArticleType('short')"
+            >
+              <span class="type-btn__icon">📱</span>
+              <span class="type-btn__text">短文章</span>
+              <small class="type-btn__hint">小红书风格</small>
+            </button>
           </div>
+          <p v-if="isEditMode" class="create-form__hint" style="color: #666">
+            编辑模式下不支持切换文章类型
+          </p>
+        </section>
 
-          <div class="form-section" v-if="formData.topic">
-            <label class="form-label">当前话题</label>
-            <div class="topic-selector topic-locked">
-              <div class="topic-display">
-                <span class="topic-name">{{
-                  getTopicName(formData.topic)
-                }}</span>
-              </div>
-              <div class="topic-lock-hint">
-                <span class="nav-icon">🔒</span>
-                <span v-if="isEditMode">话题已锁定，不可修改</span>
-                <span v-else>话题已锁定，来自当前页面</span>
-              </div>
-            </div>
+        <!-- 文章标题 -->
+        <section class="create-form__section" aria-label="文章标题">
+          <label for="title" class="create-form__label">文章标题</label>
+          <input
+            id="title"
+            type="text"
+            class="create-form__input"
+            placeholder="请输入文章标题"
+            v-model="formData.title"
+          />
+        </section>
+
+        <!-- 分类（仅新建） -->
+        <section v-if="!isEditMode" class="create-form__section" aria-label="分类选择">
+          <label for="category" class="create-form__label">选择分类</label>
+          <select id="category" class="create-form__select" v-model="formData.category">
+            <option value="">请选择分类</option>
+            <option value="游戏攻略">游戏攻略</option>
+            <option value="旅游攻略">旅游攻略</option>
+            <option value="美食攻略">美食攻略</option>
+            <option value="科技攻略">科技攻略</option>
+            <option value="健身攻略">健身攻略</option>
+            <option value="美妆攻略">美妆攻略</option>
+            <option value="学习攻略">学习攻略</option>
+          </select>
+        </section>
+
+        <!-- 话题信息 -->
+        <section v-if="formData.topic" class="create-form__section" aria-label="话题信息">
+          <label class="create-form__label">当前话题</label>
+          <div class="topic-locked">
+            <span class="topic-locked__name">{{ formData.topicName || formData.topic }}</span>
+            <span class="topic-locked__hint">
+              <span>🔒</span>
+              {{ isEditMode ? '话题已锁定，不可修改' : '话题已锁定，来自当前页面' }}
+            </span>
           </div>
+        </section>
 
-          <div v-if="formData.articleType === 'long'">
-            <div class="form-section">
-              <label class="form-label">封面图片（可选）</label>
-              <ImageUploader
-                ref="imageUploader"
-                :imageUrl="formData.imageUrl"
-                @update:imageUrl="formData.imageUrl = $event"
-                @notify="showNotification"
-              />
-            </div>
+        <!-- 长文章表单 -->
+        <template v-if="formData.articleType === 'long'">
+          <section class="create-form__section" aria-label="封面图片">
+            <label class="create-form__label">封面图片（可选）</label>
+            <ImageUploader
+              ref="imageUploader"
+              :image-url="formData.imageUrl"
+              @update:imageUrl="formData.imageUrl = $event"
+              @notify="showNotification"
+            />
+          </section>
 
+          <section class="create-form__section" aria-label="文章内容">
             <QuillEditorWrapper
               ref="quillEditor"
               v-model="formData.content"
               @notify="showNotification"
               @uploading="isSubmitting = $event"
             />
+          </section>
 
+          <section class="create-form__section" aria-label="标签">
             <TagInput
               v-model="formData.tags"
               label="标签"
               placeholder="例如：#游戏 #攻略 #技巧"
-              inputId="tags"
+              input-id="tags"
             />
-          </div>
+          </section>
+        </template>
 
-          <div v-else-if="formData.articleType === 'short'">
-            <div class="form-section">
-              <label class="form-label">封面图片</label>
-              <ImageUploader
-                ref="imageUploader"
-                :imageUrl="formData.imageUrl"
-                @update:imageUrl="formData.imageUrl = $event"
-                @notify="showNotification"
-              />
-            </div>
+        <!-- 短文章表单 -->
+        <template v-else-if="formData.articleType === 'short'">
+          <section class="create-form__section" aria-label="封面图片">
+            <label class="create-form__label">封面图片</label>
+            <ImageUploader
+              ref="imageUploader"
+              :image-url="formData.imageUrl"
+              @update:imageUrl="formData.imageUrl = $event"
+              @notify="showNotification"
+            />
+          </section>
 
-            <div class="form-section">
-              <label class="form-label">媒体文件</label>
-              <p class="form-hint">支持多张图片或视频，最多9张</p>
-              <MediaUploader
-                :mediaFiles="formData.mediaFiles"
-                :maxCount="9"
-                @add-media="onAddMedia"
-                @remove-media="onRemoveMedia"
-                @notify="showNotification"
-              />
-            </div>
+          <section class="create-form__section" aria-label="媒体文件">
+            <label class="create-form__label">媒体文件</label>
+            <p class="create-form__hint">支持多张图片或视频，最多9张</p>
+            <MediaUploader
+              :media-files="formData.mediaFiles"
+              :max-count="9"
+              @add-media="onAddMedia"
+              @remove-media="onRemoveMedia"
+              @notify="showNotification"
+            />
+          </section>
 
-            <div class="form-section">
-              <label for="shortContent" class="form-label">文章内容</label>
-              <p class="form-hint">最多2000字</p>
-              <textarea
-                id="shortContent"
-                v-model="formData.shortContent"
-                class="form-textarea"
-                placeholder="分享你的经验和知识..."
-                rows="5"
-                maxlength="2000"
-              ></textarea>
-              <div class="char-count">
-                {{ formData.shortContent.length }}/2000
-              </div>
-            </div>
+          <section class="create-form__section" aria-label="文章内容">
+            <label for="shortContent" class="create-form__label">文章内容</label>
+            <p class="create-form__hint">最多2000字</p>
+            <textarea
+              id="shortContent"
+              v-model="formData.shortContent"
+              class="create-form__textarea"
+              placeholder="分享你的经验和知识..."
+              rows="5"
+              maxlength="2000"
+            ></textarea>
+            <div class="char-count">{{ formData.shortContent.length }}/2000</div>
+          </section>
 
+          <section class="create-form__section" aria-label="话题标签">
             <TagInput
               v-model="formData.hashtags"
               label="话题标签"
               hint="例如：#游戏攻略 #旅游体验"
               placeholder="输入话题标签，用空格分隔"
-              inputId="hashtags"
+              input-id="hashtags"
             />
+          </section>
 
-            <div class="form-section">
-              <label for="location" class="form-label">位置信息（可选）</label>
-              <input
-                type="text"
-                id="location"
-                class="form-input"
-                placeholder="例如：北京故宫"
-                v-model="formData.location"
-              />
-            </div>
-          </div>
+          <section class="create-form__section" aria-label="位置信息">
+            <label for="location" class="create-form__label">位置信息（可选）</label>
+            <input
+              id="location"
+              type="text"
+              class="create-form__input"
+              placeholder="例如：北京故宫"
+              v-model="formData.location"
+            />
+          </section>
+        </template>
 
-          <div class="form-section form-actions">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              @click="cancelCreate"
-            >
-              取消
-            </button>
-            <button
-              type="submit"
-              class="btn btn-primary"
-              :disabled="isSubmitting"
-            >
-              <span class="nav-icon" v-if="isSubmitting">🔄</span>
-              <span class="nav-icon" v-else>{{
-                isEditMode ? "📝" : "🚀"
-              }}</span>
-              {{
-                isSubmitting
-                  ? isEditMode
-                    ? "更新中..."
-                    : "发布中..."
-                  : isEditMode
-                  ? "更新攻略"
-                  : "发布攻略"
-              }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- 操作按钮 -->
+        <section class="create-form__actions" aria-label="操作按钮">
+          <button type="button" class="btn btn--secondary" @click="cancelCreate">取消</button>
+          <button type="submit" class="btn btn--primary" :disabled="isSubmitting">
+            <span v-if="isSubmitting">🔄</span>
+            <span v-else>{{ isEditMode ? '📝' : '🚀' }}</span>
+            {{ isSubmitting ? (isEditMode ? '更新中...' : '发布中...') : (isEditMode ? '更新攻略' : '发布攻略') }}
+          </button>
+        </section>
+      </form>
     </main>
-  </div>
+  </article>
 </template>
 
 <script>
-import QuillEditorWrapper from "./create/QuillEditorWrapper.vue";
-import ImageUploader from "./create/ImageUploader.vue";
-import MediaUploader from "./create/MediaUploader.vue";
-import TagInput from "./create/TagInput.vue";
-import { showNotification } from "../utils/notification";
+import QuillEditorWrapper from './create/QuillEditorWrapper.vue';
+import ImageUploader from './create/ImageUploader.vue';
+import MediaUploader from './create/MediaUploader.vue';
+import TagInput from './create/TagInput.vue';
+import { showNotification } from '../utils/notification';
+import { normalizeImageUrl, getAuthToken } from '../utils/helpers';
+
+// 表单默认值
+function getDefaultFormData() {
+  return {
+    title: '',
+    category: '',
+    topic: '',
+    topicName: '',
+    imageUrl: '',
+    content: '',
+    tags: '',
+    articleType: 'long',
+    mediaFiles: [],
+    shortContent: '',
+    hashtags: '',
+    location: ''
+  };
+}
 
 export default {
-  name: "Create",
-  components: {
-    QuillEditorWrapper,
-    ImageUploader,
-    MediaUploader,
-    TagInput,
-  },
+  name: 'Create',
+  components: { QuillEditorWrapper, ImageUploader, MediaUploader, TagInput },
+
   data() {
     return {
       isSubmitting: false,
       isEditMode: false,
       currentBlogId: null,
-      formData: {
-        title: "",
-        category: "",
-        topic: "",
-        topicName: "",
-        imageUrl: "",
-        content: "",
-        tags: "",
-        articleType: "long",
-        mediaFiles: [],
-        shortContent: "",
-        hashtags: "",
-        location: "",
-      },
-      originalImageUrl: null,
+      formData: getDefaultFormData(),
+      originalImageUrl: null
     };
   },
 
   mounted() {
+    // 从 query 参数读取话题
     if (this.$route.query.topic) {
       this.formData.topic = this.$route.query.topic;
-      if (this.$route.query.topicName) {
-        this.formData.topicName = this.$route.query.topicName;
-      }
+      this.formData.topicName = this.$route.query.topicName || '';
     }
-
+    // 编辑模式
     if (this.$route.params.id) {
       this.isEditMode = true;
       this.currentBlogId = this.$route.params.id;
@@ -260,595 +239,496 @@ export default {
     }
   },
 
+  beforeDestroy() {
+    if (this.$refs.imageUploader) {
+      this.$refs.imageUploader.clearFile();
+    }
+  },
+
   methods: {
-    showNotification(message, type = "success") {
-      // 调用你导入的工具函数
-      showNotification(message, type);
-    },
+    showNotification,
+
     onAddMedia(media) {
       this.formData.mediaFiles.push(media);
     },
     onRemoveMedia(index) {
       this.formData.mediaFiles.splice(index, 1);
     },
+
+    // 将标签字符串解析为数组
     parseTags(tagString) {
       if (!tagString) return [];
-      let processed = tagString
-        .replace(/,/g, " ")
-        .replace(/，/g, " ")
-        .replace(/、/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      let tags = processed.split(" ").filter((tag) => tag.trim());
-      tags = tags
-        .map((tag) => {
-          tag = tag.trim();
-          if (tag.startsWith("#")) {
-            return tag.slice(1);
-          }
-          return tag;
-        })
-        .filter((tag) => tag);
-      return tags;
-    },
-    formatTags(tags) {
-      if (!tags || !Array.isArray(tags)) return "";
-      return tags.map((tag) => `#${tag}`).join(" ");
-    },
-    getTopicName(topicId) {
-      return this.formData.topicName || topicId;
+      return tagString
+        .replace(/[,，、]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .map(tag => tag.trim().replace(/^#/, ''))
+        .filter(Boolean);
     },
 
+    // 将标签数组格式化为显示字符串
+    formatTags(tags) {
+      if (!tags || !Array.isArray(tags)) return '';
+      return tags.map(tag => `#${tag}`).join(' ');
+    },
+
+    // 切换文章类型
     setArticleType(type) {
       if (this.isEditMode) {
-        showNotification("编辑模式下不支持切换文章类型", "warning");
+        showNotification('编辑模式下不支持切换文章类型', 'warning');
         return;
       }
       this.formData.articleType = type;
-      if (type === "long") {
+      // 清空不相关的字段
+      if (type === 'long') {
         this.formData.mediaFiles = [];
-        this.formData.shortContent = "";
-        this.formData.hashtags = "";
-        this.formData.location = "";
-      } else if (type === "short") {
-        this.formData.content = "";
-        this.formData.tags = "";
+        this.formData.shortContent = '';
+        this.formData.hashtags = '';
+        this.formData.location = '';
+      } else {
+        this.formData.content = '';
+        this.formData.tags = '';
       }
     },
 
+    // 取消创建
     cancelCreate() {
       if (this.$refs.imageUploader) {
         this.$refs.imageUploader.clearFile();
       }
-      this.formData = {
-        title: "",
-        category: "",
-        topic: "",
-        topicName: "",
-        imageUrl: "",
-        content: "",
-        tags: "",
-        articleType: "long",
-        mediaFiles: [],
-        shortContent: "",
-        hashtags: "",
-        location: "",
-      };
-      if (this.$refs.imageUploader) {
-        this.$refs.imageUploader.clearFile();
-      }
-      this.$router.push("/my-creation");
+      this.formData = getDefaultFormData();
+      this.$router.push('/my-creation').catch(() => {});
     },
 
+    // 加载博客详情（编辑模式）
     async loadBlogDetail(blogId) {
       try {
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
+        const token = getAuthToken();
         if (!token) {
-          showNotification("请先登录", "warning");
+          showNotification('请先登录', 'warning');
           return;
         }
         const data = await this.$http.get(`/api/blogs/${blogId}`);
-        if (data.success) {
-          const blog = data.data;
-          let imageUrl = blog.image;
-          if (imageUrl) {
-            if (imageUrl && imageUrl.startsWith("/static/uploads/")) {
-            } else if (
-              imageUrl &&
-              !imageUrl.startsWith("http://") &&
-              !imageUrl.startsWith("https://")
-            ) {
-              imageUrl = `/static/uploads/${imageUrl.replace(/^\/+|^\/*/, "")}`;
-            }
-          }
-          const mediaFiles = blog.mediaFiles || [];
-          const processedMediaFiles = mediaFiles.map((media) => {
-            let mediaUrl = media.url;
-            if (
-              mediaUrl &&
-              !mediaUrl.startsWith("http://") &&
-              !mediaUrl.startsWith("https://")
-            ) {
-              if (!mediaUrl.startsWith("/static/uploads/")) {
-                mediaUrl = `/static/uploads/${mediaUrl.replace(
-                  /^\/+|^\/*/,
-                  "",
-                )}`;
-              }
-            }
-            return {
-              url: mediaUrl,
-              mediaType: media.mediaType || "image",
-            };
-          });
-          this.formData = {
-            title: blog.title,
-            content: blog.content,
-            topic: blog.topic ? blog.topic._id : "",
-            topicName: blog.topic ? blog.topic.name : "",
-            imageUrl: imageUrl,
-            tags: this.formatTags(blog.tags),
-            articleType: blog.articleType || "long",
-            mediaFiles: processedMediaFiles,
-            shortContent: blog.shortContent || "",
-            hashtags: this.formatTags(blog.hashtags),
-            location: blog.location || "",
-          };
-          if (this.formData.articleType === "long") {
-            this.$nextTick(() => {
-              if (this.$refs.quillEditor) {
-                this.$refs.quillEditor.setContent(blog.content || "");
-              }
-            });
-          }
-          this.originalImageUrl = imageUrl;
-          this.currentBlogId = blogId;
-        } else {
-          showNotification(`加载文章失败: ${data.message}`, "error");
+        if (!data.success) {
+          showNotification(`加载文章失败: ${data.message}`, 'error');
+          return;
         }
+
+        const blog = data.data;
+        const imageUrl = normalizeImageUrl(blog.image || '');
+        const mediaFiles = (blog.mediaFiles || []).map(media => ({
+          url: normalizeImageUrl(media.url),
+          mediaType: media.mediaType || 'image'
+        }));
+
+        this.formData = {
+          title: blog.title || '',
+          content: blog.content || '',
+          topic: blog.topic ? blog.topic._id : '',
+          topicName: blog.topic ? blog.topic.name : '',
+          imageUrl,
+          tags: this.formatTags(blog.tags),
+          articleType: blog.articleType || 'long',
+          mediaFiles,
+          shortContent: blog.shortContent || '',
+          hashtags: this.formatTags(blog.hashtags),
+          location: blog.location || ''
+        };
+
+        // 富文本编辑器需要 nextTick 后设置内容
+        if (this.formData.articleType === 'long') {
+          this.$nextTick(() => {
+            if (this.$refs.quillEditor) {
+              this.$refs.quillEditor.setContent(blog.content || '');
+            }
+          });
+        }
+
+        this.originalImageUrl = imageUrl;
+        this.currentBlogId = blogId;
       } catch (error) {
-        console.error("加载文章详情失败:", error);
-        showNotification("加载文章详情失败，请稍后重试", "error");
+        console.error('加载文章详情失败:', error);
+        showNotification('加载文章详情失败，请稍后重试', 'error');
       }
     },
 
+    // 表单验证
     validateForm() {
       if (!this.formData.title.trim()) {
-        showNotification("请输入文章标题", "warning");
+        showNotification('请输入文章标题', 'warning');
         return false;
       }
       if (this.formData.title.trim().length < 5) {
-        showNotification("标题长度至少为 5 个字符", "warning");
+        showNotification('标题长度至少为 5 个字符', 'warning');
         return false;
       }
       if (!this.formData.imageUrl) {
-        showNotification("请设置封面图片", "warning");
+        showNotification('请设置封面图片', 'warning');
         return false;
       }
-      if (this.formData.articleType === "long") {
-        if (!this.formData.content.trim()) {
-          showNotification("请输入文章内容", "warning");
-          return false;
-        }
-      } else if (this.formData.articleType === "short") {
+      if (this.formData.articleType === 'long' && !this.formData.content.trim()) {
+        showNotification('请输入文章内容', 'warning');
+        return false;
+      }
+      if (this.formData.articleType === 'short') {
         if (!this.formData.shortContent.trim()) {
-          showNotification("请输入文章内容", "warning");
+          showNotification('请输入文章内容', 'warning');
           return false;
         }
         if (this.formData.mediaFiles.length === 0) {
-          showNotification("请上传媒体文件", "warning");
+          showNotification('请上传媒体文件', 'warning');
           return false;
         }
       }
       return true;
     },
 
+    // 构建提交数据
     buildSubmitData(imageUrl) {
       const submitData = {
         title: this.formData.title,
         topic: this.formData.topic,
         articleType: this.formData.articleType,
-        image: imageUrl,
+        image: imageUrl
       };
 
+      // 分类标签合并到 tags
       if (this.formData.category) {
-        const categoryTag = this.formData.category;
         const existingTags = this.parseTags(this.formData.tags);
-        if (!existingTags.includes(categoryTag)) {
-          existingTags.unshift(categoryTag);
+        if (!existingTags.includes(this.formData.category)) {
+          existingTags.unshift(this.formData.category);
         }
-        this.formData.tags = existingTags.join(", ");
+        this.formData.tags = existingTags.join(', ');
       }
 
-      if (this.formData.articleType === "long") {
-        submitData.content = this.formData.content;
-        submitData.video = "";
-        submitData.tags = this.parseTags(this.formData.tags);
-        submitData.mediaFiles = [];
-        submitData.shortContent = "";
-        submitData.hashtags = [];
-        submitData.location = "";
-      } else if (this.formData.articleType === "short") {
-        submitData.mediaFiles = this.formData.mediaFiles;
-        submitData.shortContent = this.formData.shortContent;
-        submitData.hashtags = this.parseTags(this.formData.hashtags);
-        submitData.location = this.formData.location;
-        submitData.content = "";
-        submitData.video = "";
-        submitData.tags = [];
+      if (this.formData.articleType === 'long') {
+        Object.assign(submitData, {
+          content: this.formData.content,
+          tags: this.parseTags(this.formData.tags),
+          video: '', mediaFiles: [], shortContent: '', hashtags: [], location: ''
+        });
+      } else {
+        Object.assign(submitData, {
+          mediaFiles: this.formData.mediaFiles,
+          shortContent: this.formData.shortContent,
+          hashtags: this.parseTags(this.formData.hashtags),
+          location: this.formData.location,
+          content: '', video: '', tags: []
+        });
       }
 
       return submitData;
     },
 
+    // 上传图片
+    async uploadImage() {
+      const imageFile = this.$refs.imageUploader
+        ? this.$refs.imageUploader.getFile()
+        : null;
+      if (!imageFile) return null;
+
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      const result = await this.$http.post('/api/blogs/upload-image', formData);
+      if (!result.success) {
+        throw new Error(`图片上传失败: ${result.message}`);
+      }
+      return result.data.url;
+    },
+
+    // 获取最终图片 URL
+    resolveImageUrl(uploadedUrl) {
+      if (uploadedUrl) return uploadedUrl;
+      if (this.isEditMode) {
+        const currentUrl = this.formData.imageUrl;
+        if (currentUrl && currentUrl.startsWith('blob:')) {
+          return this.originalImageUrl || '';
+        }
+        return currentUrl || this.originalImageUrl || '';
+      }
+      return '';
+    },
+
+    // 提交表单
     async submitForm() {
       if (!this.validateForm()) return;
 
       this.isSubmitting = true;
       try {
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
+        const token = getAuthToken();
         if (!token) {
-          showNotification("请先登录", "warning");
-          this.isSubmitting = false;
+          showNotification('请先登录', 'warning');
           return;
         }
 
-        const imageFile = this.$refs.imageUploader
-          ? this.$refs.imageUploader.getFile()
-          : null;
-        let uploadData = null;
-        if (imageFile) {
-          const imageFormData = new FormData();
-          imageFormData.append("image", imageFile);
-          uploadData = await this.$http.post(
-            "/api/blogs/upload-image",
-            imageFormData,
-          );
-          if (!uploadData.success) {
-            throw new Error(`图片上传失败: ${uploadData.message}`);
-          }
+        // 上传图片
+        let uploadedUrl = null;
+        try {
+          uploadedUrl = await this.uploadImage();
+        } catch (error) {
+          showNotification(error.message, 'error');
+          return;
         }
 
-        let imageUrl = this.formData.imageUrl;
-        if (uploadData) {
-          imageUrl = uploadData.data.url;
-        } else if (this.isEditMode) {
-          if (imageUrl && imageUrl.startsWith("blob:")) {
-            imageUrl = this.originalImageUrl || "";
-          } else if (!imageUrl) {
-            imageUrl = this.originalImageUrl || "";
-          }
-        } else {
-          if (!uploadData) {
-            imageUrl = "";
-          }
-        }
-
+        const imageUrl = this.resolveImageUrl(uploadedUrl);
         if (!imageUrl) {
-          showNotification("封面图片上传失败，请重试", "error");
-          this.isSubmitting = false;
+          showNotification('封面图片上传失败，请重试', 'error');
           return;
         }
 
         const submitData = this.buildSubmitData(imageUrl);
+        const url = this.isEditMode
+          ? `/api/blogs/${this.currentBlogId}`
+          : '/api/blogs';
+        const method = this.isEditMode ? 'put' : 'post';
 
-        let data;
-        if (this.isEditMode) {
-          data = await this.$http.put(
-            `/api/blogs/${this.currentBlogId}`,
-            submitData,
-          );
-        } else {
-          data = await this.$http.post("/api/blogs", submitData);
-        }
-
+        const data = await this.$http[method](url, submitData);
         if (data.success) {
           showNotification(
-            this.isEditMode ? "攻略更新成功！" : "攻略发布成功！",
-            "success",
+            this.isEditMode ? '攻略更新成功！' : '攻略发布成功！',
+            'success'
           );
           this.cancelCreate();
         } else {
           showNotification(
-            this.isEditMode
-              ? `更新失败: ${data.message}`
-              : `发布失败: ${data.message}`,
-            "error",
+            `${this.isEditMode ? '更新' : '发布'}失败: ${data.message}`,
+            'error'
           );
         }
       } catch (error) {
-        console.error("发布失败:", error);
-        showNotification(`发布失败: ${error.message}`, "error");
+        console.error('发布失败:', error);
+        showNotification(`发布失败: ${error.message}`, 'error');
       } finally {
         this.isSubmitting = false;
       }
-    },
-  },
-
-  beforeDestroy() {
-    if (this.$refs.imageUploader) {
-      this.$refs.imageUploader.clearFile();
     }
-  },
+  }
 };
 </script>
 
 <style scoped>
 .create-page {
   min-height: 100vh;
-  background: linear-gradient(
-    135deg,
-    var(--background-light) 0%,
-    var(--background-dark) 100%
-  );
-  font-family: var(--font-family);
+  background: linear-gradient(135deg, #fef3c7 0%, #fbcfe8 50%, #e0f2fe 100%);
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive, sans-serif;
 }
 
-.main-content {
+.create-page__main {
   padding-bottom: 70px;
 }
 
-.page-header {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  border: 4px solid var(--background-dark);
-  border-radius: 12px;
+.create-page__header {
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
+  border: 3px solid #fbcfe8;
+  border-radius: 16px;
   padding: 40px 0 30px;
-  margin-bottom: 30px;
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
   margin: 20px auto 30px;
   max-width: 1200px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(251, 207, 232, 0.25);
 }
 
-.page-title {
+.create-page__title {
   margin: 0 0 10px;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #16a34a;
 }
 
-.page-subtitle {
+.create-page__subtitle {
   margin: 0;
   font-size: 1rem;
-  color: var(--text-secondary);
+  color: #6ee7b7;
 }
 
+/* 表单 */
 .create-form {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  border: 4px solid var(--background-dark);
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
-  margin-bottom: 30px;
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
+  border: 3px solid #fbcfe8;
+  border-radius: 16px;
+  padding: 32px;
+  margin: 0 auto 30px;
+  max-width: 1200px;
+  box-shadow: 0 8px 30px rgba(251, 207, 232, 0.25);
+  animation: fadeIn 0.4s ease;
 }
 
-.form-section {
-  margin-bottom: 25px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.form-label {
+.create-form__section {
+  margin-bottom: 24px;
+}
+
+.create-form__label {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #16a34a;
   font-size: 0.95rem;
 }
 
-.form-input,
-.form-select,
-.form-textarea {
+.create-form__input,
+.create-form__select,
+.create-form__textarea {
   width: 100%;
-  padding: 12px 15px;
-  border: 2px solid var(--background-dark);
-  border-radius: 10px;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-  background-color: white;
-  font-family: var(--font-family);
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
-}
-
-.topic-selector {
-  position: relative;
-}
-
-.topic-lock-hint {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 4px 8px;
+  padding: 12px 16px;
+  border: 2px solid #fbcfe8;
   border-radius: 12px;
-  border: 1px solid var(--background-dark);
-}
-
-.topic-selector.topic-locked .form-select {
-  background-color: var(--background-light);
-  cursor: not-allowed;
-}
-
-.topic-display {
-  padding: 12px 15px;
-  border: 2px solid var(--background-dark);
-  border-radius: 10px;
-  background-color: var(--background-light);
   font-size: 0.95rem;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.topic-name {
-  display: inline-block;
-  padding: 4px 12px;
-  background-color: var(--primary-pink);
-  color: white;
-  border-radius: 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 200px;
-  font-family: var(--font-family);
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-.btn {
-  border-radius: 30px;
-  padding: 12px 30px;
-  font-weight: 600;
+  color: #333;
+  background: #fff;
   transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-family);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.create-form__input:focus,
+.create-form__select:focus,
+.create-form__textarea:focus {
+  outline: none;
+  border-color: #ec4899;
+  box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.08);
 }
 
-.btn-primary {
-  background: linear-gradient(
-    135deg,
-    var(--primary-pink),
-    var(--secondary-pink)
-  );
-  color: white;
+.create-form__textarea {
+  resize: vertical;
+  min-height: 180px;
 }
 
-.btn-primary:hover {
-  background: linear-gradient(135deg, var(--secondary-pink), #be185d);
-  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  color: var(--text-primary);
-  border: 2px solid var(--background-dark);
-}
-
-.btn-secondary:hover {
-  background: linear-gradient(135deg, var(--background-light) 0%, #fff 100%);
-  box-shadow: 0 4px 12px rgba(251, 207, 232, 0.3);
-}
-
-.form-hint {
+.create-form__hint {
   font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-top: 5px;
-  margin-bottom: 15px;
-  font-family: var(--font-family);
+  color: #999;
+  margin-top: 6px;
 }
 
 .char-count {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: #999;
   text-align: right;
-  margin-top: 5px;
-  font-family: var(--font-family);
+  margin-top: 6px;
 }
 
-.article-type-selector {
+/* 类型选择器 */
+.type-selector {
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 16px;
 }
 
 .type-btn {
   flex: 1;
-  padding: 15px 20px;
-  border: 4px solid var(--background-dark);
-  border-radius: 10px;
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
+  padding: 16px 20px;
+  border: 3px solid #fbcfe8;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
-  font-family: var(--font-family);
+  box-shadow: 0 4px 16px rgba(251, 207, 232, 0.2);
 }
 
-.type-btn:hover {
-  border-color: var(--primary-pink);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(251, 207, 232, 0.4);
+.type-btn:hover:not(:disabled) {
+  border-color: #ec4899;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.15);
 }
 
-.type-btn.active {
-  border-color: var(--primary-pink);
-  background: linear-gradient(135deg, #fff 0%, rgba(236, 72, 153, 0.1) 100%);
-  color: var(--primary-pink);
-  box-shadow: 0 12px 30px rgba(236, 72, 153, 0.3);
+.type-btn--active {
+  border-color: #ec4899;
+  background: linear-gradient(135deg, #fff 0%, rgba(236, 72, 153, 0.08) 100%);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);
 }
 
-.type-btn span {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.type-btn small {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
+.type-btn__icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+.type-btn__text { display: block; font-weight: 600; margin-bottom: 2px; }
+.type-btn__hint { font-size: 0.8rem; color: #999; }
 
 .type-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.type-btn:disabled:hover {
-  border-color: var(--background-dark);
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  color: var(--text-primary);
-  transform: none;
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
+/* 话题锁定 */
+.topic-locked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border: 2px solid #fbcfe8;
+  border-radius: 12px;
+}
+
+.topic-locked__name {
+  display: inline-block;
+  padding: 4px 14px;
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.topic-locked__hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* 按钮 */
+.create-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.btn {
+  border-radius: 30px;
+  padding: 12px 32px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: white;
+}
+
+.btn--primary:hover {
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+}
+
+.btn--secondary {
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
+  color: #333;
+  border: 2px solid #fbcfe8;
+}
+
+.btn--secondary:hover {
+  box-shadow: 0 6px 20px rgba(251, 207, 232, 0.3);
 }
 
 @media (max-width: 768px) {
-  .page-header {
-    padding: 30px 0 20px;
+  .create-page__header {
+    padding: 24px 0 20px;
+    margin: 12px 16px 24px;
   }
-  .page-title {
-    font-size: 1.5rem;
-  }
-  .create-form {
-    padding: 20px;
-  }
-  .article-type-selector {
-    flex-direction: column;
-  }
-  .type-btn {
-    width: 100%;
-  }
-  .form-actions {
-    flex-direction: column;
-  }
-  .btn {
-    width: 100%;
-  }
+  .create-page__title { font-size: 1.5rem; }
+  .create-form { padding: 20px; margin: 0 16px 30px; }
+  .type-selector { flex-direction: column; }
+  .create-form__actions { flex-direction: column; }
+  .btn { width: 100%; }
 }
 </style>

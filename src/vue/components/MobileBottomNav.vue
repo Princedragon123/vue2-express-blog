@@ -1,26 +1,28 @@
-<!-- MobileBottomNav.vue - 移动端底部导航栏组件 -->
 <template>
-  <nav class="mobile-bottom-nav" :class="currentStyle">
-    <router-link to="/blog" class="nav-item" :class="{ active: $route.path === '/blog' }" aria-label="发现" tabindex="0">
-      <span class="nav-icon">🧭</span>
-      <span>发现</span>
+  <nav class="mobile-nav" aria-label="移动端导航">
+    <router-link to="/blog" class="mobile-nav__item" :class="{ 'mobile-nav__item--active': isActive('/blog') }" aria-label="发现">
+      <span class="mobile-nav__icon">🧭</span>
+      <span class="mobile-nav__label">发现</span>
     </router-link>
-    <router-link to="/following" class="nav-item" :class="{ active: $route.path === '/following' }" aria-label="我的关注" tabindex="0">
-      <span class="nav-icon">👥</span>
-      <span>我的关注</span>
+
+    <router-link to="/following" class="mobile-nav__item" :class="{ 'mobile-nav__item--active': isActive('/following') }" aria-label="关注">
+      <span class="mobile-nav__icon">👥</span>
+      <span class="mobile-nav__label">关注</span>
     </router-link>
-    <router-link to="/create" class="nav-item create-btn" :class="{ active: $route.path === '/create' }" aria-label="发布" tabindex="0">
-      <span class="nav-icon">➕</span>
-      <span>发布</span>
+
+    <router-link to="/create" class="mobile-nav__item mobile-nav__item--create" :class="{ 'mobile-nav__item--active': isActive('/create') }" aria-label="发布">
+      <span class="mobile-nav__create-icon">➕</span>
     </router-link>
-    <router-link to="/messages" class="nav-item notification-btn" :class="{ active: $route.path === '/messages' }" aria-label="我的私信" tabindex="0">
-      <span class="nav-icon">✉️</span>
-      <span>我的私信</span>
-      <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+
+    <router-link to="/messages" class="mobile-nav__item" :class="{ 'mobile-nav__item--active': isActive('/messages') }" aria-label="私信">
+      <span class="mobile-nav__icon">✉️</span>
+      <span class="mobile-nav__label">私信</span>
+      <span v-if="unreadCount > 0" class="mobile-nav__badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
     </router-link>
-    <router-link to="/profile" class="nav-item" :class="{ active: $route.path === '/profile' }" aria-label="个人中心" tabindex="0">
-      <span class="nav-icon">👤</span>
-      <span>个人中心</span>
+
+    <router-link to="/profile" class="mobile-nav__item" :class="{ 'mobile-nav__item--active': isProfileActive }" aria-label="个人中心">
+      <span class="mobile-nav__icon">👤</span>
+      <span class="mobile-nav__label">我的</span>
     </router-link>
   </nav>
 </template>
@@ -28,215 +30,204 @@
 <script>
 export default {
   name: 'MobileBottomNav',
+
   data() {
     return {
-      currentStyle: 'style-spring-garden', // 默认风格
-      unreadCount: 0 // 未读消息数量，默认为0
+      unreadCount: 0
+    };
+  },
+
+  computed: {
+    isProfileActive() {
+      const p = this.$route.path;
+      return p === '/profile' || p.startsWith('/profile/') || p === '/my-profile' || p === '/my-creation' || p === '/edit-profile';
     }
   },
+
+  watch: {
+    '$route'() {
+      // 路由变化时刷新未读消息数
+      this.fetchUnreadCount();
+    }
+  },
+
   created() {
-    // 从localStorage获取保存的风格，如果没有则使用默认值
-    const savedStyle = localStorage.getItem('currentStyle')
-    if (savedStyle) {
-      this.currentStyle = savedStyle
-    }
-    
-    // 监听风格变化事件
-    window.addEventListener('styleChanged', this.handleStyleChange)
+    this.fetchUnreadCount();
+    // 每 30 秒轮询未读消息数
+    this._pollInterval = setInterval(() => {
+      this.fetchUnreadCount();
+    }, 30000);
   },
+
   beforeDestroy() {
-    // 移除事件监听
-    window.removeEventListener('styleChanged', this.handleStyleChange)
+    if (this._pollInterval) clearInterval(this._pollInterval);
   },
+
   methods: {
-    handleStyleChange(event) {
-      // 更新当前风格
-      this.currentStyle = event.detail.style
-      // 保存到localStorage
-      localStorage.setItem('currentStyle', event.detail.style)
+    isActive(path) {
+      return this.$route.path === path;
+    },
+
+    async fetchUnreadCount() {
+      if (!this.$store.getters.isLoggedIn) return;
+      try {
+        // 获取未读消息数（使用联系人列表来判断是否有未读）
+        const response = await this.$http.messages.getContacts({ limit: 1 });
+        if (response.success && typeof response.unreadCount === 'number') {
+          this.unreadCount = response.unreadCount;
+        }
+      } catch {
+        // 静默失败 - 未读消息数不是关键功能
+      }
     }
   }
-}
+};
 </script>
 
 <style scoped>
-/* 底部导航栏 - 可爱风格 */
-.mobile-bottom-nav {
+/* 移动端底部导航栏 */
+.mobile-nav {
   position: fixed;
-  position: -webkit-sticky;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 65px;
-  background: linear-gradient(135deg, #fef3c7, #fbcfe8);
-  border-top: 0;
+  height: 60px;
+  /* 安全区域适配 - iPhone X 及以上机型 */
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 243, 199, 0.98) 100%);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(236, 72, 153, 0.12);
   display: none;
   justify-content: space-around;
   align-items: center;
-  padding: 0 0.5rem 10px;
   z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(236, 72, 153, 0.2);
-  /* 可爱风格：圆润边角 */
-  border-radius: 20px 20px 0 0;
-  /* 可爱风格：柔和的顶部边框 */
-  border-top: 1px solid rgba(236, 72, 153, 0.3);
-  /* 防止滑动时位置偏移 */
-  transform: translateZ(0);
-  will-change: transform;
-  /* 确保导航栏不会被其他元素遮挡 */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* 导航项 */
-.mobile-bottom-nav .nav-item {
+.mobile-nav__item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #495057;
-  text-decoration: none;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  gap: 2px;
   flex: 1;
-  max-width: 20%; /* 5个项目，每个20%宽度 */
   height: 100%;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-width: 48px;
+  /* 最小触摸目标 44px */
+  min-height: 44px;
+  color: #999;
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* 导航项悬停效果 */
-.mobile-bottom-nav .nav-item:hover {
-  background-color: #fff0f5;
-  color: var(--primary-pink);
-  box-shadow: 0 3px 6px rgba(236, 72, 153, 0.2);
+.mobile-nav__item:active {
+  transform: scale(0.93);
 }
 
-/* 导航图标 */
-.mobile-bottom-nav .nav-item .nav-icon {
-  font-size: 1.5rem;
-  transition: all 0.3s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  color: #6c757d;
+.mobile-nav__item--active {
+  color: #ec4899;
 }
 
-/* 导航项悬停时图标颜色 */
-.mobile-bottom-nav .nav-item:hover .nav-icon {
-  color: var(--primary-pink);
+.mobile-nav__item--active .mobile-nav__icon {
+  transform: scale(1.15);
 }
 
-.mobile-bottom-nav .create-btn .nav-icon {
+.mobile-nav__icon {
+  font-size: 1.35rem;
+  transition: transform 0.2s ease;
+}
+
+.mobile-nav__label {
+  line-height: 1;
+}
+
+/* 中间发布按钮 */
+.mobile-nav__item--create {
+  position: relative;
+  top: -14px;
+}
+
+.mobile-nav__create-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  transition: all 0.3s ease;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.35);
+  font-size: 1.3rem;
+  transition: all 0.25s ease;
+  /* 确保触摸目标足够大 */
+  min-width: 44px;
+  min-height: 44px;
 }
 
-.mobile-bottom-nav .create-btn:hover .nav-icon {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5),
-              0 0 0 3px rgba(255, 255, 255, 0.3) inset;
+.mobile-nav__item--create:active .mobile-nav__create-icon {
+  transform: scale(0.9);
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.25);
 }
 
-/* 激活状态 */
-.mobile-bottom-nav .nav-item.active {
-  background-color: #fff0f5;
-  color: var(--primary-pink);
-  box-shadow: 0 2px 5px rgba(236, 72, 153, 0.2);
+/* 未读消息徽章 */
+.mobile-nav__badge {
+  position: absolute;
+  top: 2px;
+  right: calc(50% - 20px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  animation: badgePop 0.3s ease;
 }
 
-.mobile-bottom-nav .nav-item.active .nav-icon {
-  color: var(--primary-pink);
-  transform: scale(1.2);
-  /* 可爱风格：发光效果 */
-  text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
-/* 导航文字 */
-.mobile-bottom-nav .nav-item span {
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-/* 响应式显示控制 - 根据屏幕宽度显示，适配手机边框长度 */
+/* 响应式显示 */
 @media (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex !important;
-  }
-  
-  /* 确保内容不被底部导航栏遮挡 */
-  main {
-    padding-bottom: 75px !important;
+  .mobile-nav {
+    display: flex;
   }
 }
 
-/* 确保在所有屏幕尺寸下默认隐藏，仅在小屏幕显示 */
 @media (min-width: 769px) {
-  .mobile-bottom-nav {
-    display: none !important;
+  .mobile-nav {
+    display: none;
   }
 }
 
-/* 小屏幕手机优化 */
-@media (max-width: 375px) {
-  .mobile-bottom-nav {
-    height: 60px;
-    padding: 0 0.1rem 0;
+/* 小屏幕优化 */
+@media (max-width: 360px) {
+  .mobile-nav {
+    height: 54px;
   }
-  
-  .mobile-bottom-nav .nav-item {
-    font-size: 0.65rem;
+  .mobile-nav__icon {
+    font-size: 1.15rem;
   }
-  
-  .mobile-bottom-nav .nav-item .nav-icon {
-    font-size: 1.2rem;
-  }
-  
-  .mobile-bottom-nav .create-btn .nav-icon {
-    width: 55px;
-    height: 55px;
-    font-size: 2.2rem;
-  }
-}
-
-/* 超小屏幕手机优化（320px以下） */
-@media (max-width: 320px) {
-  .mobile-bottom-nav {
-    height: 55px;
-    padding: 0 0.1rem 6px;
-  }
-  
-  .mobile-bottom-nav .nav-item {
+  .mobile-nav__label {
     font-size: 0.6rem;
   }
-  
-  .mobile-bottom-nav .nav-item .nav-icon {
+  .mobile-nav__create-icon {
+    width: 40px;
+    height: 40px;
     font-size: 1.1rem;
   }
-  
-  .mobile-bottom-nav .create-btn .nav-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
-  }
 }
-
-/* 主题风格 - 春日花园 */
-.style-spring-garden .mobile-bottom-nav {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  border-top: 3px solid var(--background-dark);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='20' viewBox='0 0 1200 20'%3E%3Cpath d='M0,10 C300,5 900,15 1200,10 L1200,20 L0,20 Z' fill='%23fbcfe8' opacity='0.3'/%3E%3C/svg%3E");
-}
-
-.style-spring-garden .mobile-bottom-nav .nav-item.active,
-.style-spring-garden .mobile-bottom-nav .nav-item.active i {
-  color: var(--text-primary);
-}
-
-.style-spring-garden .mobile-bottom-nav .create-btn i {
-  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
-}
-
 </style>

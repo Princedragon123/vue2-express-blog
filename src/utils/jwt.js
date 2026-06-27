@@ -73,22 +73,25 @@ exports.generateToken = (userId, role = 'user') => {
 
 // 验证 JWT Token
 // - token: JWT Token 字符串
+// - ignoreExpiration: 是否忽略过期检查（默认false，用于refresh-token场景）
 // - 解码后的 Payload 对象
 // - Token 格式错误
 // - 签名无效
-// - Token 已过期
+// - Token 已过期（除非ignoreExpiration=true）
 // const decoded = verifyToken(token);
 // // { id: '507f1f77bcf86cd799439011', role: 'user', iat: 1600000000, exp: 1600604800 }
-exports.verifyToken = (token) => {
+exports.verifyToken = (token, ignoreExpiration = false) => {
     try {
         // 验证 Token
-        // jwt.verify(token, secret)
+        // jwt.verify(token, secret, options)
         // 1. Token 格式是否正确
         // 2. 签名是否有效（使用相同的 secret）
-        // 3. Token 是否过期（检查 exp 字段）
+        // 3. Token 是否过期（检查 exp 字段，除非ignoreExpiration=true）
         // 验证成功：返回 Payload 对象
         // 验证失败：抛出异常
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET, {
+            ignoreExpiration  // refresh-token场景设为true，允许过期Token通过
+        });
 
         return decoded;
     } catch (error) {

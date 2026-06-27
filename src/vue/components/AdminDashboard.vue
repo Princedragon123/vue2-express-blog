@@ -1,70 +1,58 @@
-<!-- AdminDashboard.vue - 管理员仪表盘组件 -->
+<!-- AdminDashboard.vue - 管理员仪表盘（嵌套路由子组件，渲染在AdminLayout的router-view中） -->
 <template>
   <div class="admin-dashboard">
-    <!-- 主内容区 -->
-    <main class="admin-content">
-      <!-- 页面标题 -->
-      <div class="admin-header">
-        <div class="container">
-          <h1 class="admin-title">管理员仪表盘</h1>
-          <p class="admin-subtitle">管理博客系统的所有内容</p>
-        </div>
-      </div>
-      
-      <!-- 统计概览 -->
-      <div class="container">
-        <div class="stats-overview">
-          <div class="stat-card">
-            <div class="stat-icon users-icon">
-              <svg-icon name="users" :size="32"></svg-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-number">{{ stats.totalUsers }}</div>
-              <div class="stat-label">总用户数</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon blogs-icon">
-              <svg-icon name="book" :size="32"></svg-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-number">{{ stats.totalBlogs }}</div>
-              <div class="stat-label">总博客数</div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 管理导航 -->
-        <div class="admin-nav">
-          <div class="nav-card" @click="goToUsers">
-            <div class="nav-icon">
-              <svg-icon name="userShield" :size="32"></svg-icon>
-            </div>
-            <div class="nav-content">
-              <h3>用户管理</h3>
-              <p>管理所有注册用户</p>
-            </div>
-            <div class="nav-arrow">
-              <svg-icon name="arrowRight" :size="20"></svg-icon>
-            </div>
-          </div>
-          <div class="nav-card" @click="goToBlogs">
-            <div class="nav-icon">
-              <svg-icon name="bookOpen" :size="32"></svg-icon>
-            </div>
-            <div class="nav-content">
-              <h3>博客管理</h3>
-              <p>管理所有博客文章</p>
-            </div>
-            <div class="nav-arrow">
-              <svg-icon name="arrowRight" :size="20"></svg-icon>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-    
+    <!-- 统计概览 -->
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="admin-dashboard__loading">
+      <div class="spinner"></div>
+      <p>加载统计数据...</p>
+    </div>
 
+    <!-- 统计概览 -->
+    <div v-else class="stats-overview">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--users">
+          <svg-icon name="users" :size="32"></svg-icon>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__number">{{ stats.totalUsers }}</div>
+          <div class="stat-card__label">总用户数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blogs">
+          <svg-icon name="book" :size="32"></svg-icon>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__number">{{ stats.totalBlogs }}</div>
+          <div class="stat-card__label">总博客数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--comments">
+          <span>💬</span>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__number">{{ stats.totalComments || 0 }}</div>
+          <div class="stat-card__label">总评论数</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷操作 -->
+    <div class="admin-dashboard__quick-actions">
+      <h3 class="quick-actions__title">快捷操作</h3>
+      <div class="quick-actions__grid">
+        <router-link to="/admin/users" class="quick-action-card">
+          <span class="quick-action-card__icon">👥</span>
+          <span class="quick-action-card__text">用户管理</span>
+        </router-link>
+        <router-link to="/admin/blogs" class="quick-action-card">
+          <span class="quick-action-card__icon">📝</span>
+          <span class="quick-action-card__text">博客管理</span>
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -111,191 +99,177 @@ export default {
         this.isLoading = false;
       }
     },
-    // 跳转到用户管理页面
-    goToUsers() {
-      this.$router.push('/admin/users');
-    },
-    // 跳转到博客管理页面
-    goToBlogs() {
-      this.$router.push('/admin/blogs');
-    }
+    // 跳转逻辑已移至 AdminLayout 侧边栏导航
   }
 };
 </script>
 
 <style scoped>
-.admin-dashboard {
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
-  font-family: var(--font-family);
+.admin-dashboard__loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
 }
 
-.admin-content {
-  padding-top: 80px;
-  padding-bottom: 70px;
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #f3f3f3;
+  border-top-color: #ec4899;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
 }
 
-.admin-header {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  padding: 20px 0;
-  margin-bottom: 30px;
-  border-bottom: 4px solid var(--background-dark);
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
-}
-
-.admin-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--text-primary);
-  margin: 0 0 5px 0;
-}
-
-.admin-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .stats-overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  border: 4px solid var(--background-dark);
-  border-radius: 12px;
+  background: #fff;
+  border: 2px solid #fbcfe8;
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(251, 207, 232, 0.15);
   display: flex;
   align-items: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  gap: 16px;
+  transition: all 0.3s ease;
+  cursor: default;
+  /* 触摸反馈 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(251, 207, 232, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15);
 }
 
-.stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.stat-card:active {
+  transform: scale(0.98);
+}
+
+.stat-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  margin-right: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.users-icon {
-  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
-  color: white;
+.stat-card__icon--users {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
 }
 
-.blogs-icon {
-  background: linear-gradient(135deg, var(--accent-green) 0%, #4caf50 100%);
-  color: white;
+.stat-card__icon--blogs {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
 }
 
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--text-primary);
-  margin-bottom: 5px;
+.stat-card__icon--comments {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.admin-nav {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.nav-card {
-  background: linear-gradient(135deg, #fff 0%, var(--background-light) 100%);
-  border: 4px solid var(--background-dark);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 8px 25px rgba(251, 207, 232, 0.3);
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.nav-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(251, 207, 232, 0.4);
-}
-
-.nav-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.stat-card__number {
   font-size: 28px;
-  color: white;
-  margin-right: 15px;
-  box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.1;
 }
 
-.nav-content h3 {
-  font-size: 18px;
-  font-weight: bold;
-  color: var(--text-primary);
-  margin: 0 0 5px 0;
+.stat-card__label {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 2px;
 }
 
-.nav-content p {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0;
+/* 快捷操作 */
+.admin-dashboard__quick-actions {
+  margin-top: 8px;
 }
 
-.nav-arrow {
-  margin-left: auto;
-  font-size: 18px;
-  color: var(--text-secondary);
+.quick-actions__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 14px;
+}
+
+.quick-actions__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.quick-action-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 2px solid #fbcfe8;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  min-height: 52px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.quick-action-card:hover {
+  border-color: #ec4899;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.1);
+}
+
+.quick-action-card:active {
+  transform: scale(0.97);
+}
+
+.quick-action-card__icon {
+  font-size: 1.4rem;
+}
+
+.quick-action-card__text {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.95rem;
 }
 
 @media (max-width: 768px) {
   .stats-overview {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
-  
-  .admin-nav {
-    grid-template-columns: 1fr;
-  }
-  
+
   .stat-card {
-    padding: 20px;
+    padding: 18px;
   }
-  
-  .nav-card {
-    padding: 20px;
+
+  .stat-card__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
   }
-  
-  .stat-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
-  }
-  
-  .nav-icon {
-    width: 60px;
-    height: 60px;
+
+  .stat-card__number {
     font-size: 24px;
+  }
+
+  .quick-actions__grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 </style>

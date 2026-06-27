@@ -1,115 +1,134 @@
+// Axios 封装 + 所有 API 方法
+// 统一管理 HTTP 请求、Token 注入、401 自动刷新
 
-// axios: HTTP 请求库
 import axios from 'axios';
-
-// 认证状态管理
 import store from '../store';
-
-// 通知工具
 import { showNotification } from './notification';
 
-// 👇 新增：导入路由！！！ 核心修复
-import router from '@/router/index';
-
-const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE_URL = isLocalDev ? '' : '';
-
+// 创建主 API 实例
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 15000, 
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: '',
+  timeout: 15000,
+  headers: { 'Content-Type': 'application/json' }
 });
 
+// 用于刷新 Token 的独立实例（避免拦截器死循环）
 const refreshInstance = axios.create({
   baseURL: '',
   timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' }
 });
 
+// Token 刷新锁 - 防止并发刷新
+let isRefreshing = false;
+let refreshSubscribers = [];
 
+function subscribeTokenRefresh(cb) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+}
+
+function onRefreshFailed(err) {
+  refreshSubscribers.forEach(cb => cb(null, err));
+  refreshSubscribers = [];
+}
+
+async function refreshAuthToken() {
+  const token = store.getters.getToken;
+  if (!token) throw new Error('无 Token');
+
+  const response = await refreshInstance.post('/api/auth/refresh-token', {}, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  if (!response.data || !response.data.success) {
+    throw new Error(response.data?.message || 'Token 刷新失败');
+  }
+
+  const rememberMe = !!localStorage.getItem('token');
+  store.dispatch('loginSuccess', {
+    user: response.data.user,
+    token: response.data.token,
+    rememberMe
+  });
+
+  return response.data.token;
+}
+
+// 请求拦截器 - 自动添加 Authorization
 api.interceptors.request.use(
   (config) => {
     const token = store.getters.getToken;
     if (token && !config.noAuth) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // FormData 时不设置 Content-Type，让浏览器自动处理（含 boundary）
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
     return config;
   },
-  (error) => {
-    console.error('API 请求错误:', error);
-    // Promise.reject(error)：把错误传递给调用者的 catch
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
+// 响应拦截器 - 统一错误处理 + 401 自动刷新
 api.interceptors.response.use(
   (response) => {
-    // 状态码2xx时，处理业务逻辑
     const data = response.data;
-    if (data.success) {
-      return data;
-    } else {
-      // 业务失败，抛出后端返回的错误信息
-      return Promise.reject(new Error(data.message || '请求失败'));
-    }
+    if (data.success) return data;
+    return Promise.reject(new Error(data.message || '请求失败'));
   },
   async (error) => {
-    console.error('API响应错误:', error);
     if (error.response) {
       const { status, data } = error.response;
-      
-      // 统一处理后端返回的message
       const errorMsg = data?.message || '未知错误';
 
       switch (status) {
         case 400:
-          // 新增：处理400状态码，直接显示后端返回的错误信息
           showNotification(errorMsg, 'error');
           break;
+
         case 401: {
-          const originalRequest = error.config; 
-          if (!originalRequest._retry) {
-            originalRequest._retry = true;  
-            try {
-              const token = store.getters.getToken;
-              if (!token) {
-                store.dispatch('logout', router);
-                showNotification('登录已过期，请重新登录', 'error');
-                return Promise.reject(error);
-              }
-              const refreshResponse = await refreshInstance.post('/api/auth/refresh-token', {}, {
-                headers: {
-                  'Authorization': `Bearer ${token}`
-                }
-              });
-              
-              store.dispatch('loginSuccess', {
-                user: refreshResponse.data.user,
-                token: refreshResponse.data.token,
-                rememberMe: localStorage.getItem('token') !== null
-              });
-              
-              originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
-              
-              return api(originalRequest);
-              
-            } catch (refreshError) {
-              console.error('Token刷新失败:', refreshError);
-              store.dispatch('logout', router);
-              showNotification('登录已过期，请重新登录', 'error');
-              return Promise.reject(refreshError);
-            }
+          const originalRequest = error.config;
+          // 防止无限重试
+          if (originalRequest._retry) {
+            return Promise.reject(error);
           }
-          store.dispatch('logout');
-          return Promise.reject(error);
+          originalRequest._retry = true;
+
+          // 如果正在刷新，排队等待
+          if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+              subscribeTokenRefresh((newToken, err) => {
+                if (err) return reject(err);
+                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                resolve(api(originalRequest));
+              });
+            });
+          }
+
+          isRefreshing = true;
+          try {
+            const newToken = await refreshAuthToken();
+            onRefreshed(newToken);
+            isRefreshing = false;
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            return api(originalRequest);
+          } catch (refreshError) {
+            onRefreshFailed(refreshError);
+            isRefreshing = false;
+            // 延迟导入路由以避免循环依赖
+            const router = (await import('../router')).default;
+            store.dispatch('logout', router);
+            showNotification('登录已过期，请重新登录', 'error');
+            return Promise.reject(refreshError);
+          }
         }
+
         case 403:
           showNotification('权限不足，无法访问该资源', 'error');
           break;
@@ -120,7 +139,6 @@ api.interceptors.response.use(
           showNotification('服务器内部错误，请稍后重试', 'error');
           break;
         default:
-          // 其他状态码，统一显示后端返回的错误信息
           showNotification(`请求失败: ${errorMsg}`, 'error');
       }
     } else if (error.request) {
@@ -128,228 +146,95 @@ api.interceptors.response.use(
     } else {
       showNotification('请求配置错误', 'error');
     }
-    
+
     return Promise.reject(error);
   }
 );
 
 // API 方法封装
-// 1. 代码更清晰，便于维护
-// 2. IDE自动提示更友好
-// 3. 统一管理所有API调用
 const apiMethods = {
-  // 直接HTTP方法（兼容现有代码）
-  // 这里提供直接访问底层axios实例的方法
   get: (url, config) => api.get(url, config),
   post: (url, data, config) => api.post(url, data, config),
   put: (url, data, config) => api.put(url, data, config),
   delete: (url, config) => api.delete(url, config),
-  
-  // 认证相关API
+
   auth: {
-    // 登录
     login: (data) => api.post('/api/auth/login', data),
-    
-    // 注册
     register: (data) => api.post('/api/auth/register', data),
-    
-    // 获取当前用户信息
     getCurrentUser: () => api.get('/api/auth/me'),
-    
-    // 登出
     logout: () => api.post('/api/auth/logout')
   },
-  
-  // 博客相关API
+
   blogs: {
-    // 获取博客列表
     getList: (params) => api.get('/api/blogs', { params }),
-    
-    // 获取博客详情
     getDetail: (id) => api.get(`/api/blogs/${id}`),
-    
-    // 创建博客
     create: (data) => api.post('/api/blogs', data),
-    
-    // 更新博客
     update: (id, data) => api.put(`/api/blogs/${id}`, data),
-    
-    // 删除博客
     delete: (id) => api.delete(`/api/blogs/${id}`),
-    
-    // 点赞博客
     like: (id) => api.post(`/api/blogs/${id}/like`),
-    
-    // 取消点赞
     unlike: (id) => api.delete(`/api/blogs/${id}/like`),
-    
-    // 检查是否已点赞
     checkLikeStatus: (id) => api.get(`/api/blogs/${id}/is-liked`),
-    
-    // 检查是否已收藏
     checkBookmarkStatus: (id) => api.get(`/api/blogs/${id}/is-bookmarked`),
-    
-    // 收藏博客
     bookmark: (id) => api.post(`/api/blogs/${id}/bookmark`),
-    
-    // 取消收藏
     unbookmark: (id) => api.delete(`/api/blogs/${id}/bookmark`),
-    
-    // 获取博客评论
     getComments: (id, params) => api.get(`/api/blogs/${id}/comments`, { params }),
-    
-    // 创建评论
     createComment: (id, data) => api.post(`/api/blogs/${id}/comments`, data),
-    
-    // 删除评论
     deleteComment: (id) => api.delete(`/api/blogs/comments/${id}`),
-    
-    // 上传图片
-    uploadImage: (formData) => api.post('/api/blogs/upload-image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }),
-    
-    // 上传视频
-    uploadVideo: (formData) => api.post('/api/blogs/upload-video', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }),
-  },
-  
-  // 消息相关API
-  messages: {
-    // 获取联系人列表
-    getContacts: (params) => api.get('/api/messages/contacts', { params }),
-    
-    // 获取消息历史
-    getHistory: (userId, params) => api.get(`/api/messages/${userId}`, { params }),
-    
-    // 发送消息
-    send: (data) => api.post('/api/messages', data),
-    
-    // 分享博客
-    share: (data) => api.post('/api/messages/share', data),
-    
-    // 上传附件
-    uploadAttachment: (formData) => api.post('/api/messages/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }),
-    
-    // 标记消息为已读
-    markAsRead: (data) => api.put('/api/messages/read', data),
-    
-    // 删除消息
-    delete: (id) => api.delete(`/api/messages/${id}`)
-  },
-  
-  // 通知相关API
-  notifications: {
-    // 获取通知列表
-    getList: (params) => api.get('/api/notifications', { params }),
-    
-    // 创建通知
-    create: (data) => api.post('/api/notifications', data),
-    
-    // 标记通知为已读
-    markAsRead: (notificationId) => api.put(`/api/notifications/${notificationId}/read`),
-    
-    // 标记所有通知为已读
-    markAllAsRead: () => api.put('/api/notifications/read-all'),
-    
-    // 删除通知
-    delete: (notificationId) => api.delete(`/api/notifications/${notificationId}`)
-  },
-  
-  // 用户相关API
-  users: {
-    // 获取用户信息
-    getInfo: (id) => api.get(`/api/users/${id}`),
-    
-    // 更新用户信息
-    update: (data) => api.put('/api/users/profile', data),
-    
-    // 关注用户
-    follow: (id) => api.post(`/api/users/${id}/follow`),
-    
-    // 取消关注
-    unfollow: (id) => api.delete(`/api/users/${id}/follow`),
-    
-    // 检查关注状态
-    checkFollow: (id) => api.get(`/api/users/check-follow/${id}`),
-    
-    // 获取关注列表
-    getFollowing: (id, params) => api.get(`/api/users/${id}/following`, { params }),
-    
-    // 获取粉丝列表
-    getFollowers: (id, params) => api.get(`/api/users/${id}/followers`, { params }),
-    
-    // 获取用户点赞的文章
-    getLikedPosts: (id) => api.get(`/api/users/${id}/liked-posts`),
-    
-    // 获取用户收藏的文章
-    getBookmarkedPosts: (id) => api.get(`/api/users/${id}/bookmarked-posts`)
-  },
-  
-  // 表情包相关 API
-  emojis: {
-    // 上传表情包
-    upload: (formData) => api.post('/api/emojis/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }),
-    
-    // 获取收藏表情包
-    getFavorites: () => api.get('/api/emojis/favorites'),
-    
-    // 删除收藏表情包
-    deleteFavorite: (emojiId) => api.delete(`/api/emojis/favorites/${emojiId}`)
+    uploadImage: (formData) => api.post('/api/blogs/upload-image', formData),
+    uploadVideo: (formData) => api.post('/api/blogs/upload-video', formData)
   },
 
-  // 历史记录相关 API
+  messages: {
+    getContacts: (params) => api.get('/api/messages/contacts', { params }),
+    getHistory: (userId, params) => api.get(`/api/messages/${userId}`, { params }),
+    send: (data) => api.post('/api/messages', data),
+    share: (data) => api.post('/api/messages/share', data),
+    uploadAttachment: (formData) => api.post('/api/messages/upload', formData),
+    markAsRead: (data) => api.put('/api/messages/read', data),
+    delete: (id) => api.delete(`/api/messages/${id}`)
+  },
+
+  notifications: {
+    getList: (params) => api.get('/api/notifications', { params }),
+    create: (data) => api.post('/api/notifications', data),
+    markAsRead: (id) => api.put(`/api/notifications/${id}/read`),
+    markAllAsRead: () => api.put('/api/notifications/read-all'),
+    delete: (id) => api.delete(`/api/notifications/${id}`)
+  },
+
+  users: {
+    getInfo: (id) => api.get(`/api/users/${id}`),
+    update: (data) => api.put('/api/users/profile', data),
+    follow: (id) => api.post(`/api/users/${id}/follow`),
+    unfollow: (id) => api.delete(`/api/users/${id}/follow`),
+    checkFollow: (id) => api.get(`/api/users/check-follow/${id}`),
+    getFollowing: (id, params) => api.get(`/api/users/${id}/following`, { params }),
+    getFollowers: (id, params) => api.get(`/api/users/${id}/followers`, { params }),
+    getLikedPosts: (id) => api.get(`/api/users/${id}/liked-posts`),
+    getBookmarkedPosts: (id) => api.get(`/api/users/${id}/bookmarked-posts`)
+  },
+
+  emojis: {
+    upload: (formData) => api.post('/api/emojis/upload', formData),
+    getFavorites: () => api.get('/api/emojis/favorites'),
+    deleteFavorite: (id) => api.delete(`/api/emojis/favorites/${id}`)
+  },
+
   history: {
-    // 添加到历史记录
     add: (blogId) => api.post('/api/history', { blogId })
   },
-  
-  // 管理员相关 API
+
   admin: {
-    // 获取仪表盘统计数据
     getDashboardStats: () => api.get('/api/admin/stats'),
-    
-    // 获取所有博客（支持筛选）
     getAllBlogs: (params) => api.get('/api/admin/blogs', { params }),
-    
-    // 删除博客
     deleteBlog: (id) => api.delete(`/api/admin/blogs/${id}`),
-    
-    // 更新博客状态
     updateBlogStatus: (id, data) => api.put(`/api/admin/blogs/${id}/status`, data),
-    
-    // 获取所有用户
     getAllUsers: (params) => api.get('/api/admin/users', { params }),
-    
-    // 获取用户详情
     getUserDetail: (id) => api.get(`/api/admin/users/${id}`),
-    
-    // 更新用户信息
     updateUser: (id, data) => api.put(`/api/admin/users/${id}`, data),
-    
-    // 封禁用户
     banUser: (id) => api.put(`/api/admin/users/${id}/ban`),
-    
-    // 解封用户
     unbanUser: (id) => api.put(`/api/admin/users/${id}/unban`),
-    
-    // 删除用户
     deleteUser: (id, data) => api.delete(`/api/admin/users/${id}`, { data }),
-    
-    // 获取分类列表
     getCategories: () => api.get('/api/admin/categories')
   }
 };

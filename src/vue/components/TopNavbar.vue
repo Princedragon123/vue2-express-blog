@@ -1,129 +1,156 @@
 <template>
   <nav class="top-navbar">
-    <div class="container">
-      <!-- 
-        Logo 区域
-      -->
-      <div class="navbar-brand">
-        <h2 
+    <div class="top-navbar__container">
+      <!-- Logo -->
+      <div class="top-navbar__brand">
+        <h2
+          class="top-navbar__logo"
           @dblclick="handleLogoDoubleClick"
           @mousedown="handleLogoMouseDown"
-          style="cursor: pointer; user-select: none;"
         >kk攻略博客</h2>
       </div>
-      
-      <!-- 
-        搜索框区域
-      -->
-      <div v-if="$route.path !== '/search'" class="search-container">
-        <div class="search-box" @click="$router.push('/search')">
-          <span class="nav-icon">🔍</span>
-          <input type="text" placeholder="搜索攻略、用户">
+
+      <!-- 搜索框 -->
+      <div v-if="$route.path !== '/search'" class="top-navbar__search" @click="$router.push('/search')">
+        <span class="top-navbar__search-icon">🔍</span>
+        <input type="text" placeholder="搜索攻略、用户" readonly tabindex="-1">
+      </div>
+      <div v-else class="top-navbar__search top-navbar__search--minimized">
+        <span class="top-navbar__search-dots">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </span>
+      </div>
+
+      <!-- 桌面导航 -->
+      <div class="top-navbar__desktop-nav">
+        <router-link to="/blog" class="nav-link" :class="{ 'nav-link--active': $route.path === '/blog' }">
+          <span class="nav-link__icon">🧭</span><span>发现</span>
+        </router-link>
+        <router-link to="/topics" class="nav-link" :class="{ 'nav-link--active': $route.path === '/topics' }">
+          <span class="nav-link__icon">💬</span><span>话题圈</span>
+        </router-link>
+        <router-link v-if="isLoggedIn" to="/following" class="nav-link" :class="{ 'nav-link--active': $route.path === '/following' }">
+          <span class="nav-link__icon">👥</span><span>关注</span>
+        </router-link>
+        <router-link v-if="isLoggedIn" to="/create" class="nav-link nav-link--create">
+          <span class="nav-link__icon">➕</span><span>发布</span>
+        </router-link>
+        <router-link v-if="isLoggedIn" to="/messages" class="nav-link" :class="{ 'nav-link--active': $route.path === '/messages' }">
+          <span class="nav-link__icon">✉️</span><span>私信</span>
+        </router-link>
+        <router-link v-if="isAdmin" to="/admin" class="nav-link" :class="{ 'nav-link--active': $route.path.startsWith('/admin') }">
+          <span class="nav-link__icon">🛡️</span><span>管理</span>
+        </router-link>
+      </div>
+
+      <!-- 用户头像 -->
+      <div class="top-navbar__actions">
+        <div v-if="isLoggedIn" class="top-navbar__avatar" @click="goToProfile">
+          <img :src="userAvatar" :alt="username" class="top-navbar__avatar-img" @error="onAvatarError">
         </div>
+        <!-- 汉堡菜单按钮（仅移动端） -->
+        <button class="top-navbar__hamburger" @click="toggleDrawer" :aria-label="drawerOpen ? '关闭菜单' : '打开菜单'">
+          <span :class="{ 'hamburger-line': true, 'hamburger-line--open': drawerOpen }"></span>
+          <span :class="{ 'hamburger-line': true, 'hamburger-line--open': drawerOpen }"></span>
+          <span :class="{ 'hamburger-line': true, 'hamburger-line--open': drawerOpen }"></span>
+        </button>
       </div>
-      <!-- 搜索页面时显示的搜索动态效果 -->
-      <div v-else class="search-container search-container-active">
-        <div class="search-box search-box-active">
-          <span class="nav-icon search-icon-active">🔍</span>
-          <div class="loading-dots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-        </div>
+    </div>
+
+    <!-- 移动端遮罩层 -->
+    <div v-if="drawerOpen" class="drawer-overlay" @click="toggleDrawer" @touchmove.prevent></div>
+
+    <!-- 移动端抽屉菜单 -->
+    <div class="mobile-drawer" :class="{ 'mobile-drawer--open': drawerOpen }">
+      <div class="mobile-drawer__header">
+        <span class="mobile-drawer__title">菜单</span>
+        <button class="mobile-drawer__close" @click="toggleDrawer">✕</button>
       </div>
-      
-      <!-- 
-        导航菜单（平板和电脑端）
-      -->
-      <div class="desktop-nav-menu">
-        <!-- 发现页面 - 始终显示 -->
-        <router-link to="/blog" class="nav-link" :class="{ active: $route.path === '/blog' }">
-          <span class="nav-icon">🧭</span>
-          <span>发现</span>
+      <nav class="mobile-drawer__nav">
+        <router-link to="/blog" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>🧭</span><span>发现</span>
         </router-link>
-        
-        <!-- 话题圈 - 始终显示 -->
-        <router-link to="/topics" class="nav-link" :class="{ active: $route.path === '/topics' }">
-          <span class="nav-icon">💬</span>
-          <span>话题圈</span>
+        <router-link to="/topics" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>💬</span><span>话题圈</span>
         </router-link>
-        
-        <!-- 我的关注 - 登录后显示 -->
-        <router-link v-if="isLoggedIn()" to="/following" class="nav-link" :class="{ active: $route.path === '/following' }">
-          <span class="nav-icon">👥</span>
-          <span>我的关注</span>
+        <router-link to="/create" class="mobile-drawer__link mobile-drawer__link--create" @click.native="toggleDrawer">
+          <span>➕</span><span>发布攻略</span>
         </router-link>
-        
-        <!-- 发布 - 登录后显示 -->
-        <router-link v-if="isLoggedIn()" to="/create" class="nav-link">
-          <span class="nav-icon">➕</span>
-          <span>发布</span>
+        <router-link to="/following" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>👥</span><span>我的关注</span>
         </router-link>
-        
-        <!-- 我的私信 - 登录后显示 -->
-        <router-link v-if="isLoggedIn()" to="/messages" class="nav-link" :class="{ active: $route.path === '/messages' }">
-          <span class="nav-icon">✉️</span>
-          <span>我的私信</span>
+        <router-link to="/messages" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>✉️</span><span>我的私信</span>
         </router-link>
-        
-        <!-- 管理 - 仅管理员可见 -->
-        <router-link v-if="isLoggedIn() && isAdmin()" to="/admin" class="nav-link" :class="{ active: $route.path.startsWith('/admin') }">
-          <span class="nav-icon">🛡️</span>
-          <span>管理</span>
+        <router-link to="/profile" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>👤</span><span>个人中心</span>
         </router-link>
-      </div>
-      
-      <!-- 
-        右侧菜单
-      -->
-      <div class="navbar-menu">
-        <!-- 用户头像 - 登录后显示 -->
-        <div v-if="isLoggedIn()" class="user-avatar" @click="goToProfile">
-          <img :src="getUserAvatar()" :alt="getUsername()" class="avatar-img" @error="onAvatarError">
-        </div>
-      </div>
+        <router-link v-if="isAdmin" to="/admin" class="mobile-drawer__link mobile-drawer__link--admin" @click.native="toggleDrawer">
+          <span>🛡️</span><span>管理后台</span>
+        </router-link>
+      </nav>
     </div>
   </nav>
 </template>
 
 <script>
-// 组件导入区
-import { getAuthorAvatar } from './../utils/avatarUtils'
-import api from './../utils/api'
+import { getAuthorAvatar } from '../utils/avatarUtils';
 
 export default {
   name: 'TopNavbar',
-  
+
   data() {
     return {
-      userInfo: null
+      userInfo: null,
+      drawerOpen: false
     };
   },
-  
+
+  computed: {
+    username() {
+      return this.$store.getters.currentUser?.username || '游戏达人';
+    },
+    userAvatar() {
+      const user = this.userInfo || this.$store.getters.currentUser;
+      if (!user) return getAuthorAvatar(null, 40);
+      return getAuthorAvatar(user.avatar || user.profile?.avatar || user, 40);
+    },
+    isLoggedIn() {
+      return this.$store.getters.isLoggedIn;
+    },
+    isAdmin() {
+      return this.$store.getters.currentUser?.role === 'admin';
+    }
+  },
+
   mounted() {
-    if (this.isLoggedIn()) {
+    if (this.isLoggedIn) {
       this.fetchUserInfo();
     }
   },
-  
+
   methods: {
-    handleLogoMouseDown(event) {
-      // 如果按住 Ctrl 和 Shift，阻止默认的文字选择行为
-      if (event.ctrlKey && event.shiftKey) {
-        event.preventDefault();
-      }
+    toggleDrawer() {
+      this.drawerOpen = !this.drawerOpen;
+      // 防止背景滚动
+      document.body.style.overflow = this.drawerOpen ? 'hidden' : '';
     },
+
     handleLogoDoubleClick(event) {
-      // 检查是否同时按住了 Ctrl 和 Shift 键
       if (event.ctrlKey && event.shiftKey) {
         this.$router.push('/ymt');
       }
     },
-    
+
+    handleLogoMouseDown(event) {
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+      }
+    },
+
     async fetchUserInfo() {
       try {
-        const response = await api.auth.getCurrentUser();
+        const response = await this.$http.auth.getCurrentUser();
         if (response.success && response.data) {
           this.userInfo = response.data;
         }
@@ -131,470 +158,372 @@ export default {
         console.error('获取用户信息失败:', error);
       }
     },
-    
-    // ✅ 修复：统一调用头像工具函数（和编辑页完全一致）
-    getUserAvatar() {
-      const user = this.userInfo || this.$store.getters.currentUser;
-      if (!user) return getAuthorAvatar(null, 40);
-      
-      const avatar = user.avatar || user.profile?.avatar;
-      return getAuthorAvatar(avatar || user, 40);
-    },
-    
+
     onAvatarError(event) {
-      event.target.src = 'https://ui-avatars.com/api/?name=U&background=4CAF50&color=fff&size=40';
-    },
-    
-    getUsername() {
-      const user = this.$store.getters.currentUser;
-      return user?.username || user?.name || '游戏达人';
+      event.target.src = getAuthorAvatar(null, 40);
     },
 
     goToProfile() {
       if (this.$route.path.startsWith('/profile/')) {
         window.location.reload();
       } else {
-        this.$router.push('/profile/current');
+        this.$router.push('/profile');
       }
-    },
-    
-    isAdmin() {
-      const user = this.$store.getters.currentUser;
-      return user?.role === 'admin';
-    },
-    
-    isLoggedIn() {
-      return this.$store.getters.isLoggedIn;
     }
   }
-}
+};
 </script>
 
 <style scoped>
-/* 顶部导航栏 - 春日花园风格 */
+/* 顶部导航栏 */
 .top-navbar {
-  background: linear-gradient(135deg, #fef3c7, #fbcfe8);
-  box-shadow: 0 2px 10px rgba(236, 72, 153, 0.2);
-  padding: 10px 0;
+  background: linear-gradient(135deg, #fef3c7, #fce7f3);
+  box-shadow: 0 2px 12px rgba(236, 72, 153, 0.12);
+  padding: 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  /* 可爱风格：柔和的底部边框 */
-  border-bottom: 1px solid rgba(236, 72, 153, 0.3);
-  /* 可爱风格：圆润的顶部边角 */
-  border-radius: 0 0 20px 20px;
+  border-bottom: 2px solid rgba(236, 72, 153, 0.15);
+  height: 56px;
+  display: flex;
+  align-items: center;
 }
 
-.container {
+.top-navbar__container {
   width: 95%;
   max-width: 1400px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
 
-/* Logo - 可爱风格 */
-.navbar-brand h2 {
+/* Logo */
+.top-navbar__logo {
   margin: 0;
-  font-size: 1.4rem;
-  color: var(--primary-pink);
-  font-weight: 600;
-  /* 可爱风格：柔和的文字阴影 */
-  text-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
-  /* 可爱风格：文字装饰 */
-  letter-spacing: 0.5px;
+  font-size: 1.15rem;
+  color: #ec4899;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
 }
 
-/* 搜索框 - 可爱风格 */
-.search-container {
+/* 搜索框 */
+.top-navbar__search {
   flex: 1;
-  max-width: 500px;
-  margin: 0 15px;
-  transition: all 0.3s ease;
-}
-
-.search-container:not(.search-container-active) {
-  animation: searchContainerExpand 0.5s ease forwards;
-}
-
-.search-container-active {
-  max-width: 100px;
-  transition: all 0.3s ease;
-  animation: searchContainerShrink 0.5s ease forwards;
-}
-
-.search-box {
-  position: relative;
+  max-width: 360px;
   display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 20px;
-  padding: 8px 16px;
-  border: 1px solid rgba(236, 72, 153, 0.2);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  min-width: 80px;
+  padding: 8px 14px;
+  border: 1.5px solid rgba(236, 72, 153, 0.15);
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
-.search-box:not(.search-box-active) {
-  animation: searchBoxExpand 0.5s ease forwards;
+.top-navbar__search:hover {
+  border-color: #ec4899;
+  background: rgba(255, 255, 255, 0.95);
 }
 
-.search-box-active {
-  background-color: rgba(236, 72, 153, 0.1);
-  border-color: rgba(236, 72, 153, 0.4);
-  width: 60px;
-  height: 40px;
-  padding: 0 12px;
-  justify-content: center;
-  transition: all 0.3s ease;
-  animation: searchBoxShrink 0.5s ease forwards;
+.top-navbar__search-icon {
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
-.search-box i {
-  color: var(--primary-pink);
-  margin-right: 10px;
-  font-size: 0.95rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.search-box input {
+.top-navbar__search input {
   flex: 1;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.9rem;
-  color: #333;
+  font-size: 0.85rem;
+  color: #999;
+  pointer-events: none;
+  min-width: 0;
 }
 
-.search-box input::placeholder {
-  color: #8e8e8e;
+.top-navbar__search--minimized {
+  max-width: 60px;
+  justify-content: center;
+  padding: 8px;
 }
 
-@keyframes searchContainerShrink {
-  from {
-    max-width: 500px;
-  }
-  to {
-    max-width: 100px;
-  }
-}
-
-@keyframes searchContainerExpand {
-  from {
-    max-width: 100px;
-  }
-  to {
-    max-width: 500px;
-  }
-}
-
-@keyframes searchBoxShrink {
-  from {
-    width: 100%;
-    max-width: 500px;
-  }
-  to {
-    width: 60px;
-  }
-}
-
-@keyframes searchBoxExpand {
-  from {
-    width: 60px;
-  }
-  to {
-    width: 100%;
-    max-width: 500px;
-  }
-}
-
-.search-icon-active {
-  color: var(--primary-pink);
-  font-size: 1.1rem;
-  margin-right: 8px;
-  animation: searchIconPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes searchIconPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-.loading-dots {
+.top-navbar__search-dots {
   display: flex;
-  align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
+.top-navbar__search-dots .dot {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background-color: var(--primary-pink);
-  animation: dotBounce 1.5s ease-in-out infinite;
-  opacity: 0;
+  background: #ec4899;
+  animation: dotBounce 1.4s ease-in-out infinite;
 }
-
-.dot:nth-child(1) {
-  animation-delay: 0.1s;
-  animation-fill-mode: forwards;
-}
-
-.dot:nth-child(2) {
-  animation-delay: 0.3s;
-  animation-fill-mode: forwards;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0.5s;
-  animation-fill-mode: forwards;
-}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes dotBounce {
-  0% {
-    transform: translateY(0);
-    opacity: 0.3;
-  }
-  50% {
-    transform: translateY(-5px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 0.3;
-  }
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
-/* 桌面端导航菜单（平板和电脑） - 和谐风格 */
-.desktop-nav-menu {
+/* 桌面导航 */
+.top-navbar__desktop-nav {
   display: none;
-  flex: 1;
-  max-width: 800px;
-  margin: 0 20px;
-  justify-content: space-around;
   align-items: center;
+  gap: 4px;
+  margin-left: auto;
 }
 
-.desktop-nav-menu .nav-link {
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #555;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: rgba(236, 72, 153, 0.08);
+  color: #ec4899;
+}
+
+.nav-link--active {
+  background: rgba(236, 72, 153, 0.1);
+  color: #ec4899;
+  font-weight: 600;
+}
+
+.nav-link--create {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
+}
+
+.nav-link--create:hover {
+  background: linear-gradient(135deg, #db2777, #ec4899);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.nav-link__icon {
+  font-size: 1rem;
+}
+
+/* 用户头像 */
+.top-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.top-navbar__avatar {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.top-navbar__avatar-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ec4899;
+  transition: transform 0.25s ease;
+}
+
+.top-navbar__avatar:active .top-navbar__avatar-img {
+  transform: scale(0.92);
+}
+
+/* 汉堡菜单按钮（移动端） */
+.top-navbar__hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(236, 72, 153, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.top-navbar__hamburger:active {
+  background: rgba(236, 72, 153, 0.1);
+}
+
+.hamburger-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #ec4899;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger-line--open:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-line--open:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger-line--open:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* 遮罩层 */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 移动端抽屉菜单 */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 80vw;
+  background: linear-gradient(180deg, #fff 0%, #fef3c7 100%);
+  z-index: 2001;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  /* 安全区域适配 */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-drawer--open {
+  transform: translateX(0);
+}
+
+.mobile-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(236, 72, 153, 0.1);
+}
+
+.mobile-drawer__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ec4899;
+}
+
+.mobile-drawer__close {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  text-decoration: none;
-  color: #495057;
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 10px 0;
-  width: 100px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.desktop-nav-menu .nav-link .nav-icon {
+  border-radius: 50%;
+  background: rgba(236, 72, 153, 0.08);
+  color: #ec4899;
   font-size: 1rem;
-  color: #6c757d;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
 }
 
-.search-box .nav-icon {
-  color: var(--primary-pink);
-  margin-right: 10px;
-  font-size: 0.95rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.mobile-drawer__close:active {
+  background: rgba(236, 72, 153, 0.2);
 }
 
-.desktop-nav-menu .nav-link:hover {
-  background-color: #fff0f5;
-  color: var(--primary-pink);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(236, 72, 153, 0.2);
+.mobile-drawer__nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.desktop-nav-menu .nav-link:hover .nav-icon {
-  color: var(--primary-pink);
-}
-
-.desktop-nav-menu .nav-link.active {
-  background-color: #fff0f5;
-  color: var(--primary-pink);
-  box-shadow: 0 2px 5px rgba(236, 72, 153, 0.2);
-}
-
-.desktop-nav-menu .nav-link.active .nav-icon {
-  color: var(--primary-pink);
-}
-
-/* 创作按钮特殊样式 - 春日花园风格 */
-.desktop-nav-menu .create-btn {
-  background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 3px 10px rgba(236, 72, 153, 0.4);
-  border-radius: 20px;
-  width: 100px;
-}
-
-.desktop-nav-menu .create-btn:hover {
-  background: linear-gradient(135deg, var(--secondary-pink), var(--primary-pink));
-  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5);
-  transform: translateY(-2px);
-}
-
-.desktop-nav-menu .create-btn .nav-icon {
-  color: #fff;
-}
-
-/* 右侧菜单 */
-.navbar-menu {
+.mobile-drawer__link {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #444;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  /* 最小触摸目标 44px */
+  min-height: 48px;
 }
 
-/* 用户头像 - 可爱风格 */
-.user-avatar {
-  cursor: pointer;
-  position: relative;
+.mobile-drawer__link:active {
+  background: rgba(236, 72, 153, 0.08);
+  transform: scale(0.98);
 }
 
-.avatar-img {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--primary-pink);
-  box-shadow: 0 3px 8px rgba(236, 72, 153, 0.2);
-  transition: all 0.3s ease;
-  transform: translateY(0);
+.mobile-drawer__link--create {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
+  font-weight: 600;
+  justify-content: center;
+  margin: 8px 0;
 }
 
-.user-avatar:hover .avatar-img {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 5px 12px rgba(236, 72, 153, 0.3);
+.mobile-drawer__link--create:active {
+  background: linear-gradient(135deg, #db2777, #ec4899);
+  transform: scale(0.97);
 }
 
-/* 汉堡菜单 - 可爱风格 */
-.hamburger-menu {
-  display: none;
-  background: rgba(255, 255, 255, 0.8);
-  /* 可爱风格：柔和的边框 */
-  border: 1px solid rgba(255, 107, 157, 0.2);
-  /* 可爱风格：更圆润的边角 */
-  border-radius: 12px;
-  font-size: 1.25rem;
-  color: var(--primary-pink);
-  cursor: pointer;
-  padding: 8px 12px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+.mobile-drawer__link--admin {
+  margin-top: auto;
+  border: 1.5px dashed rgba(236, 72, 153, 0.3);
+  color: #ec4899;
 }
 
-.hamburger-menu:hover {
-  background: var(--light-pink);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(255, 107, 157, 0.2);
-}
-
-/* 响应式设计 */
-/* 手机端 (默认) */
-
-/* 平板端 (768px - 1023px) - 汉堡菜单模式 */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .desktop-nav-menu {
-    display: flex;
-    max-width: 400px;
-  }
-  
-  .hamburger-menu {
-    display: none;
-  }
-  
-  .search-container {
-    display: block;
-    max-width: 180px;
-    margin: 0 15px;
-  }
-  
-  .navbar-brand h2 {
-    font-size: 1.3rem;
-  }
-  
-  /* 平板端导航按钮只显示图标，不显示文字 */
-  .desktop-nav-menu .nav-link span:not(.nav-icon) {
-    display: none;
-  }
-  
-  .desktop-nav-menu .nav-link {
-    width: 60px;
-    justify-content: center;
-  }
-}
-
-/* 电脑端 (1024px 以上) */
+/* 响应式 */
 @media (min-width: 1024px) {
-  .desktop-nav-menu {
-    display: flex;
-    max-width: 700px;
-  }
-  
-  .hamburger-menu {
-    display: none;
-  }
-  
-  .search-container {
-    display: block;
-    max-width: 500px;
-  }
-  
-  .navbar-brand h2 {
-    font-size: 1.4rem;
-  }
+  .top-navbar__desktop-nav { display: flex; }
+  .top-navbar__search { max-width: 360px; }
+  .top-navbar__hamburger { display: none; }
 }
 
-/* 小屏幕手机 (767px 以下) - 汉堡菜单+logo+搜索框+用户头像模式 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .top-navbar__desktop-nav { display: flex; }
+  .top-navbar__search { max-width: 180px; }
+  .top-navbar__hamburger { display: none; }
+  .nav-link span:not(.nav-link__icon) { display: none; }
+  .nav-link { padding: 8px 10px; }
+}
+
 @media (max-width: 767px) {
-  .search-container {
-    display: block;
-    max-width: 90px;
-    margin: 0 15px;
-  }
-  
-  .search-box {
-    padding: 6px 10px;
-    min-width: 70px;
-  }
-  
-  .search-box input {
-    font-size: 0.8rem;
-  }
-  
-  .hamburger-menu {
-    display: block;
-  }
-  
-  .navbar-brand h2 {
-    font-size: 1.2rem;
-  }
-  
-  .container {
-    width: 95%;
-  }
-  
-  /* 确保用户头像始终显示 */
-  .user-avatar {
-    display: flex;
-  }
-  
-  .avatar-img {
-    width: 36px;
-    height: 36px;
-  }
+  .top-navbar__desktop-nav { display: none; }
+  .top-navbar__search { max-width: 100px; margin: 0 4px; }
+  .top-navbar__search input { font-size: 0.75rem; }
+  .top-navbar__logo { font-size: 1rem; }
+  .top-navbar__hamburger { display: flex; }
 }
 </style>

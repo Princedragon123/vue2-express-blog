@@ -113,6 +113,8 @@ router.delete('/:id', authMiddleware, BlogController.deleteBlog);
 // POST /upload-image - 上传文章图片
 router.post('/upload-image', authMiddleware, BlogController.uploadBlogImage);
 
+router.delete('/remove-file', authMiddleware, BlogController.removeUploadedFile);
+
 // POST /upload-video - 上传文章视频
 router.post('/upload-video', authMiddleware, BlogController.uploadBlogVideo);
 

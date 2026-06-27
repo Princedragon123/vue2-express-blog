@@ -1,165 +1,105 @@
-<!-- TopicList.vue - 话题列表组件 -->
 <template>
-  <div class="topic-list-page">
-    <!-- 主内容区 -->
-    <main class="main-content">
-      <!-- 页面标题 -->
-      <div class="page-header">
-        <div class="container">
-          <h1 class="page-title">话题圈</h1>
-          <p class="page-subtitle">发现感兴趣的话题，参与讨论</p>
-        </div>
-      </div>
-      
-      <!-- 话题列表 -->
-      <div class="container">
-        <!-- 搜索框和创建按钮 -->
-        <div class="search-and-create">
-          <input 
-            type="text" 
-            class="search-input" 
+  <article class="topic-list-page" aria-label="话题列表">
+    <main class="topic-list-page__main" role="main">
+      <header class="topic-list-page__header">
+        <h1 class="topic-list-page__title">话题圈</h1>
+        <p class="topic-list-page__subtitle">发现感兴趣的话题，参与讨论</p>
+      </header>
+
+      <div class="topic-list-page__container">
+        <!-- 搜索 + 创建 -->
+        <section class="topic-list-page__toolbar">
+          <input
+            type="text"
+            class="search-input"
             placeholder="搜索话题..."
             v-model="searchQuery"
-            @input="searchTopics"
+            @input="onSearch"
           >
-          <button class="create-topic-btn" @click="showCreateModal = true">
-            <svg-icon name="plus" :size="16"></svg-icon> 创建话题
-          </button>
-        </div>
-        
-        <!-- 话题分类 -->
-        <div class="topic-categories">
-          <button 
-            class="category-btn" 
-            :class="{ active: activeCategory === 'all' }"
-            @click="setCategory('all')"
-          >
-            全部话题
-          </button>
-          <button 
-            class="category-btn" 
-            :class="{ active: activeCategory === 'hot' }"
-            @click="setCategory('hot')"
-          >
-            热门话题
-          </button>
-          <button 
-            class="category-btn" 
-            :class="{ active: activeCategory === 'new' }"
-            @click="setCategory('new')"
-          >
-            最新话题
-          </button>
-        </div>
-        
+          <button class="create-btn" @click="showCreateModal = true">➕ 创建话题</button>
+        </section>
+
+        <!-- 分类 -->
+        <nav class="topic-categories" aria-label="话题分类">
+          <button
+            v-for="cat in categories"
+            :key="cat.key"
+            class="category-btn"
+            :class="{ 'category-btn--active': activeCategory === cat.key }"
+            @click="setCategory(cat.key)"
+          >{{ cat.label }}</button>
+        </nav>
+
         <!-- 话题列表 -->
-        <div class="topic-list">
-          <div 
-            class="topic-item" 
-            v-for="topic in topics" 
+        <section class="topic-list" aria-label="话题列表">
+          <article
+            class="topic-item"
+            v-for="topic in topics"
             :key="topic._id"
             @click="goToTopicDetail(topic._id)"
           >
-            <div class="topic-info">
-              <h3 class="topic-name">{{ topic.name }}</h3>
-              <p class="topic-description">{{ topic.description }}</p>
-              <div class="topic-stats">
-                <span class="stat-item">
-                  <svg-icon name="user" :size="14"></svg-icon>
-                  {{ topic.followersCount }} 关注
-                </span>
-                <span class="stat-item">
-                  <svg-icon name="fileText" :size="14"></svg-icon>
-                  {{ topic.articlesCount }} 文章
-                </span>
+            <div class="topic-item__info">
+              <h3 class="topic-item__name">{{ topic.name }}</h3>
+              <p class="topic-item__desc">{{ topic.description }}</p>
+              <div class="topic-item__stats">
+                <span>👥 {{ topic.followersCount }} 关注</span>
+                <span>📄 {{ topic.articlesCount }} 文章</span>
               </div>
             </div>
-            <div class="topic-actions">
-              <button 
-                class="follow-btn" 
-                :class="{ active: isFollowing(topic._id) }"
-                @click.stop="toggleFollow(topic._id)"
-              >
-                {{ isFollowing(topic._id) ? '已关注' : '关注' }}
-              </button>
+            <div class="topic-item__actions">
+              <button
+                class="follow-btn"
+                :class="{ 'follow-btn--active': isFollowing(topic._id) }"
+                @click.stop="toggleFollow(topic)"
+              >{{ isFollowing(topic._id) ? '已关注' : '+ 关注' }}</button>
             </div>
-          </div>
-        </div>
-        
-        <!-- 加载更多 -->
-        <div v-if="hasMore" class="load-more">
-          <button class="btn-primary" @click="loadMore">加载更多</button>
-        </div>
-        
-        <!-- 无话题提示 -->
-        <div v-if="topics.length === 0" class="empty-state">
-          <svg-icon name="comments" :size="48"></svg-icon>
-          <p>暂无话题</p>
+          </article>
+        </section>
+
+        <section v-if="hasMore" class="load-more">
+          <button class="btn btn--primary" @click="loadMore">加载更多</button>
+        </section>
+
+        <div v-if="topics.length === 0 && !searchQuery" class="empty-state">
+          <span class="empty-state__icon">💬</span>
+          <p>暂无话题，快来创建第一个吧！</p>
         </div>
       </div>
-      
-      <!-- 创建话题模态框 -->
-      <div class="modal" v-if="showCreateModal">
-        <div class="modal-content">
-          <div class="modal-header">
+
+      <!-- 创建话题弹窗 -->
+      <div class="modal-overlay" v-if="showCreateModal" @click.self="showCreateModal = false">
+        <div class="modal">
+          <header class="modal__header">
             <h2>创建新话题</h2>
-            <button class="close-btn" @click="showCreateModal = false">
-              <svg-icon name="close" :size="20"></svg-icon>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="createTopic">
-              <div class="form-group">
-                <label for="topic-name">话题名称</label>
-                <input 
-                  type="text" 
-                  id="topic-name" 
-                  v-model="newTopic.name"
-                  placeholder="请输入话题名称"
-                  required
-                >
-              </div>
-              <div class="form-group">
-                <label for="topic-description">话题描述</label>
-                <textarea 
-                  id="topic-description" 
-                  v-model="newTopic.description"
-                  placeholder="请输入话题描述"
-                  rows="4"
-                  required
-                ></textarea>
-              </div>
-              <div class="form-group">
-                <label for="topic-cover">封面图片（可选）</label>
-                <input 
-                  type="file" 
-                  id="topic-cover" 
-                  @change="handleCoverImage"
-                  accept="image/*"
-                >
-                <img v-if="newTopic.coverImage" :src="newTopic.coverImage" class="preview-img">
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn-secondary" @click="showCreateModal = false">取消</button>
-                <button type="submit" class="btn-primary" :disabled="isCreating">
-                  {{ isCreating ? '创建中...' : '创建话题' }}
-                </button>
-              </div>
-            </form>
-          </div>
+            <button class="modal__close" @click="showCreateModal = false">✕</button>
+          </header>
+          <form class="modal__body" @submit.prevent="createTopic">
+            <div class="form-group">
+              <label for="topic-name">话题名称</label>
+              <input id="topic-name" v-model="newTopic.name" placeholder="请输入话题名称" required>
+            </div>
+            <div class="form-group">
+              <label for="topic-desc">话题描述</label>
+              <textarea id="topic-desc" v-model="newTopic.description" placeholder="请输入话题描述" rows="4" required></textarea>
+            </div>
+            <footer class="modal__footer">
+              <button type="button" class="btn btn--secondary" @click="showCreateModal = false">取消</button>
+              <button type="submit" class="btn btn--primary" :disabled="isCreating">{{ isCreating ? '创建中...' : '创建话题' }}</button>
+            </footer>
+          </form>
         </div>
       </div>
     </main>
-  </div>
+  </article>
 </template>
 
 <script>
 import { showNotification } from '../utils/notification';
+import { debounce } from '../utils/helpers';
 
 export default {
   name: 'TopicList',
-  components: {
-  },
+
   data() {
     return {
       topics: [],
@@ -168,163 +108,107 @@ export default {
       page: 1,
       limit: 10,
       hasMore: true,
-      followingTopics: [],
+      followingTopics: new Set(),
       showCreateModal: false,
-      newTopic: {
-        name: '',
-        description: '',
-        coverImage: ''
-      },
-      isCreating: false
+      newTopic: { name: '', description: '' },
+      isCreating: false,
+      categories: [
+        { key: 'all', label: '全部话题' },
+        { key: 'hot', label: '热门话题' },
+        { key: 'new', label: '最新话题' }
+      ]
     };
   },
+
   mounted() {
     this.fetchTopics();
     this.fetchFollowingTopics();
   },
+
   methods: {
     async fetchTopics() {
       try {
         let url = `/api/topics?page=${this.page}&limit=${this.limit}`;
-        if (this.activeCategory === 'hot') {
-          url += '&sort=followersCount';
-        } else if (this.activeCategory === 'new') {
-          url += '&sort=createdAt';
-        }
-        
+        if (this.activeCategory === 'hot') url += '&sort=followersCount';
+        else if (this.activeCategory === 'new') url += '&sort=createdAt';
+
         const data = await this.$http.get(url);
         if (data.success) {
-          if (this.page === 1) {
-            this.topics = data.data;
-          } else {
-            this.topics = [...this.topics, ...data.data];
-          }
+          this.topics = this.page === 1 ? data.data : [...this.topics, ...data.data];
           this.hasMore = data.data.length === this.limit;
         }
       } catch (error) {
         console.error('获取话题列表失败:', error);
       }
     },
-    async searchTopics() {
+
+    onSearch: debounce(function () {
       if (this.searchQuery.trim()) {
-        try {
-          const data = await this.$http.get(`/api/topics/search?query=${encodeURIComponent(this.searchQuery)}`);
-          if (data.success) {
-            this.topics = data.data;
-            this.hasMore = false;
-          }
-        } catch (error) {
-          console.error('搜索话题失败:', error);
-        }
+        this.$http.get(`/api/topics/search?query=${encodeURIComponent(this.searchQuery)}`)
+          .then(data => { if (data.success) { this.topics = data.data; this.hasMore = false; } })
+          .catch(() => {});
       } else {
         this.page = 1;
+        this.hasMore = true;
         this.fetchTopics();
       }
-    },
+    }, 300),
+
     setCategory(category) {
       this.activeCategory = category;
       this.page = 1;
+      this.hasMore = true;
       this.fetchTopics();
     },
-    loadMore() {
-      this.page += 1;
-      this.fetchTopics();
-    },
-    goToTopicDetail(topicId) {
-      this.$router.push(`/topic/${topicId}`);
-    },
+
+    loadMore() { this.page += 1; this.fetchTopics(); },
+    goToTopicDetail(id) { this.$router.push(`/topic/${id}`); },
+
     async fetchFollowingTopics() {
       try {
         const data = await this.$http.get('/api/topics/user/following');
         if (data.success) {
-          this.followingTopics = data.data;
+          this.followingTopics = new Set(data.data.map(t => t._id || t));
         }
-      } catch (error) {
-        console.error('获取关注话题失败:', error);
-      }
+      } catch { /* 静默 */ }
     },
+
     isFollowing(topicId) {
-      return this.followingTopics.includes(topicId);
+      return this.followingTopics.has(topicId);
     },
-    async toggleFollow(topicId) {
+
+    async toggleFollow(topic) {
+      const token = this.$store.getters.getToken;
+      if (!token) { this.$router.replace('/login'); return; }
       try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (!token) {
-          this.$router.push('/login');
-          return;
-        }
-        
-        const isFollowing = this.isFollowing(topicId);
-        let data;
-        if (isFollowing) {
-          data = await this.$http.delete(`/api/topics/${topicId}/follow`);
-        } else {
-          data = await this.$http.post(`/api/topics/${topicId}/follow`);
-        }
-        
+        const isFollowing = this.isFollowing(topic._id);
+        const method = isFollowing ? 'delete' : 'post';
+        const data = await this.$http[method](`/api/topics/${topic._id}/follow`);
         if (data.success) {
-          if (isFollowing) {
-            this.followingTopics = this.followingTopics.filter(id => id !== topicId);
-          } else {
-            this.followingTopics.push(topicId);
-          }
-          
-          // 更新话题的关注数
-          const topic = this.topics.find(t => t._id === topicId);
-          if (topic) {
-            topic.followersCount += isFollowing ? -1 : 1;
-          }
+          if (isFollowing) { this.followingTopics.delete(topic._id); }
+          else { this.followingTopics.add(topic._id); }
+          topic.followersCount += isFollowing ? -1 : 1;
         }
       } catch (error) {
         console.error('关注话题失败:', error);
       }
     },
-    handleCoverImage(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.newTopic.coverImage = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    },
+
     async createTopic() {
+      if (!this.newTopic.name.trim()) return;
+      this.isCreating = true;
       try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (!token) {
-          this.$router.push('/login');
-          return;
-        }
-        
-        this.isCreating = true;
-        
-        // 检查是否有图片需要上传
-        if (this.newTopic.coverImage && this.newTopic.coverImage.startsWith('data:')) {
-          // 这里可以实现图片上传逻辑，暂时使用占位图
-          this.newTopic.coverImage = `https://via.placeholder.com/400x200?text=${encodeURIComponent(this.newTopic.name)}`;
-        }
-        
         const data = await this.$http.post('/api/topics', this.newTopic);
         if (data.success) {
-          // 关闭模态框
           this.showCreateModal = false;
-          // 重置表单
-          this.newTopic = {
-            name: '',
-            description: '',
-            coverImage: ''
-          };
-          // 重新获取话题列表
+          this.newTopic = { name: '', description: '' };
           this.page = 1;
           this.fetchTopics();
-          // 显示成功提示
           showNotification('话题创建成功！', 'success');
         } else {
-          showNotification('创建话题失败: ' + (data.message || '未知错误'), 'error');
+          showNotification('创建失败: ' + (data.message || '未知错误'), 'error');
         }
-      } catch (error) {
-        console.error('创建话题失败:', error);
+      } catch {
         showNotification('创建话题失败，请稍后重试', 'error');
       } finally {
         this.isCreating = false;
@@ -335,402 +219,177 @@ export default {
 </script>
 
 <style scoped>
-/* 话题列表页面 */
 .topic-list-page {
   min-height: 100vh;
-  background-color: #fafafa;
+  background: linear-gradient(180deg, #fef3c7 0%, #fdf2f8 40%, #f0f9ff 100%);
 }
 
-/* 页面标题 */
-.page-header {
-  background-color: white;
-  padding: 40px 0 30px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.topic-list-page__main { padding-bottom: 60px; }
+
+.topic-list-page__container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-.page-title {
-  margin: 0 0 10px;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #333;
+.topic-list-page__header {
+  text-align: center;
+  padding: 36px 0 28px;
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  margin: 20px;
 }
 
-.page-subtitle {
-  margin: 0;
-  font-size: 1rem;
-  color: #8e8e8e;
-}
+.topic-list-page__title { font-size: 1.8rem; font-weight: 700; color: #1f2937; margin: 0 0 8px; }
+.topic-list-page__subtitle { font-size: 0.95rem; color: #9ca3af; margin: 0; }
 
-/* 搜索框和创建按钮 */
-.search-and-create {
+/* 搜索栏 */
+.topic-list-page__toolbar {
   display: flex;
   gap: 12px;
-  margin-bottom: 30px;
-  align-items: center;
+  margin-bottom: 20px;
 }
 
 .search-input {
   flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #ff6b9d;
-  box-shadow: 0 0 0 2px rgba(255, 107, 157, 0.1);
-}
-
-.create-topic-btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  background-color: #4ecdc4;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.create-topic-btn:hover {
-  background-color: #45b7aa;
-  transform: translateY(-2px);
-}
-
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
+  padding: 10px 16px;
+  border: 2px solid #fbcfe8;
   border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  color: #8e8e8e;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
   font-size: 0.95rem;
-  font-weight: 500;
-  color: #333;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
   outline: none;
-  border-color: #ff6b9d;
-  box-shadow: 0 0 0 2px rgba(255, 107, 157, 0.1);
+  transition: all 0.25s ease;
 }
+.search-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.08); }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.preview-img {
-  margin-top: 12px;
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding: 20px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.btn-secondary {
-  padding: 10px 20px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background-color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: #f5f5f5;
-}
-
-.btn-primary {
+.create-btn {
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
-  background-color: #ff6b9d;
-  font-size: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
   font-weight: 600;
-  color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
+  white-space: nowrap;
+  transition: all 0.25s ease;
 }
+.create-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
 
-.btn-primary:hover {
-  background-color: #ff528b;
-}
-
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #8e8e8e;
-  cursor: not-allowed;
-}
-
-/* 话题分类 */
+/* 分类 */
 .topic-categories {
   display: flex;
-  gap: 12px;
-  margin-bottom: 30px;
+  gap: 8px;
+  margin-bottom: 24px;
   overflow-x: auto;
-  padding-bottom: 10px;
 }
 
 .category-btn {
-  padding: 8px 16px;
-  border: 1px solid #e0e0e0;
+  padding: 8px 18px;
+  border: 1.5px solid #fbcfe8;
   border-radius: 20px;
-  background-color: white;
-  font-size: 0.9rem;
+  background: #fff;
+  font-size: 0.85rem;
   font-weight: 500;
-  color: #333;
+  color: #6b7280;
   cursor: pointer;
-  transition: all 0.3s ease;
   white-space: nowrap;
+  transition: all 0.2s ease;
 }
-
-.category-btn:hover {
-  border-color: #ff6b9d;
-  color: #ff6b9d;
-}
-
-.category-btn.active {
-  background-color: #ff6b9d;
-  border-color: #ff6b9d;
-  color: white;
-}
+.category-btn:hover { border-color: #ec4899; color: #ec4899; }
+.category-btn--active { background: #ec4899; border-color: #ec4899; color: #fff; }
 
 /* 话题列表 */
-.topic-list {
-  display: grid;
-  gap: 20px;
-  margin-bottom: 30px;
-}
+.topic-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 
-/* 话题项 */
 .topic-item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  background-color: white;
-  border-radius: 12px;
+  background: #fff;
+  border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: all 0.25s ease;
   cursor: pointer;
 }
+.topic-item:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
 
-.topic-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.topic-item__info { flex: 1; margin-right: 16px; min-width: 0; }
+.topic-item__name { margin: 0 0 6px; font-size: 1.1rem; font-weight: 600; color: #1f2937; }
+.topic-item__desc {
+  margin: 0 0 10px; font-size: 0.85rem; color: #9ca3af;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
+.topic-item__stats { display: flex; gap: 16px; font-size: 0.8rem; color: #9ca3af; }
 
-.topic-info {
-  flex: 1;
-  margin-right: 20px;
-}
-
-.topic-name {
-  margin: 0 0 8px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.topic-description {
-  margin: 0 0 12px;
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.topic-stats {
-  display: flex;
-  gap: 20px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: #8e8e8e;
-}
-
-.stat-item i {
-  font-size: 1rem;
-}
-
-/* 话题操作 */
-.topic-actions {
-  display: flex;
-  align-items: flex-start;
-}
-
+/* 关注按钮 */
 .follow-btn {
-  padding: 8px 16px;
-  border: 1px solid #ff6b9d;
+  padding: 8px 20px;
+  border: 1.5px solid #ec4899;
   border-radius: 20px;
-  background-color: white;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #ff6b9d;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.follow-btn:hover {
-  background-color: #ff6b9d;
-  color: white;
-}
-
-.follow-btn.active {
-  background-color: #ff6b9d;
-  color: white;
-}
-
-/* 加载更多 */
-.load-more {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.btn-primary {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  background-color: #ff6b9d;
-  font-size: 1rem;
+  background: #fff;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: white;
+  color: #ec4899;
   cursor: pointer;
-  transition: all 0.3s ease;
+  white-space: nowrap;
+  transition: all 0.2s ease;
 }
+.follow-btn:hover,
+.follow-btn--active { background: #ec4899; color: #fff; }
 
-.btn-primary:hover {
-  background-color: #ff528b;
-  transform: translateY(-2px);
+/* 弹窗 */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
 }
-
-/* 无话题提示 */
-.empty-state {
-  text-align: center;
-  padding: 60px 0;
-  color: #8e8e8e;
+.modal {
+  background: #fff; border-radius: 16px; width: 100%; max-width: 460px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
 }
-
-.empty-state i {
-  font-size: 3rem;
-  margin-bottom: 16px;
-  opacity: 0.5;
+.modal__header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; border-bottom: 1px solid #f3f4f6;
 }
-
-.empty-state p {
-  font-size: 1.1rem;
-  margin: 0;
+.modal__header h2 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+.modal__close {
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: #f3f4f6; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; font-size: 0.9rem;
 }
+.modal__body { padding: 20px 24px; }
+.modal__footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
-/* 响应式设计 */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: #374151; font-size: 0.9rem; }
+.form-group input,
+.form-group textarea {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 0.95rem; transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none; border-color: #ec4899;
+  box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+}
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+/* 通用 */
+.load-more { text-align: center; margin-bottom: 30px; }
+.empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; }
+.empty-state__icon { font-size: 3rem; display: block; margin-bottom: 12px; opacity: 0.5; }
+
 @media (max-width: 768px) {
-  .topic-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .topic-actions {
-    margin-top: 16px;
-  }
-  
-  .topic-stats {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
+  .topic-list-page__header { margin: 12px; padding: 24px 0 20px; border-radius: 12px; }
+  .topic-list-page__title { font-size: 1.4rem; }
+  .topic-list-page__container { padding: 0 12px; }
+  .topic-item { flex-direction: column; }
+  .topic-item__actions { margin-top: 12px; }
+  .topic-list-page__toolbar { flex-direction: column; }
+  .create-btn { text-align: center; }
 }
 </style>

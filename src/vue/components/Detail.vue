@@ -1,11 +1,11 @@
-<!-- Detail.vue - 博客详情页组件 -->
 <template>
-  <div class="detail-page">
-    <main class="main-content">
-      <div class="container">
-        <div v-if="error" class="error-message">
+  <article class="detail-page" aria-label="博客详情">
+    <main class="detail-page__main" role="main">
+      <div class="detail-page__container">
+        <!-- 错误/加载状态 -->
+        <div v-if="error" class="detail-page__error">
           <p>{{ error }}</p>
-          <button class="btn-primary" @click="fetchBlogDetail">重新加载</button>
+          <button class="btn btn--primary" @click="fetchBlogDetail">重新加载</button>
         </div>
 
         <div v-if="isLoading" class="loading-state">
@@ -13,61 +13,98 @@
           <p>加载中...</p>
         </div>
 
-        <div v-else-if="blogData && Object.keys(blogData).length > 0">
-          <DetailHeader
-            :category="blogData.category.name || blogData.category"
-            :topic="blogData.topic"
-            :title="blogData.title"
-            :author="blogData.author"
-            :author-avatar="getAuthorAvatar(blogData.author, 50)"
-            :post-date="blogData.date"
-            @go-to-topic="goToTopicDetail"
-            @follow="followAuthor"
-          />
+        <template v-else-if="blogData && Object.keys(blogData).length > 0">
+          <!-- 文章头部 -->
+          <header class="detail-page__header">
+            <DetailHeader
+              :category="blogData.category?.name || blogData.category"
+              :topic="blogData.topic"
+              :title="blogData.title"
+              :author="blogData.author"
+              :author-avatar="getAuthorAvatar(blogData.author, 50)"
+              :post-date="blogData.date"
+              @go-to-topic="goToTopicDetail"
+              @follow="followAuthor"
+            />
+          </header>
 
-          <DetailContent
-            :image="blogData.image"
-            :title="blogData.title"
-            :content="blogData.content"
-          />
+          <!-- 文章内容 -->
+          <section class="detail-page__content">
+            <DetailContent
+              :image="blogData.image"
+              :title="blogData.title"
+              :content="blogData.content"
+            />
+          </section>
 
-          <InteractionBar
-            :likes="blogData.likes"
-            :comments="blogData.comments"
-            :bookmarks="blogData.bookmarks"
-            :is-bookmarked="isBookmarked"
-            :show-share-menu="showShareMenu"
-            @like="likeBlog"
-            @toggle-bookmark="isBookmarked ? unbookmarkBlog() : bookmarkBlog()"
-            @toggle-share="toggleShareMenu"
-            @close-share="closeShareMenu"
-            @share="handleShare"
-          />
+          <!-- 评论区域 -->
+          <section class="detail-page__comments" aria-label="评论区域">
+            <DetailCommentSection
+              :comments="comments"
+              :total-comments="blogData.comments"
+              :is-loading="isLoading"
+              :comment-input="commentInput"
+              :reply-input="replyInput"
+              :replying-to="replyingTo"
+              user-avatar="https://via.placeholder.com/40"
+              @update:commentInput="commentInput = $event"
+              @update:replyInput="replyInput = $event"
+              @submit-comment="submitComment"
+              @toggle-reply="toggleReply"
+              @submit-reply="submitReply"
+              @cancel-reply="cancelReply"
+            />
+          </section>
 
-          <DetailCommentSection
-            :comments="comments"
-            :total-comments="blogData.comments"
-            :is-loading="isLoading"
-            :comment-input="commentInput"
-            :reply-input="replyInput"
-            :replying-to="replyingTo"
-            user-avatar="https://via.placeholder.com/40"
-            @update:commentInput="commentInput = $event"
-            @update:replyInput="replyInput = $event"
-            @submit-comment="submitComment"
-            @toggle-reply="toggleReply"
-            @submit-reply="submitReply"
-            @cancel-reply="cancelReply"
-          />
-
-          <RelatedArticles
-            :articles="relatedBlogs"
-            @click="goToBlogDetail"
-          />
-        </div>
+          <!-- 相关推荐 -->
+          <section class="detail-page__related" aria-label="相关文章">
+            <RelatedArticles
+              :articles="relatedBlogs"
+              @click="goToBlogDetail"
+            />
+          </section>
+        </template>
       </div>
     </main>
-  </div>
+
+    <!-- 移动端底部互动栏（固定在底部） -->
+    <div class="detail-page__mobile-bar" v-if="isMobile">
+      <button class="mobile-bar__btn" @click="likeBlog" :class="{ 'mobile-bar__btn--active': isLiked }">
+        <span>{{ isLiked ? '❤️' : '🤍' }}</span>
+        <span>{{ blogData.likes || 0 }}</span>
+      </button>
+      <button class="mobile-bar__btn" @click="focusCommentInput">
+        <span>💬</span>
+        <span>{{ blogData.comments || 0 }}</span>
+      </button>
+      <button class="mobile-bar__btn" @click="isBookmarked ? unbookmarkBlog() : bookmarkBlog()" :class="{ 'mobile-bar__btn--active': isBookmarked }">
+        <span>{{ isBookmarked ? '🔖' : '🏷️' }}</span>
+        <span>{{ isBookmarked ? '已收藏' : '收藏' }}</span>
+      </button>
+      <button class="mobile-bar__btn" @click="toggleShareMenu">
+        <span>📤</span>
+        <span>分享</span>
+      </button>
+    </div>
+
+    <!-- 桌面端互动栏 -->
+    <div class="detail-page__desktop-bar" v-if="!isMobile">
+      <section class="interaction-section" aria-label="互动区域">
+        <InteractionBar
+          :likes="blogData.likes"
+          :comments="blogData.comments"
+          :bookmarks="blogData.bookmarks"
+          :is-bookmarked="isBookmarked"
+          :show-share-menu="showShareMenu"
+          @like="likeBlog"
+          @toggle-bookmark="isBookmarked ? unbookmarkBlog() : bookmarkBlog()"
+          @toggle-share="toggleShareMenu"
+          @close-share="closeShareMenu"
+          @share="handleShare"
+        />
+      </section>
+    </div>
+  </article>
 </template>
 
 <script>
@@ -82,70 +119,42 @@ import DetailContent from './detail/DetailContent.vue';
 
 export default {
   name: 'Detail',
-  components: {
-    InteractionBar,
-    DetailCommentSection,
-    RelatedArticles,
-    DetailHeader,
-    DetailContent
-  },
-  
+  components: { InteractionBar, DetailCommentSection, RelatedArticles, DetailHeader, DetailContent },
+
   metaInfo() {
     return {
       title: this.blogData.title || '博客详情',
       meta: [
-        { name: 'description', content: this.blogData.content ? this.blogData.content.substring(0, 100) + '...' : '查看博客详情' },
-        { name: 'keywords', content: `${this.blogData.title || '博客'},${this.blogData.category || ''},${this.blogData.author || ''}` }
+        { name: 'description', content: (this.blogData.content || '').substring(0, 100) + '...' },
+        { name: 'keywords', content: [this.blogData.title, this.blogData.category, this.blogData.author].filter(Boolean).join(',') }
       ]
     };
   },
-  
+
   data() {
     return {
       blogId: this.$route.params.id || 1,
-      
-      blogData: {
-        id: 1,
-        title: '2024最新游戏攻略：如何快速提升等级',
-        category: '游戏攻略',
-        author: '游戏达人',
-        authorAvatar: 'https://via.placeholder.com/40',
-        date: '2024-01-07',
-        image: 'https://via.placeholder.com/800x400',
-        content: '这是一篇详细的游戏攻略...',
-        likes: 123,
-        comments: 45,
-        bookmarks: 67,
-        views: 0
-      },
-      
+      blogData: null,
       comments: [],
       commentInput: '',
       replyInput: '',
       replyingTo: null,
-      
       isLoading: false,
       error: null,
-      
       isBookmarked: false,
       isLiked: false,
-      hasViewed: false,
-      
       showShareMenu: false,
-      
-      relatedBlogs: [
-        { id: 2, title: '新手必看：游戏基础操作指南', image: '...', author: '游戏导师', likes: 234 },
-        { id: 3, title: '高级玩家技巧：如何在游戏中脱颖而出', image: '...', author: '游戏大师', likes: 345 },
-        { id: 4, title: '游戏装备推荐：性价比最高的装备组合', image: '...', author: '装备专家', likes: 456 }
-      ]
+      isMobile: false,
+      relatedBlogs: []
     };
   },
-  
+
   created() {
+    this.isMobile = window.innerWidth <= 768;
     this.fetchBlogDetail();
     this.fetchComments();
   },
-  
+
   watch: {
     '$route.params.id': {
       handler(newId) {
@@ -158,20 +167,18 @@ export default {
       immediate: true
     }
   },
-  
+
   methods: {
-    getAuthorAvatar(author, size = 40) {
-      return getAuthorAvatar(author, size);
-    },
-    
+    getAuthorAvatar,
+
     async fetchBlogDetail() {
       try {
         this.isLoading = true;
         this.error = null;
-        
+
         const cacheKey = `blog_detail_${this.blogId}`;
         const cachedData = CacheManager.get(cacheKey);
-        
+
         if (cachedData) {
           this.blogData = cachedData;
         } else {
@@ -183,7 +190,7 @@ export default {
             this.error = response.message || '获取博客详情失败';
           }
         }
-        
+
         await this.checkLikeStatus();
         this.addToHistory();
       } catch (error) {
@@ -193,317 +200,242 @@ export default {
         this.isLoading = false;
       }
     },
-    
+
     async checkLikeStatus() {
+      if (!this.$store.getters.isLoggedIn) { this.isLiked = false; return; }
       try {
-        if (!this.$store.getters.isLoggedIn) {
-          this.isLiked = false;
-          return;
-        }
-        
-        const response = await this.$http.get(`/api/blogs/${this.blogId}/is-liked`);
-        
-        if (response.success) {
-          this.isLiked = response.data.isLiked;
-        }
-      } catch (error) {
-        console.error('检查点赞状态失败:', error);
-      }
+        const response = await this.$http.blogs.checkLikeStatus(this.blogId);
+        if (response.success) this.isLiked = response.data.isLiked;
+      } catch { /* 静默失败 */ }
     },
-    
+
     async addToHistory() {
-      if (!this.blogData || (!this.blogData._id && !this.blogData.id)) {
-        return;
-      }
-      
-      try {
-        const blogId = this.blogData._id || this.blogData.id;
-        const result = await this.$http.history.add(blogId);
-      } catch (error) {
-        console.error('添加到历史记录失败:', error);
-      }
+      const blogId = this.blogData?._id || this.blogData?.id;
+      if (!blogId) return;
+      try { await this.$http.history.add(blogId); } catch { /* 静默失败 */ }
     },
-    
+
     async fetchComments() {
       try {
-        this.isLoading = true;
-        
         const cacheKey = `blog_comments_${this.blogId}`;
         const cachedData = CacheManager.get(cacheKey);
-        
         if (cachedData) {
           this.comments = cachedData;
-        } else {
-          const result = await this.$http.comments.getList(this.blogId);
+          return;
+        }
+        const result = await this.$http.blogs.getComments(this.blogId);
+        if (result.success) {
           this.comments = result.data;
           CacheManager.set(cacheKey, result.data, 300);
         }
       } catch (error) {
-        console.error('获取评论列表失败:', error);
-        this.error = '获取评论列表失败';
-      } finally {
-        this.isLoading = false;
+        console.error('获取评论失败:', error);
       }
     },
-    
+
     async submitComment() {
       if (!this.commentInput.trim()) return;
-      
       try {
-        const result = await this.$http.comments.create({
-          blogId: this.blogId,
-          content: this.commentInput
-        });
-        
-        this.comments.unshift(result.data);
-        this.blogData.comments += 1;
-        this.commentInput = '';
+        const result = await this.$http.blogs.createComment(this.blogId, { content: this.commentInput });
+        if (result.success) {
+          this.comments.unshift(result.data);
+          this.blogData.comments = (this.blogData.comments || 0) + 1;
+          this.commentInput = '';
+        }
       } catch (error) {
         console.error('提交评论失败:', error);
-        if (error.response && error.response.status === 401) {
-          this.$router.push('/login');
-        } else {
-          showNotification('提交评论失败，请重试', 'error');
-        }
+        showNotification(error.response?.status === 401 ? '请先登录' : '提交评论失败', 'error');
       }
     },
-    
+
     toggleReply(commentId) {
       this.replyingTo = this.replyingTo === commentId ? null : commentId;
       this.replyInput = '';
     },
-    
-    cancelReply() {
-      this.replyingTo = null;
-      this.replyInput = '';
-    },
-    
+    cancelReply() { this.replyingTo = null; this.replyInput = ''; },
+
     async submitReply(commentId) {
       if (!this.replyInput.trim()) return;
-      
       try {
-        const result = await this.$http.comments.reply({
-          commentId,
-          content: this.replyInput
+        const result = await this.$http.blogs.createComment(this.blogId, {
+          content: this.replyInput,
+          parentId: commentId
         });
-        
-        const commentIndex = this.comments.findIndex(c => c._id === commentId);
-        if (commentIndex !== -1) {
-          if (!this.comments[commentIndex].replies) {
-            this.comments[commentIndex].replies = [];
+        if (result.success) {
+          const idx = this.comments.findIndex(c => c._id === commentId);
+          if (idx !== -1) {
+            if (!this.comments[idx].replies) this.comments[idx].replies = [];
+            this.comments[idx].replies.push(result.data);
           }
-          this.comments[commentIndex].replies.push(result.data);
+          this.replyingTo = null;
+          this.replyInput = '';
         }
-        
-        this.replyingTo = null;
-        this.replyInput = '';
       } catch (error) {
-        console.error('提交回复失败:', error);
-        if (error.response && error.response.status === 401) {
-          this.$router.push('/login');
-        } else {
-          showNotification('提交回复失败，请重试', 'error');
-        }
+        console.error('回复失败:', error);
+        showNotification('提交回复失败', 'error');
       }
     },
-    
+
     async likeBlog() {
       try {
-        if (this.isLiked) {
-          const result = await this.$http.blogs.unlike(this.blogId);
-          if (result.success) {
-            this.blogData.likes -= 1;
-            this.isLiked = false;
-          }
-        } else {
-          const result = await this.$http.blogs.like(this.blogId);
-          if (result.success) {
-            this.blogData.likes += 1;
-            this.isLiked = true;
-          }
+        const api = this.isLiked ? 'unlike' : 'like';
+        const result = await this.$http.blogs[api](this.blogId);
+        if (result.success) {
+          this.blogData.likes += this.isLiked ? -1 : 1;
+          this.isLiked = !this.isLiked;
         }
       } catch (error) {
-        console.error('点赞博客失败:', error);
-        showNotification('操作失败，请重试', 'error');
+        console.error('点赞失败:', error);
+        showNotification('操作失败', 'error');
       }
     },
-    
+
     async bookmarkBlog() {
       try {
         const result = await this.$http.blogs.bookmark(this.blogId);
         if (result.success) {
           this.isBookmarked = true;
-          this.blogData.bookmarks += 1;
+          this.blogData.bookmarks = (this.blogData.bookmarks || 0) + 1;
           showNotification('收藏成功', 'success');
         }
       } catch (error) {
-        console.error('收藏博客失败:', error);
-        showNotification('收藏失败，请重试', 'error');
+        showNotification('收藏失败', 'error');
       }
     },
-    
+
     async unbookmarkBlog() {
       try {
-        const response = await this.$http.delete(`/api/blogs/${this.blogId}/bookmark`);
-        if (response.success) {
+        const result = await this.$http.blogs.unbookmark(this.blogId);
+        if (result.success) {
           this.isBookmarked = false;
-          this.blogData.bookmarks -= 1;
-          showNotification('取消收藏成功', 'success');
+          this.blogData.bookmarks = Math.max(0, (this.blogData.bookmarks || 1) - 1);
+          showNotification('已取消收藏', 'success');
         }
       } catch (error) {
-        console.error('取消收藏失败:', error);
-        if (error.response && error.response.status === 401) {
-          this.$router.push('/login');
-        } else {
-          showNotification('取消收藏失败，请重试', 'error');
-        }
+        showNotification('操作失败', 'error');
       }
     },
-    
+
     async followAuthor() {
-      if (!this.$store.getters.isLoggedIn) {
-        this.$router.push('/login');
-        return;
-      }
-      
+      if (!this.$store.getters.isLoggedIn) { this.$router.replace('/login'); return; }
+      const authorId = this.blogData.author?._id || this.blogData.author?.id;
+      if (!authorId) { showNotification('作者信息不完整', 'error'); return; }
       try {
-        const authorId = this.blogData.author?._id || this.blogData.author?.id;
-        if (!authorId) {
-          showNotification('作者信息不完整', 'error');
-          return;
-        }
-        
         const result = await this.$http.users.follow(authorId);
-        if (result.success) {
-          showNotification('关注成功的', 'success');
-        } else {
-          showNotification(result.message || '关注失败', 'error');
-        }
-      } catch (error) {
-        console.error('关注作者失败:', error);
+        showNotification(result.success ? '关注成功' : (result.message || '关注失败'), result.success ? 'success' : 'error');
+      } catch {
         showNotification('关注失败，请重试', 'error');
       }
     },
-    
-    toggleShareMenu() {
-      this.showShareMenu = !this.showShareMenu;
-    },
-    
-    closeShareMenu() {
-      this.showShareMenu = false;
-    },
-    
-    shareToWechat() {
-      showNotification('微信分享功能待实现', 'info');
-      this.closeShareMenu();
-    },
-    
-    shareToWeibo() {
-      const shareUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(this.blogData.title)}`;
-      window.open(shareUrl, '_blank', 'width=600,height=400');
-      this.closeShareMenu();
-    },
-    
-    copyLink() {
-      const link = window.location.href;
-      navigator.clipboard.writeText(link)
-        .then(() => {
-          showNotification('链接已复制到剪贴板', 'success');
-          this.closeShareMenu();
-        })
-        .catch(err => {
-          console.error('复制失败:', err);
-          showNotification('复制失败，请手动复制', 'error');
-        });
-    },
-    
-    shareToQQ() {
-      const shareUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(this.blogData.title)}&desc=${encodeURIComponent(this.blogData.excerpt || '')}&pics=${encodeURIComponent(this.blogData.image)}`;
-      window.open(shareUrl, '_blank', 'width=600,height=400');
-      this.closeShareMenu();
-    },
-    
-    shareToPrivateMessage() {
-      const blogShareInfo = {
-        title: this.blogData.title,
-        link: window.location.href,
-        image: this.blogData.image,
-        excerpt: this.blogData.excerpt || ''
-      };
-      sessionStorage.setItem('blogShareInfo', JSON.stringify(blogShareInfo));
-      
-      this.closeShareMenu();
-      this.$router.push('/messages');
-    },
-    
-    goToTopicDetail(topicId) {
-      this.$router.push(`/topic/${topicId}`);
-    },
-    
+
+    toggleShareMenu() { this.showShareMenu = !this.showShareMenu; },
+    closeShareMenu() { this.showShareMenu = false; },
+
     handleShare(platform) {
-      const shareMap = {
-        wechat: 'shareToWechat',
-        weibo: 'shareToWeibo',
-        copy: 'copyLink',
-        qq: 'shareToQQ',
-        private: 'shareToPrivateMessage'
+      const handlers = {
+        weibo: () => window.open(`https://service.weibo.com/share/share.php?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(this.blogData.title)}`, '_blank', 'width=600,height=400'),
+        copy: () => navigator.clipboard.writeText(window.location.href).then(() => showNotification('链接已复制', 'success')).catch(() => showNotification('复制失败', 'error')),
+        qq: () => window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(this.blogData.title)}`, '_blank', 'width=600,height=400'),
+        private: () => {
+          sessionStorage.setItem('blogShareInfo', JSON.stringify({ title: this.blogData.title, link: window.location.href, image: this.blogData.image }));
+          this.$router.push('/messages');
+        }
       };
-      const method = shareMap[platform];
-      if (method && typeof this[method] === 'function') {
-        this[method]();
-      }
+      if (handlers[platform]) handlers[platform]();
+      this.closeShareMenu();
     },
-    
-    goToBlogDetail(blogId) {
-      this.$router.push(`/blog/${blogId}`);
-    }
+
+    focusCommentInput() {
+      // 滚动到评论区并聚焦输入框
+      const commentsSection = document.querySelector('.detail-page__comments');
+      if (commentsSection) commentsSection.scrollIntoView({ behavior: 'smooth' });
+      // 触发评论输入框聚焦（通过子组件事件）
+    },
+
+    goToTopicDetail(topicId) { this.$router.push(`/topic/${topicId}`); },
+    goToBlogDetail(blogId) { this.$router.push(`/zhihu-detail/${blogId}`); }
   }
-}
+};
 </script>
 
 <style scoped>
 .detail-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
+  background: linear-gradient(180deg, #fef3c7 0%, #fdf2f8 40%, #f0f9ff 100%);
 }
 
-.main-content {
-  padding-bottom: 70px;
+.detail-page__main {
+  padding-bottom: 80px;
 }
 
-.error-message {
+.detail-page__container {
+  width: 95%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.detail-page__error {
   text-align: center;
   padding: 60px 20px;
   color: #666;
 }
-
-.btn-primary {
-  padding: 10px 24px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
+.detail-page__error p {
+  margin-bottom: 16px;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 60px 20px;
+/* 移动端底部互动栏 */
+.detail-page__mobile-bar {
+  display: none;
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ec4899;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+.detail-page__desktop-bar {
+  display: block;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* 移动端底部固定栏 */
+@media (max-width: 768px) {
+  .detail-page__mobile-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(236, 72, 153, 0.1);
+    justify-content: space-around;
+    align-items: center;
+    z-index: 500;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-bar__btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 16px;
+    border: none;
+    background: none;
+    color: #666;
+    font-size: 0.7rem;
+    cursor: pointer;
+    min-width: 48px;
+    min-height: 44px;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-bar__btn:active { transform: scale(0.92); }
+  .mobile-bar__btn--active { color: #ec4899; }
+
+  .detail-page__desktop-bar { display: none; }
+  .detail-page__container { padding-bottom: 60px; }
+}
+
+@media (min-width: 769px) {
+  .detail-page__container { padding: 32px 0; }
 }
 </style>

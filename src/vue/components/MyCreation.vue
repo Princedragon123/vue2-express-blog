@@ -1,123 +1,73 @@
-<!-- MyCreation.vue - 我的创作页面组件 -->
 <template>
-  <div class="my-creation-page" :class="currentStyle">
-    <!-- 返回按钮 -->
-    <button class="back-btn" @click="goBack">
-      <svg-icon name="arrowLeft" :size="18"></svg-icon> 返回首页
-    </button>
-    
-    <!-- 主内容区 -->
-    <main class="main-content">
-      <!-- 页面标题 -->
-      <div class="page-header">
-        <div class="container">
-          <h1 class="page-title">我的创作</h1>
-          <p class="page-subtitle">查看和管理你发布的所有攻略文章</p>
-        </div>
-      </div>
-      
-      <!-- 创作列表 -->
-      <div class="container">
+  <div class="my-creation-page">
+    <main class="my-creation-page__main">
+      <header class="my-creation-page__header">
+        <h1 class="my-creation-page__title">我的创作</h1>
+        <p class="my-creation-page__subtitle">查看和管理你发布的所有攻略文章</p>
+      </header>
+
+      <div class="my-creation-page__container">
         <!-- 加载状态 -->
         <div v-if="loading" class="loading-state">
-          <svg-icon name="spinner" :size="24" class-name="fa-spin"></svg-icon>
+          <div class="spinner"></div>
           <p>加载中...</p>
         </div>
-        
-        <!-- 创作文章列表 -->
-        <div v-else class="creation-list">
-          <!-- 创作文章卡片 -->
-          <div class="creation-card" v-for="(creation, index) in paginatedCreations" :key="creation.id">
-            <div class="creation-image" v-if="creation.image">
-              <img :src="creation.image" alt="文章封面" class="article-image">
+
+        <!-- 文章列表 -->
+        <div v-else-if="creations.length > 0" class="creation-grid">
+          <article
+            class="creation-card"
+            v-for="creation in paginatedCreations"
+            :key="creation.id"
+          >
+            <div class="creation-card__image" v-if="creation.image">
+              <img :src="creation.image" alt="封面" class="creation-card__img">
             </div>
-            <div class="creation-content">
-              <div class="creation-category">{{ creation.category }}</div>
-              <h3 class="creation-title" @click="viewCreation(creation.id)">{{ creation.title }}</h3>
-              <div class="creation-meta">
-                <span class="creation-date">{{ creation.date }}</span>
-                <span class="creation-stats">
-                  <svg-icon name="eye" :size="14"></svg-icon> {{ creation.views }}
-                  <svg-icon name="heart" :size="14"></svg-icon> {{ creation.likes }}
-                  <svg-icon name="comment" :size="14"></svg-icon> {{ creation.comments }}
-                </span>
+            <div class="creation-card__body">
+              <span class="creation-card__category">{{ creation.category }}</span>
+              <h3 class="creation-card__title" @click="viewCreation(creation.id)">{{ creation.title }}</h3>
+              <div class="creation-card__meta">
+                <span>{{ creation.date }}</span>
+                <span>👁 {{ creation.views }}</span>
+                <span>❤️ {{ creation.likes }}</span>
+                <span>💬 {{ creation.comments }}</span>
               </div>
-              <div class="creation-actions">
-                <button class="action-btn edit-btn" @click="editCreation(creation.id)">
-                  <svg-icon name="edit" :size="16"></svg-icon> 编辑
-                </button>
-                <button class="action-btn delete-btn" @click="deleteCreation(creation.id)">
-                  <svg-icon name="trash" :size="16"></svg-icon> 删除
-                </button>
+              <div class="creation-card__actions">
+                <button class="action-btn action-btn--edit" @click="editCreation(creation.id)">✏️ 编辑</button>
+                <button class="action-btn action-btn--delete" @click="deleteCreation(creation.id)">🗑️ 删除</button>
               </div>
             </div>
-          </div>
-          
-          <!-- 分页控制 -->
-          <div v-if="creations.length > 0" class="pagination">
-            <button 
-              class="page-btn" 
-              @click="changePage(currentPage - 1)" 
-              :disabled="currentPage === 1"
-            >
-              <svg-icon name="chevronLeft" :size="16"></svg-icon> 上一页
-            </button>
-            
-            <span class="page-info">
-              第 {{ currentPage }} / {{ totalPages }} 页（共 {{ totalCreations }} 条）
-            </span>
-            
-            <button 
-              class="page-btn" 
-              @click="changePage(currentPage + 1)" 
-              :disabled="currentPage === totalPages"
-            >
-              下一页 <svg-icon name="chevronRight" :size="16"></svg-icon>
-            </button>
+          </article>
+
+          <!-- 分页 -->
+          <div class="pagination">
+            <button class="page-btn" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">← 上一页</button>
+            <span class="page-info">第 {{ currentPage }} / {{ totalPages }} 页（共 {{ totalCreations }} 条）</span>
+            <button class="page-btn" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">下一页 →</button>
           </div>
         </div>
-        
-        <!-- 空创作状态 -->
-        <div v-if="!loading && creations.length === 0" class="empty-state">
-          <svg-icon name="edit" :size="48"></svg-icon>
+
+        <!-- 空状态 -->
+        <div v-else class="empty-state">
+          <span class="empty-state__icon">📝</span>
           <h3>暂无创作</h3>
-          <p>你还没有发布任何攻略文章，快去创作第一篇吧！</p>
-          <button class="btn-primary" @click="goToCreate">
-            <svg-icon name="plus" :size="16"></svg-icon> 发布攻略
-          </button>
+          <p>快去发布你的第一篇攻略吧！</p>
+          <button class="btn btn--primary" @click="$router.push('/create')">🚀 发布攻略</button>
         </div>
       </div>
     </main>
-    
-
   </div>
 </template>
 
 <script>
 import { showNotification } from '../utils/notification';
+import { formatDate } from '../utils/helpers';
 
 export default {
   name: 'MyCreation',
-  components: {
-  },
-  created() {
-    // 添加全局风格变化事件监听器
-    window.addEventListener('styleChanged', (event) => {
-      this.currentStyle = event.detail.style;
-    });
-    
-    // 加载用户文章列表
-    this.loadMyCreations();
-  },
-  beforeDestroy() {
-    // 移除事件监听器
-    window.removeEventListener('styleChanged', (event) => {
-      this.currentStyle = event.detail.style;
-    });
-  },
+
   data() {
     return {
-      currentStyle: localStorage.getItem('currentStyle') || 'style-spring-garden',
       creations: [],
       loading: true,
       currentPage: 1,
@@ -125,602 +75,256 @@ export default {
       totalCreations: 0
     };
   },
+
   computed: {
     totalPages() {
-      return Math.ceil(this.totalCreations / this.pageSize);
+      return Math.max(1, Math.ceil(this.totalCreations / this.pageSize));
     },
     paginatedCreations() {
       const start = (this.currentPage - 1) * this.pageSize;
-      const end = start + this.pageSize;
-      return this.creations.slice(start, end);
+      return this.creations.slice(start, start + this.pageSize);
     }
   },
+
+  created() {
+    this.loadMyCreations();
+  },
+
   methods: {
-    goToCreate() {
-      this.$router.push('/create');
-    },
-    
-    // 返回首页
-    goBack() {
-      this.$router.push('/blog');
-    },
-    
-    // 获取认证令牌
-    getAuthToken() {
-      return localStorage.getItem('token') || sessionStorage.getItem('token');
-    },
-    
-    // 获取模拟文章数据
-    getMockCreationsData() {
-      // 使用 picsum.photos 作为替代的占位符图片服务
-      return [
-        {
-          id: '1',
-          title: '最新游戏攻略：如何快速升级',
-          image: 'https://picsum.photos/300/180',
-          category: '游戏攻略',
-          date: new Date().toISOString().split('T')[0],
-          views: 1234,
-          likes: 56,
-          comments: 23
-        },
-        {
-          id: '2',
-          title: '游戏装备选择指南',
-          image: 'https://picsum.photos/301/180',
-          category: '游戏攻略',
-          date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-          views: 987,
-          likes: 45,
-          comments: 18
-        },
-        {
-          id: '3',
-          title: '游戏团队配合技巧',
-          image: 'https://picsum.photos/302/180',
-          category: '游戏攻略',
-          date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-          views: 765,
-          likes: 34,
-          comments: 12
-        }
-      ];
-    },
-    
-    // 加载用户文章列表
     async loadMyCreations() {
-      // 1. 初始化状态
       this.loading = true;
-      
       try {
-        // 2. 获取认证令牌
-        const token = this.getAuthToken();
-        
-        // 3. 检查令牌
-        if (!token) {
-          const mockData = this.getMockCreationsData();
-          this.creations = mockData;
-          this.totalCreations = mockData.length;
-          return;
-        }
-        
-        // 4. 准备请求头
-        const headers = {
-          'Authorization': `Bearer ${token}`
-        };
-        
-        // 5. 获取文章列表（获取所有数据，不限制数量）
-        try {
-          const data = await this.$http.get('/api/blogs/my', {
-            params: {
-              page: 1,
-              limit: 1000  // 获取最多 1000 条，应该够用了
-            }
-          });
-          
-          if (data.success && data.data) {
-            console.log('后端返回的数据:', data.data);
-            console.log('数据数量:', data.data.length);
-            
-            // 转换数据格式，适配前端显示
-            const blogData = data.data.map(blog => ({
+        const token = this.$store.getters.getToken;
+        if (!token) { this.creations = []; this.totalCreations = 0; return; }
+
+        const data = await this.$http.blogs.getList({ page: 1, limit: 1000 });
+        if (data.success && data.data) {
+          // 去重 + 格式转换
+          const seen = new Set();
+          this.creations = data.data
+            .filter(blog => {
+              if (seen.has(blog._id)) return false;
+              seen.add(blog._id);
+              return true;
+            })
+            .map(blog => ({
               id: blog._id,
               title: blog.title,
-              image: blog.image,
-              category: '游戏攻略',
-              date: new Date(blog.createdAt).toISOString().split('T')[0],
+              image: blog.image || '',
+              category: blog.category || '未分类',
+              date: formatDate(blog.createdAt),
               views: blog.views || 0,
               likes: blog.likes || 0,
               comments: blog.comments || 0
             }));
-            
-            // 去重：使用 Map 根据 id 去重
-            const uniqueMap = new Map();
-            blogData.forEach(blog => {
-              if (!uniqueMap.has(blog.id)) {
-                uniqueMap.set(blog.id, blog);
-              }
-            });
-            
-            const uniqueBlogData = Array.from(uniqueMap.values());
-            
-            console.log('去重后的数据:', uniqueBlogData);
-            console.log('去重后数量:', uniqueBlogData.length);
-            console.log('原始数量:', blogData.length);
-            
-            this.creations = uniqueBlogData;
-            this.totalCreations = uniqueBlogData.length;
-            console.log('总数量:', this.totalCreations);
-          } else {
-            const mockData = this.getMockCreationsData();
-            this.creations = mockData;
-            this.totalCreations = mockData.length;
-          }
-        } catch (error) {
-          console.error('获取文章列表失败:', error);
-          const mockData = this.getMockCreationsData();
-          this.creations = mockData;
-          this.totalCreations = mockData.length;
+          this.totalCreations = this.creations.length;
         }
       } catch (error) {
         console.error('加载创作列表失败:', error);
-        const mockData = this.getMockCreationsData();
-        this.creations = mockData;
-        this.totalCreations = mockData.length;
       } finally {
-        // 6. 重置状态
         this.loading = false;
       }
     },
-    
-    // 查看文章详情
-    viewCreation(id) {
-      // 跳转到文章详情页
-      this.$router.push(`/detail/${id}`);
-    },
-    
-    // 编辑文章
-    editCreation(id) {
-      // 跳转到编辑页面，传入文章ID
-      this.$router.push(`/edit/${id}`);
-    },
-    
-    // 删除文章
+
+    viewCreation(id) { this.$router.push(`/zhihu-detail/${id}`); },
+    editCreation(id) { this.$router.push(`/edit/${id}`); },
+
     async deleteCreation(id) {
-      // 首先显示确认对话框
-      const confirmed = confirm('确定要删除这篇文章吗？此操作不可恢复。');
-      
-      // 只有用户确认后才执行删除操作
-      if (confirmed) {
-        try {
-          const token = this.getAuthToken();
-          
-          if (!token) {
-            // 模拟删除
-            this.creations = this.creations.filter(c => c.id !== id);
-            this.totalCreations = this.creations.length;
-            showNotification('删除成功', 'success');
-            return;
-          }
-          
-          const response = await this.$http.delete(`/api/blogs/${id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (response.success) {
-            // 从列表中移除已删除的文章
-            this.creations = this.creations.filter(c => c.id !== id);
-            this.totalCreations = this.creations.length;
-            
-            // 如果当前页没有数据了，返回上一页
-            if (this.paginatedCreations.length === 0 && this.currentPage > 1) {
-              this.currentPage--;
-            }
-            
-            showNotification('删除成功', 'success');
-          }
-        } catch (error) {
-          console.error('删除文章失败:', error);
-          showNotification('删除失败，请重试', 'error');
+      if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) return;
+      try {
+        const response = await this.$http.blogs.delete(id);
+        if (response.success) {
+          this.creations = this.creations.filter(c => c.id !== id);
+          this.totalCreations = this.creations.length;
+          if (this.paginatedCreations.length === 0 && this.currentPage > 1) this.currentPage--;
+          showNotification('删除成功', 'success');
         }
+      } catch {
+        showNotification('删除失败，请重试', 'error');
       }
     },
-    
-    // 切换页码
+
     changePage(page) {
       if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
-}
+};
 </script>
 
 <style scoped>
-/* 我的创作页面 */
 .my-creation-page {
   min-height: 100vh;
-  background-color: #fafafa;
+  background: linear-gradient(180deg, #fef3c7 0%, #fdf2f8 40%, #f0f9ff 100%);
 }
 
-/* 主内容区 */
-.main-content {
-  padding-bottom: 70px; /* 为底部导航栏预留空间 */
+.my-creation-page__main {
+  padding-bottom: 70px;
 }
 
-/* 页面标题 */
-.page-header {
-  background-color: white;
+.my-creation-page__container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.my-creation-page__header {
+  text-align: center;
   padding: 40px 0 30px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  margin: 20px 20px 24px;
 }
 
-.page-title {
-  margin: 0 0 10px;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #333;
-}
+.my-creation-page__title { font-size: 1.8rem; font-weight: 700; color: #333; margin: 0 0 8px; }
+.my-creation-page__subtitle { font-size: 0.95rem; color: #999; margin: 0; }
 
-.page-subtitle {
-  margin: 0;
-  font-size: 1rem;
-  color: #8e8e8e;
-}
-
-/* 创作列表 */
-.creation-list {
+/* 卡片网格 */
+.creation-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
 
-/* 创作文章卡片 */
 .creation-card {
-  background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
 }
+.creation-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); }
 
-.creation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-.creation-image {
+.creation-card__image {
   width: 100%;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
 }
-
-.article-image {
+.creation-card__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
+.creation-card:hover .creation-card__img { transform: scale(1.05); }
 
-.creation-card:hover .article-image {
-  transform: scale(1.05);
-}
-
-.creation-content {
-  padding: 20px;
+.creation-card__body {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
 }
 
-.creation-category {
+.creation-card__category {
   display: inline-block;
-  padding: 5px 12px;
-  background-color: #ffd700;
-  color: #8b4513;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #fef3c7, #fcd34d);
+  color: #92400e;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   align-self: flex-start;
 }
 
-.creation-title {
+.creation-card__title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: #1f2937;
+  cursor: pointer;
   line-height: 1.4;
 }
+.creation-card__title:hover { color: #ec4899; }
 
-.creation-meta {
+.creation-card__meta {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #8e8e8e;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  flex-wrap: wrap;
 }
 
-.creation-stats {
+.creation-card__actions {
   display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.creation-stats i {
-  margin-right: 4px;
-  color: #ff6b9d;
-}
-
-.creation-actions {
-  display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
 }
 
 .action-btn {
   flex: 1;
-  padding: 10px 15px;
-  border: none;
+  padding: 8px;
   border-radius: 10px;
-  font-size: 0.9rem;
+  border: none;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.edit-btn {
-  background-color: #4ecdc4;
-  color: white;
-}
-
-.edit-btn:hover {
-  background-color: #45b7aa;
-  transform: translateY(-2px);
-}
-
-.delete-btn {
-  background-color: #ff6b6b;
-  color: white;
-}
-
-.delete-btn:hover {
-  background-color: #ee5a52;
-  transform: translateY(-2px);
-}
-
-/* 加载状态 */
-.loading-state {
+  transition: all 0.2s ease;
   text-align: center;
-  padding: 80px 20px;
-  background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
 }
+.action-btn--edit { background: #dbeafe; color: #1e40af; }
+.action-btn--edit:hover { background: #bfdbfe; }
+.action-btn--delete { background: #fee2e2; color: #991b1b; }
+.action-btn--delete:hover { background: #fecaca; }
 
-.loading-state i {
-  font-size: 3rem;
-  color: #ff6b9d;
-  margin-bottom: 20px;
-}
-
-.loading-state p {
-  margin: 0;
-  color: #8e8e8e;
-  font-size: 1.1rem;
-}
-
-/* 空创作状态 */
+/* 空状态 */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
-  grid-column: 1 / -1;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
+.empty-state__icon { font-size: 3rem; display: block; margin-bottom: 16px; opacity: 0.6; }
+.empty-state h3 { margin: 0 0 8px; font-size: 1.2rem; color: #333; }
+.empty-state p { color: #999; margin: 0 0 20px; }
 
-.empty-state i {
-  font-size: 4rem;
-  color: #e0e0e0;
-  margin-bottom: 20px;
+/* 加载状态 */
+.loading-state { text-align: center; padding: 60px 20px; color: #999; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top-color: #ec4899;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.empty-state h3 {
-  margin: 0 0 10px;
-  font-size: 1.5rem;
-  color: #333;
-}
-
-.empty-state p {
-  margin: 0 0 30px;
-  color: #8e8e8e;
-}
-
-/* 按钮样式 */
-.btn-primary {
-  background: linear-gradient(135deg, #ff6b9d 0%, #fec89a 100%);
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
-}
-
-/* 分页样式 */
+/* 分页 */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
-  margin-top: 30px;
-  padding: 20px;
-  width: 100%;
+  padding: 20px 0 40px;
 }
-
 .page-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 10px 20px;
   border: none;
-  padding: 10px 25px;
-  border-radius: 25px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 100px;
-  justify-content: center;
+  transition: all 0.2s ease;
 }
-
-.page-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #e0e0e0;
-}
-
-.page-info {
-  color: #666;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-/* 返回按钮 */
-.back-btn {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  padding: 12px 25px;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1.1rem;
-  font-weight: bold;
-  font-family: 'Comic Sans MS', cursive;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
-  z-index: 1000;
-}
-
-.back-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
-  animation: cute-swing 0.5s ease;
-}
-
-/* 响应式设计 */
-@media (max-width: 1200px) {
-  .creation-list {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-}
-
-@media (max-width: 992px) {
-  .page-title {
-    font-size: 1.75rem;
-  }
-  
-  .creation-list {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-}
+.page-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-info { color: #666; font-size: 0.9rem; }
 
 @media (max-width: 768px) {
-  .page-header {
-    padding: 30px 0 20px;
-  }
-  
-  .page-title {
-    font-size: 1.5rem;
-  }
-  
-  .page-subtitle {
-    font-size: 0.9rem;
-  }
-  
-  .creation-list {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  
-  .creation-card {
-    flex-direction: row;
-  }
-  
-  .creation-image {
-    width: 150px;
-    height: 150px;
-    flex-shrink: 0;
-  }
-  
-  .creation-content {
-    padding: 15px;
-    gap: 8px;
-  }
-  
-  .creation-title {
-    font-size: 1.1rem;
-  }
-  
-  .creation-actions {
-    flex-direction: column;
-  }
-  
-  .empty-state {
-    padding: 40px 15px;
-  }
-  
-  .empty-state i {
-    font-size: 3rem;
-  }
-  
-  .empty-state h3 {
-    font-size: 1.25rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .creation-card {
-    flex-direction: column;
-  }
-  
-  .creation-image {
-    width: 100%;
-    height: 180px;
-  }
+  .creation-grid { grid-template-columns: 1fr; gap: 12px; }
+  .my-creation-page__header { margin: 12px; padding: 24px 0 20px; border-radius: 12px; }
+  .my-creation-page__title { font-size: 1.4rem; }
+  .my-creation-page__container { padding: 0 12px; }
+  .creation-card { flex-direction: column; }
+  .creation-card__image { height: 160px; }
 }
 </style>

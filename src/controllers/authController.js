@@ -43,11 +43,12 @@ exports.register = async (req, res) => {
         // 步骤1：数据验证
         // 使用yup schema验证数据格式
         // 验证项：用户名格式、邮箱格式、密码强度
+        // 修复：confirmPassword 应从请求体获取，而非与 password 相同（否则验证永远通过）
         await registerValidation.validate({
             username,
             email,
             password,
-            confirmPassword: password 
+            confirmPassword: req.body.confirmPassword
         });
         
         // 步骤2：检查用户是否已存在
@@ -278,8 +279,8 @@ exports.refreshToken = async (req, res) => {
         }
         
         // 步骤2：验证token
-        // 即使token过期，也能解析出用户ID
-        const decoded = jwt.verifyToken(token);
+        // 即使token过期，也能解析出用户ID（ignoreExpiration=true）
+        const decoded = jwt.verifyToken(token, true);  // true = 忽略过期检查
         
         // 步骤3：查找用户
         const user = await User.findById(decoded.id);

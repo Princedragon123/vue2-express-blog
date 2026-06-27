@@ -9,7 +9,7 @@
       @drop.prevent="handleDrop"
     ></div>
     <input type="file" ref="contentImageInput" class="content-image-input" accept="image/*" style="display: none;" @change="handleContentImageUpload">
-    <!-- change提交事件触发 -->
+
   </div>
 </template>
 
