@@ -37,6 +37,10 @@ app.use(xss());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// SEO 路由（robots.txt + sitemap.xml）
+const seoRoutes = require('./routes/seoRoutes');
+app.use(seoRoutes);
+
 app.use('/api', routes);
 
 // 3. 静态资源也要应用 CORS

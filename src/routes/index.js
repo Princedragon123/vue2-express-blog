@@ -120,6 +120,10 @@ router.use('/emojis', emojiRoutes);
 // GET /api/chess/leaderboard - 获取战绩排行榜
 router.use('/chess', chessRoutes);
 
+// 用户数据看板路由：前缀 /stats
+const statsRoutes = require('./statsRoutes');
+router.use('/stats', statsRoutes);
+
 // 导出路由
 // 在 app.js 中：
 // const routes = require('./routes');

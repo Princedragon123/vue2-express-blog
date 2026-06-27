@@ -236,6 +236,15 @@ const apiMethods = {
     unbanUser: (id) => api.put(`/api/admin/users/${id}/unban`),
     deleteUser: (id, data) => api.delete(`/api/admin/users/${id}`, { data }),
     getCategories: () => api.get('/api/admin/categories')
+  },
+
+  // 用户数据看板相关 API
+  stats: {
+    // 获取用户数据看板
+    getDashboard: () => api.get('/api/stats/dashboard'),
+
+    // 获取最受欢迎文章 TOP5
+    getTopArticles: () => api.get('/api/stats/top-articles')
   }
 };
 

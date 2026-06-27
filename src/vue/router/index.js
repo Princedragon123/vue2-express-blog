@@ -28,6 +28,7 @@ const AdminLayout = () => import(/* webpackChunkName: "admin" */ '../components/
 const AdminDashboard = () => import(/* webpackChunkName: "admin" */ '../components/AdminDashboard.vue');
 const AdminUsers = () => import(/* webpackChunkName: "admin" */ '../components/AdminUsers.vue');
 const AdminBlogs = () => import(/* webpackChunkName: "admin" */ '../components/AdminBlogs.vue');
+const DataDashboard = () => import(/* webpackChunkName: "profile" */ '../components/DataDashboard.vue');
 const MeowChess = () => import(/* webpackChunkName: "game" */ '../components/meow-chess/MeowChess.vue');
 
 Vue.use(Router);
@@ -59,6 +60,7 @@ const routes = [
   { path: '/my-profile', name: 'ProfileSettings', component: ProfileSettings, meta: { title: '个人设置', requiresAuth: true } },
   { path: '/my-creation', name: 'MyCreation', component: MyCreation, meta: { title: '我的创作', requiresAuth: true } },
   { path: '/edit-profile', name: 'EditProfile', component: EditProfile, meta: { title: '编辑资料', requiresAuth: true } },
+  { path: '/data-dashboard', name: 'DataDashboard', component: DataDashboard, meta: { title: '数据看板', requiresAuth: true } },
 
   // 话题
   { path: '/topics', name: 'TopicList', component: TopicList, meta: { title: '话题广场', requiresAuth: true } },

@@ -252,34 +252,19 @@ const BlogController = {
             const { id } = req.params;
             const userId = req.user?.id || req.user?._id;
 
-            console.log('📝 获取博客详情 - ID:', id);
-            console.log('👤 当前用户:', req.user ? req.user.username : '未登录');
-            console.log('👤 用户角色:', req.user ? req.user.role : 'N/A');
-
-            // 查询博客详情
-            // populate: 填充关联字段
             const blog = await Blog.findById(id)
                 .populate('author', 'username _id profile.avatar role privacy')
-                // .populate('category', 'name') // 分类功能已删除
                 .populate('topic', 'name _id');
 
-            // 博客不存在
             if (!blog) {
-                console.log('❌ 博客不存在');
                 return res.status(404).json({ success: false, message: '博客不存在' });
             }
-
-            console.log('✅ 博客找到 - 作者:', blog.author ? blog.author.username : '无作者');
-            console.log('🔒 作者隐私设置:', blog.author ? blog.author.privacy : 'N/A');
 
             // 隐私权限检查
             // canViewBlog: 检查用户是否有权查看
             if (!canViewBlog(req.user, blog)) {
-                console.log('❌ 权限检查失败 - 无法查看博客');
                 return res.status(403).json({ success: false, message: '该博客已设置为私密，无法查看' });
             }
-
-            console.log('✅ 权限检查通过');
 
             // 浏览量统计（防重复）
             // 生成唯一标识：用户ID或会话ID
@@ -434,11 +419,11 @@ const BlogController = {
             // 保存评论
             await comment.save();
 
-            // 更新博客评论数
+            // 更新博客评论数（带空值保护）
             const blog = await Blog.findByIdAndUpdate(blogId, { $inc: { comments: 1 } });
-
-            // 更新作者评论统计
-            await User.findByIdAndUpdate(blog.author, { $inc: { 'stats.commentsCount': 1 } });
+            if (blog && blog.author) {
+                await User.findByIdAndUpdate(blog.author, { $inc: { 'stats.commentsCount': 1 } });
+            }
 
             // 填充作者信息
             let populatedComment = await Comment.findById(comment._id)
@@ -542,14 +527,20 @@ const BlogController = {
                 return res.status(404).json({ success: false, message: '评论不存在' });
             }
 
-            // 权限检查
-            const blog = await Blog.findById(comment.blog);
-            const user = await User.findById(userId);
+            // 权限检查（并行查询，带空值保护）
+            const [blog, user] = await Promise.all([
+                Blog.findById(comment.blog),
+                User.findById(userId)
+            ]);
+
+            if (!blog) {
+                return res.status(404).json({ success: false, message: '关联博客不存在' });
+            }
 
             // 三种角色可以删除：评论作者、博客作者、管理员
             if (comment.author.toString() !== userId.toString() &&
                 blog.author.toString() !== userId.toString() &&
-                user.role !== 'admin') {
+                user?.role !== 'admin') {
                 return res.status(403).json({ success: false, message: '没有权限删除该评论' });
             }
 
