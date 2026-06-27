@@ -1,55 +1,94 @@
 <template>
-  <nav class="nav">
-    <div class="nav__inner">
-      <router-link to="/blog" class="nav__logo">KK攻略</router-link>
-
-      <!-- Search -->
-      <div v-if="$route.path !== '/search'" class="nav__search" @click="$router.push('/search')">
-        <svg-icon name="search" :size="16" class-name="nav__search-icon" />
-        <span class="nav__search-placeholder">搜索</span>
+  <nav class="top-navbar">
+    <div class="top-navbar__container">
+      <!-- Logo -->
+      <div class="top-navbar__brand">
+        <h2
+          class="top-navbar__logo"
+          @dblclick="handleLogoDoubleClick"
+          @mousedown="handleLogoMouseDown"
+        >kk攻略博客</h2>
       </div>
 
-      <!-- Desktop links -->
-      <div class="nav__links">
-        <router-link to="/blog" class="nav__link" :class="{ 'nav__link--active': $route.path === '/blog' }">发现</router-link>
-        <router-link to="/topics" class="nav__link" :class="{ 'nav__link--active': $route.path === '/topics' }">话题</router-link>
-        <router-link v-if="isLoggedIn" to="/following" class="nav__link" :class="{ 'nav__link--active': $route.path === '/following' }">关注</router-link>
-        <router-link v-if="isLoggedIn" to="/create" class="nav__link nav__link--cta">写文章</router-link>
-        <router-link v-if="isLoggedIn" to="/messages" class="nav__link" :class="{ 'nav__link--active': $route.path === '/messages' }">私信</router-link>
-        <router-link v-if="isAdmin" to="/admin" class="nav__link" :class="{ 'nav__link--active': $route.path.startsWith('/admin') }">管理</router-link>
+      <!-- 搜索框 -->
+      <div v-if="$route.path !== '/search'" class="top-navbar__search" @click="$router.push('/search')">
+        <span class="top-navbar__search-icon">🔍</span>
+        <input type="text" placeholder="搜索攻略、用户" readonly tabindex="-1">
+      </div>
+      <div v-else class="top-navbar__search top-navbar__search--minimized">
+        <span class="top-navbar__search-dots">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </span>
       </div>
 
-      <!-- Avatar + hamburger -->
-      <div class="nav__actions">
-        <div v-if="isLoggedIn" class="nav__avatar" @click="goToProfile">
-          <img :src="userAvatar" :alt="username" class="nav__avatar-img" @error="onAvatarError">
+      <!-- 桌面导航 -->
+      <div class="top-navbar__desktop-nav">
+        <router-link to="/blog" class="nav-link" :class="{ 'nav-link--active': $route.path === '/blog' }">
+          <span class="nav-link__icon">🧭</span><span>发现</span>
+        </router-link>
+        <router-link to="/topics" class="nav-link" :class="{ 'nav-link--active': $route.path === '/topics' }">
+          <span class="nav-link__icon">💬</span><span>话题圈</span>
+        </router-link>
+        <router-link v-if="isLoggedIn" to="/following" class="nav-link" :class="{ 'nav-link--active': $route.path === '/following' }">
+          <span class="nav-link__icon">👥</span><span>关注</span>
+        </router-link>
+        <router-link v-if="isLoggedIn" to="/create" class="nav-link nav-link--create">
+          <span class="nav-link__icon">➕</span><span>发布</span>
+        </router-link>
+        <router-link v-if="isLoggedIn" to="/messages" class="nav-link" :class="{ 'nav-link--active': $route.path === '/messages' }">
+          <span class="nav-link__icon">✉️</span><span>私信</span>
+        </router-link>
+        <router-link v-if="isAdmin" to="/admin" class="nav-link" :class="{ 'nav-link--active': $route.path.startsWith('/admin') }">
+          <span class="nav-link__icon">🛡️</span><span>管理</span>
+        </router-link>
+      </div>
+
+      <!-- 用户头像 -->
+      <div class="top-navbar__actions">
+        <div v-if="isLoggedIn" class="top-navbar__avatar" @click="goToProfile">
+          <img :src="userAvatar" :alt="username" class="top-navbar__avatar-img" @error="onAvatarError">
         </div>
-        <button class="nav__hamburger" @click="toggleDrawer" :aria-label="drawerOpen ? '关闭' : '菜单'">
-          <span :class="{ 'hamburger--open': drawerOpen }" />
-          <span :class="{ 'hamburger--open': drawerOpen }" />
-          <span :class="{ 'hamburger--open': drawerOpen }" />
+        <!-- 汉堡菜单按钮（仅移动端） -->
+        <button class="top-navbar__hamburger" @click="toggleDrawer" :aria-label="drawerOpen ? '关闭菜单' : '打开菜单'">
+          <span :class="{ 'hamburger-line': true, 'hamburger-line--open': drawerOpen }"></span>
+          <span :class="{ 'hamburger-line': true, 'hamburger-line--open': drawerOpen }"></span>
+          <span :class="{ 'hamburger-line': true, 'hamburger-line--open': drawerOpen }"></span>
         </button>
       </div>
     </div>
 
-    <!-- Mobile overlay -->
-    <div v-if="drawerOpen" class="nav__overlay" @click="toggleDrawer" @touchmove.prevent />
+    <!-- 移动端遮罩层 -->
+    <div v-if="drawerOpen" class="drawer-overlay" @click="toggleDrawer" @touchmove.prevent></div>
 
-    <!-- Mobile drawer -->
-    <div class="nav__drawer" :class="{ 'nav__drawer--open': drawerOpen }">
-      <div class="nav__drawer-header">
-        <span>导航</span>
-        <button class="nav__drawer-close" @click="toggleDrawer">&times;</button>
+    <!-- 移动端抽屉菜单 -->
+    <div class="mobile-drawer" :class="{ 'mobile-drawer--open': drawerOpen }">
+      <div class="mobile-drawer__header">
+        <span class="mobile-drawer__title">菜单</span>
+        <button class="mobile-drawer__close" @click="toggleDrawer">✕</button>
       </div>
-      <div class="nav__drawer-body">
-        <router-link to="/blog" class="nav__drawer-link" @click.native="toggleDrawer">发现</router-link>
-        <router-link to="/topics" class="nav__drawer-link" @click.native="toggleDrawer">话题圈</router-link>
-        <router-link to="/create" class="nav__drawer-link nav__drawer-link--cta" @click.native="toggleDrawer">写文章</router-link>
-        <router-link to="/following" class="nav__drawer-link" @click.native="toggleDrawer">我的关注</router-link>
-        <router-link to="/messages" class="nav__drawer-link" @click.native="toggleDrawer">私信</router-link>
-        <router-link to="/data-dashboard" class="nav__drawer-link" @click.native="toggleDrawer">数据看板</router-link>
-        <router-link v-if="isAdmin" to="/admin" class="nav__drawer-link" @click.native="toggleDrawer">管理后台</router-link>
-      </div>
+      <nav class="mobile-drawer__nav">
+        <router-link to="/blog" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>🧭</span><span>发现</span>
+        </router-link>
+        <router-link to="/topics" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>💬</span><span>话题圈</span>
+        </router-link>
+        <router-link to="/create" class="mobile-drawer__link mobile-drawer__link--create" @click.native="toggleDrawer">
+          <span>➕</span><span>发布攻略</span>
+        </router-link>
+        <router-link to="/following" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>👥</span><span>我的关注</span>
+        </router-link>
+        <router-link to="/messages" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>✉️</span><span>我的私信</span>
+        </router-link>
+        <router-link to="/profile" class="mobile-drawer__link" @click.native="toggleDrawer">
+          <span>👤</span><span>个人中心</span>
+        </router-link>
+        <router-link v-if="isAdmin" to="/admin" class="mobile-drawer__link mobile-drawer__link--admin" @click.native="toggleDrawer">
+          <span>🛡️</span><span>管理后台</span>
+        </router-link>
+      </nav>
     </div>
   </nav>
 </template>
@@ -59,189 +98,432 @@ import { getAuthorAvatar } from '../utils/avatarUtils';
 
 export default {
   name: 'TopNavbar',
-  data() { return { userInfo: null, drawerOpen: false }; },
-  computed: {
-    username() { return this.$store.getters.currentUser?.username || ''; },
-    userAvatar() {
-      const u = this.userInfo || this.$store.getters.currentUser;
-      return getAuthorAvatar(u?.avatar || u?.profile?.avatar || u, 40);
-    },
-    isLoggedIn() { return this.$store.getters.isLoggedIn; },
-    isAdmin() { return this.$store.getters.currentUser?.role === 'admin'; }
+
+  data() {
+    return {
+      userInfo: null,
+      drawerOpen: false
+    };
   },
-  mounted() { if (this.isLoggedIn) this.fetchUserInfo(); },
-  methods: {
-    toggleDrawer() { this.drawerOpen = !this.drawerOpen; document.body.style.overflow = this.drawerOpen ? 'hidden' : ''; },
-    async fetchUserInfo() {
-      try { const r = await this.$http.auth.getCurrentUser(); if (r.success) this.userInfo = r.data; } catch {}
+
+  computed: {
+    username() {
+      return this.$store.getters.currentUser?.username || '游戏达人';
     },
-    onAvatarError(e) { e.target.src = getAuthorAvatar(null, 40); },
-    goToProfile() { this.$router.push(this.$route.path.startsWith('/profile') ? '/profile' : '/profile'); }
+    userAvatar() {
+      const user = this.userInfo || this.$store.getters.currentUser;
+      if (!user) return getAuthorAvatar(null, 40);
+      return getAuthorAvatar(user.avatar || user.profile?.avatar || user, 40);
+    },
+    isLoggedIn() {
+      return this.$store.getters.isLoggedIn;
+    },
+    isAdmin() {
+      return this.$store.getters.currentUser?.role === 'admin';
+    }
+  },
+
+  mounted() {
+    if (this.isLoggedIn) {
+      this.fetchUserInfo();
+    }
+  },
+
+  methods: {
+    toggleDrawer() {
+      this.drawerOpen = !this.drawerOpen;
+      // 防止背景滚动
+      document.body.style.overflow = this.drawerOpen ? 'hidden' : '';
+    },
+
+    handleLogoDoubleClick(event) {
+      if (event.ctrlKey && event.shiftKey) {
+        this.$router.push('/ymt');
+      }
+    },
+
+    handleLogoMouseDown(event) {
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+      }
+    },
+
+    async fetchUserInfo() {
+      try {
+        const response = await this.$http.auth.getCurrentUser();
+        if (response.success && response.data) {
+          this.userInfo = response.data;
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+      }
+    },
+
+    onAvatarError(event) {
+      event.target.src = getAuthorAvatar(null, 40);
+    },
+
+    goToProfile() {
+      if (this.$route.path.startsWith('/profile/')) {
+        window.location.reload();
+      } else {
+        this.$router.push('/profile');
+      }
+    }
   }
 };
 </script>
 
 <style scoped>
-.nav {
+/* 顶部导航栏 */
+.top-navbar {
+  background: linear-gradient(135deg, #fef3c7, #fce7f3);
+  box-shadow: 0 2px 12px rgba(236, 72, 153, 0.12);
+  padding: 0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  border-bottom: 2px solid rgba(236, 72, 153, 0.15);
   height: 56px;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
 }
-.nav__inner {
-  width: 92%;
-  max-width: 1200px;
+
+.top-navbar__container {
+  width: 95%;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
-.nav__logo {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-.nav__logo:hover { color: #e11d48; }
 
-/* Search */
-.nav__search {
+/* Logo */
+.top-navbar__logo {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #ec4899;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 搜索框 */
+.top-navbar__search {
   flex: 1;
-  max-width: 320px;
+  max-width: 360px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
   padding: 8px 14px;
-  background: #f3f4f6;
-  border-radius: 9999px;
+  border: 1.5px solid rgba(236, 72, 153, 0.15);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 }
-.nav__search:hover { background: #e5e7eb; }
-.nav__search-icon { color: #9ca3af; flex-shrink: 0; }
-.nav__search-placeholder { color: #9ca3af; font-size: 0.85rem; }
 
-/* Desktop links */
-.nav__links { display: none; align-items: center; gap: 4px; margin-left: auto; }
-.nav__link {
-  padding: 7px 14px;
-  border-radius: 9999px;
+.top-navbar__search:hover {
+  border-color: #ec4899;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.top-navbar__search-icon {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.top-navbar__search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
   font-size: 0.85rem;
+  color: #999;
+  pointer-events: none;
+  min-width: 0;
+}
+
+.top-navbar__search--minimized {
+  max-width: 60px;
+  justify-content: center;
+  padding: 8px;
+}
+
+.top-navbar__search-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.top-navbar__search-dots .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ec4899;
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* 桌面导航 */
+.top-navbar__desktop-nav {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 0.82rem;
   font-weight: 500;
-  color: #3d3d3d;
-  transition: all 0.2s;
+  color: #555;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
-.nav__link:hover { background: #f3f4f6; color: #1a1a1a; }
-.nav__link--active { color: #e11d48; background: #fff1f2; }
-.nav__link--cta {
-  background: #e11d48;
-  color: #fff;
-  font-weight: 600;
-  padding: 7px 18px;
-}
-.nav__link--cta:hover { background: #f43f5e; color: #fff; }
 
-/* Avatar */
-.nav__actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.nav__avatar { cursor: pointer; flex-shrink: 0; }
-.nav__avatar-img {
-  width: 32px; height: 32px;
+.nav-link:hover {
+  background: rgba(236, 72, 153, 0.08);
+  color: #ec4899;
+}
+
+.nav-link--active {
+  background: rgba(236, 72, 153, 0.1);
+  color: #ec4899;
+  font-weight: 600;
+}
+
+.nav-link--create {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
+}
+
+.nav-link--create:hover {
+  background: linear-gradient(135deg, #db2777, #ec4899);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.nav-link__icon {
+  font-size: 1rem;
+}
+
+/* 用户头像 */
+.top-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.top-navbar__avatar {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.top-navbar__avatar-img {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e5e7eb;
-  transition: border-color 0.2s;
+  border: 2px solid #ec4899;
+  transition: transform 0.25s ease;
 }
-.nav__avatar:hover .nav__avatar-img { border-color: #e11d48; }
 
-/* Hamburger */
-.nav__hamburger {
+.top-navbar__avatar:active .top-navbar__avatar-img {
+  transform: scale(0.92);
+}
+
+/* 汉堡菜单按钮（移动端） */
+.top-navbar__hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(236, 72, 153, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.top-navbar__hamburger:active {
+  background: rgba(236, 72, 153, 0.1);
+}
+
+.hamburger-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #ec4899;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger-line--open:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-line--open:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger-line--open:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* 遮罩层 */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 移动端抽屉菜单 */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 80vw;
+  background: linear-gradient(180deg, #fff 0%, #fef3c7 100%);
+  z-index: 2001;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  /* 安全区域适配 */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-drawer--open {
+  transform: translateX(0);
+}
+
+.mobile-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(236, 72, 153, 0.1);
+}
+
+.mobile-drawer__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ec4899;
+}
+
+.mobile-drawer__close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(236, 72, 153, 0.08);
+  color: #ec4899;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.mobile-drawer__close:active {
+  background: rgba(236, 72, 153, 0.2);
+}
+
+.mobile-drawer__nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 36px; height: 36px;
-  padding: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  justify-content: center;
 }
-.nav__hamburger span {
-  display: block;
-  height: 2px;
-  background: #3d3d3d;
-  border-radius: 2px;
-  transition: all 0.25s;
-}
-.nav__hamburger .hamburger--open:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.nav__hamburger .hamburger--open:nth-child(2) { opacity: 0; }
-.nav__hamburger .hamburger--open:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
-/* Overlay */
-.nav__overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.3);
-  z-index: 200;
-  animation: fadeIn 0.2s ease;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* Drawer */
-.nav__drawer {
-  position: fixed;
-  top: 0; right: 0; bottom: 0;
-  width: 280px; max-width: 80vw;
-  background: #fff;
-  z-index: 201;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+.mobile-drawer__link {
   display: flex;
-  flex-direction: column;
-  padding-top: env(safe-area-inset-top, 0);
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.nav__drawer--open { transform: translateX(0); }
-.nav__drawer-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f3f4f6;
-  font-weight: 600;
-}
-.nav__drawer-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem; color: #6b7280;
-}
-.nav__drawer-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
-.nav__drawer-link {
-  display: flex; align-items: center;
+  align-items: center;
+  gap: 12px;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 1rem;
   font-weight: 500;
-  color: #3d3d3d;
-  transition: all 0.15s;
+  color: #444;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  /* 最小触摸目标 44px */
   min-height: 48px;
 }
-.nav__drawer-link:active { background: #f3f4f6; }
-.nav__drawer-link--cta { background: #e11d48; color: #fff; justify-content: center; margin: 8px 0; font-weight: 600; }
-.nav__drawer-link--cta:active { background: #f43f5e; }
 
-@media (min-width: 768px) {
-  .nav__links { display: flex; }
-  .nav__hamburger { display: none; }
+.mobile-drawer__link:active {
+  background: rgba(236, 72, 153, 0.08);
+  transform: scale(0.98);
 }
+
+.mobile-drawer__link--create {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
+  font-weight: 600;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.mobile-drawer__link--create:active {
+  background: linear-gradient(135deg, #db2777, #ec4899);
+  transform: scale(0.97);
+}
+
+.mobile-drawer__link--admin {
+  margin-top: auto;
+  border: 1.5px dashed rgba(236, 72, 153, 0.3);
+  color: #ec4899;
+}
+
+/* 响应式 */
+@media (min-width: 1024px) {
+  .top-navbar__desktop-nav { display: flex; }
+  .top-navbar__search { max-width: 360px; }
+  .top-navbar__hamburger { display: none; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .top-navbar__desktop-nav { display: flex; }
+  .top-navbar__search { max-width: 180px; }
+  .top-navbar__hamburger { display: none; }
+  .nav-link span:not(.nav-link__icon) { display: none; }
+  .nav-link { padding: 8px 10px; }
+}
+
 @media (max-width: 767px) {
-  .nav__links { display: none; }
-  .nav__search { max-width: 120px; }
+  .top-navbar__desktop-nav { display: none; }
+  .top-navbar__search { max-width: 100px; margin: 0 4px; }
+  .top-navbar__search input { font-size: 0.75rem; }
+  .top-navbar__logo { font-size: 1rem; }
+  .top-navbar__hamburger { display: flex; }
 }
 </style>
