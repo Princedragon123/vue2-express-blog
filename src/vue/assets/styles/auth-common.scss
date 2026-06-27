@@ -1,148 +1,102 @@
-// 登录/注册通用样式
-// 与 main.scss 的设计令牌保持一致
+/* Auth forms - shared styles matching design system v2 */
 
 .auth-input-group {
   display: flex;
-  border: 2px solid transparent;
+  border: 1.5px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #fff;
 
   &:focus-within {
-    border-color: #ec4899;
-    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.08), 0 4px 16px rgba(236, 72, 153, 0.1);
+    border-color: #e11d48;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
   }
 
   .input-group-text {
-    background: #fef3c7;
-    color: #666;
+    background: #faf8f5;
+    color: #6b7280;
     border: none;
     padding: 0 14px;
     display: flex;
     align-items: center;
-    transition: all 0.3s ease;
   }
 
   .btn {
     padding: 10px 16px;
-    transition: all 0.3s ease;
-    &:hover {
-      background: #ec4899;
-      color: white;
-    }
+    transition: all 0.2s ease;
+    &:hover { background: #e11d48; color: #fff; }
   }
 }
 
 .cel-input {
   border: none;
   border-radius: 0;
-  background: #fef3c7;
+  background: #fff;
   padding: 12px 16px;
   font-size: 1rem;
   width: 100%;
-  transition: all 0.3s ease;
+  outline: none;
+  color: #1a1a1a;
 
-  &:focus {
-    outline: none;
-    box-shadow: none;
-  }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-
-  @media (max-width: 480px) {
-    padding: 10px 14px;
-  }
+  &::placeholder { color: #9ca3af; }
+  &:focus { outline: none; box-shadow: none; }
 }
 
 .cel-label {
   font-weight: 600;
-  color: #333;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: #ec4899;
-  }
+  color: #3d3d3d;
+  font-size: 0.9rem;
 }
 
 .cel-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #ec4899;
-  border-radius: 4px;
-  accent-color: #ec4899;
+  width: 18px;
+  height: 18px;
+  accent-color: #e11d48;
   cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:focus {
-    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
-  }
 }
 
 .cel-button {
   position: relative;
-  z-index: 1;
-  background: linear-gradient(135deg, #ec4899, #db2777);
+  background: #e11d48;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-weight: 600;
   padding: 12px 28px;
   color: #fff;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  font-size: 0.95rem;
   cursor: pointer;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-    transition: left 0.5s;
-    z-index: -1;
-  }
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.2);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3);
-
-    &::before {
-      left: 100%;
-    }
+    background: #f43f5e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(225, 29, 72, 0.3);
   }
-
-  &:active {
-    transform: scale(0.97);
-  }
-
+  &:active { transform: scale(0.97); }
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-
-    &::before {
-      display: none;
-    }
   }
 }
 
-.cel-link {
-  color: #ec4899;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  font-weight: 500;
+.cel-link { color: #e11d48; font-weight: 500; transition: color 0.2s; }
+.cel-link:hover { color: #f43f5e; }
 
-  &:hover {
-    color: #db2777;
-    text-decoration: underline;
-  }
+.border-cel { border: 1.5px solid #e11d48; }
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  animation: shake 0.5s ease;
 }
 
-.border-cel {
-  border: 2px solid #ec4899;
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
